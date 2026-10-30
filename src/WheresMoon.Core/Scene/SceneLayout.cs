@@ -40,6 +40,9 @@ public sealed record SceneLayout
     public required double RiseSetLine2CenterY { get; init; }
     public required double PhaseLineCenterY { get; init; }
 
+    /// <summary>Factor for line widths and star sizes. Never below 1, so they stay visible on small screens.</summary>
+    public required double DetailScale { get; init; }
+
     /// <summary>Factor for sky stop positions, so that the horizon colour stays at the horizon line.</summary>
     public required double SkyStopScale { get; init; }
 
@@ -91,6 +94,7 @@ public sealed record SceneLayout
             RiseSetLine2CenterY = textTop + text.Line2Center,
             PhaseLineCenterY = textTop + text.PhaseCenter,
 
+            DetailScale = Math.Max(1.0, unit / DesignTokens.Size.ReferenceWidth),
             SkyStopScale = horizonY / height / DesignTokens.Size.HorizonFraction,
         };
     }

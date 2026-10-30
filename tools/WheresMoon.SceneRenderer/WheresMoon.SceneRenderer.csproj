@@ -13,4 +13,10 @@
     <ProjectReference Include="..\..\src\WheresMoon.Core\WheresMoon.Core.csproj" />
   </ItemGroup>
 
+  <!-- The MAUI project cannot be referenced from a console app, so the drawing code is compiled in. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\WheresMoon.App\Rendering\SceneDrawable.cs" Link="Rendering\SceneDrawable.cs" />
+    <Compile Include="..\..\src\WheresMoon.App\Rendering\SceneState.cs" Link="Rendering\SceneState.cs" />
+  </ItemGroup>
+
 </Project>

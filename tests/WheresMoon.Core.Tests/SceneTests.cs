@@ -287,6 +287,14 @@ public class SceneTests
     }
 
     [Fact]
+    public void Fine_details_grow_with_large_scenes_but_never_shrink()
+    {
+        Assert.Equal(1.0, SceneLayout.Compute(390, 844, SafeInsets.None).DetailScale, 6);
+        Assert.Equal(1.0, SceneLayout.Compute(844, 390, SafeInsets.None).DetailScale, 6);
+        Assert.Equal(2.0, SceneLayout.Compute(780, 1688, SafeInsets.None).DetailScale, 6);
+    }
+
+    [Fact]
     public void Wide_windows_get_flatter_wider_arcs_within_the_limit()
     {
         SceneLayout layout = SceneLayout.Compute(844, 390, new SafeInsets(59, 0, 59, 21));

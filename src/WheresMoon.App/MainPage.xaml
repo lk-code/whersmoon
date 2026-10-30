@@ -1,8 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WheresMoon.App.MainPage">
+             x:Class="WheresMoon.App.MainPage"
+             SafeAreaEdges="None"
+             BackgroundColor="#070D24">
 
-    <Label Text="Where's Moon?" FontFamily="ManropeLight" HorizontalOptions="Center" VerticalOptions="Center" />
+    <Grid x:Name="Root" SafeAreaEdges="None">
+
+        <GraphicsView x:Name="Scene" />
+
+        <!-- Positions come from SceneLayout, which already accounts for the safe area. -->
+        <Grid x:Name="TextLayer" SafeAreaEdges="None" InputTransparent="True">
+            <Label x:Name="ClockLabel" FontFamily="ManropeLight" TextColor="White"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+            <Label x:Name="SunLabel" FontFamily="ManropeMedium" TextColor="White"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+            <Label x:Name="MoonLabel" FontFamily="ManropeMedium" TextColor="White"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+            <Label x:Name="PhaseLabel" FontFamily="ManropeRegular" TextColor="White" Opacity="0.8"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+        </Grid>
+
+        <!-- The probe is the only way to learn the insets: this grid keeps its full size and only shrinks its content. -->
+        <Grid x:Name="SafeArea" SafeAreaEdges="Container" CascadeInputTransparent="False">
+            <BoxView x:Name="SafeAreaProbe" Color="Transparent" InputTransparent="True" />
+            <ImageButton x:Name="SettingsButton"
+                         Source="settings_icon.png"
+                         WidthRequest="44" HeightRequest="44" Padding="11"
+                         HorizontalOptions="End" VerticalOptions="End" Margin="0,0,6,6"
+                         BackgroundColor="Transparent" BorderWidth="0" BorderColor="Transparent" CornerRadius="22" Opacity="0.7"
+                         Clicked="OnSettingsClicked" />
+        </Grid>
+
+    </Grid>
 
 </ContentPage>

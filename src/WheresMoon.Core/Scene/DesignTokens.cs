@@ -52,6 +52,9 @@ public static class DesignTokens
         /// <summary>Below this height in device independent units the compact offset applies.</summary>
         public const double CompactHeight = 520.0;
 
+        /// <summary>Width of the reference format, from which fine details such as lines scale up.</summary>
+        public const double ReferenceWidth = 390.0;
+
         /// <summary>Horizon line on the reference format, relative to the height.</summary>
         public const double HorizonFraction = 0.62;
 
@@ -185,8 +188,9 @@ public static class DesignTokens
         public static readonly HillColors FrontDay = new(Rgba.FromHex("#3A5568"), Rgba.FromHex("#1D2F3D"));
         public static readonly HillColors FrontNight = new(Rgba.FromHex("#0F1630"), Rgba.FromHex("#080D1F"));
 
-        /// <summary>Share of the sky's horizon colour that reaches the ground.</summary>
-        public const double SkyShare = 0.25;
+        /// <summary>Share of the sky's horizon colour that reaches the ground: full on the crests, less at the foot.</summary>
+        public const double SkyShareCrest = 0.25;
+        public const double SkyShareFoot = 0.12;
 
         /// <summary>Sun altitudes between which the ground goes from its night to its day colours.</summary>
         public const double NightAltitude = -10.0;

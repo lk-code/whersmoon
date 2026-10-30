@@ -81,11 +81,11 @@ public static class SkyPalette
 
         // Only the departure from the plain day-night blend is added, so that at full day
         // and full night the ground hits the reference values exactly.
-        Rgba Tinted(Rgba night, Rgba daytime) =>
-            Rgba.Mix(night, daytime, day).Shift(expectedHorizon, horizon, DesignTokens.Ground.SkyShare);
+        Rgba Tinted(Rgba night, Rgba daytime, double share) =>
+            Rgba.Mix(night, daytime, day).Shift(expectedHorizon, horizon, share);
 
         HillColors Blend(HillColors night, HillColors daytime) =>
-            new(Tinted(night.Top, daytime.Top), Tinted(night.Bottom, daytime.Bottom));
+            new(Tinted(night.Top, daytime.Top, DesignTokens.Ground.SkyShareCrest), Tinted(night.Bottom, daytime.Bottom, DesignTokens.Ground.SkyShareFoot));
 
         return new SkyColors(
             stops,

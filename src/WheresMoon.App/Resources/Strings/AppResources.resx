@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Sunrise" xml:space="preserve"><value>Sunrise</value></data>
+  <data name="Sunset" xml:space="preserve"><value>Sunset</value></data>
+  <data name="Moonrise" xml:space="preserve"><value>Moonrise</value></data>
+  <data name="Moonset" xml:space="preserve"><value>Moonset</value></data>
+  <data name="NoSunrise" xml:space="preserve"><value>No sunrise today</value></data>
+  <data name="NoSunset" xml:space="preserve"><value>No sunset today</value></data>
+  <data name="NoMoonrise" xml:space="preserve"><value>No moonrise today</value></data>
+  <data name="NoMoonset" xml:space="preserve"><value>No moonset today</value></data>
+  <data name="PhaseNewMoon" xml:space="preserve"><value>New Moon</value></data>
+  <data name="PhaseWaxingCrescent" xml:space="preserve"><value>Waxing Crescent</value></data>
+  <data name="PhaseFirstQuarter" xml:space="preserve"><value>First Quarter</value></data>
+  <data name="PhaseWaxingGibbous" xml:space="preserve"><value>Waxing Gibbous</value></data>
+  <data name="PhaseFullMoon" xml:space="preserve"><value>Full Moon</value></data>
+  <data name="PhaseWaningGibbous" xml:space="preserve"><value>Waning Gibbous</value></data>
+  <data name="PhaseLastQuarter" xml:space="preserve"><value>Last Quarter</value></data>
+  <data name="PhaseWaningCrescent" xml:space="preserve"><value>Waning Crescent</value></data>
+  <data name="LocationMissing" xml:space="preserve"><value>Set a location to see the sun and moon</value></data>
+  <data name="SettingsButton" xml:space="preserve"><value>Settings and info</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="LocationHeader" xml:space="preserve"><value>Location</value></data>
+  <data name="LocationAutomatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="LocationManual" xml:space="preserve"><value>Manual</value></data>
+  <data name="Latitude" xml:space="preserve"><value>Latitude (-90 to 90)</value></data>
+  <data name="Longitude" xml:space="preserve"><value>Longitude (-180 to 180)</value></data>
+  <data name="Elevation" xml:space="preserve"><value>Elevation in metres (optional)</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="InvalidCoordinates" xml:space="preserve"><value>Please enter a latitude from -90 to 90 and a longitude from -180 to 180.</value></data>
+  <data name="LocationDenied" xml:space="preserve"><value>Location access is off. Enter coordinates to use the app.</value></data>
+  <data name="LocationUnavailable" xml:space="preserve"><value>The location could not be determined right now.</value></data>
+  <data name="LocationCurrent" xml:space="preserve"><value>Current location: {0}, {1}</value></data>
+  <data name="AboutHeader" xml:space="preserve"><value>About</value></data>
+  <data name="AboutText" xml:space="preserve"><value>Where's Moon? shows where the sun and moon are right now. All calculations run on this device. The app uses no network, no tracking and no analytics.</value></data>
+  <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="LicensesHeader" xml:space="preserve"><value>Licenses</value></data>
+  <data name="LicenseAstronomy" xml:space="preserve"><value>Astronomy Engine, MIT License</value></data>
+  <data name="LicenseManrope" xml:space="preserve"><value>Manrope, SIL Open Font License 1.1</value></data>
+  <data name="ShowLicense" xml:space="preserve"><value>Show license text</value></data>
+  <data name="HideLicense" xml:space="preserve"><value>Hide license text</value></data>
+  <data name="AltitudeLow" xml:space="preserve"><value>low</value></data>
+  <data name="AltitudeMedium" xml:space="preserve"><value>halfway up</value></data>
+  <data name="AltitudeHigh" xml:space="preserve"><value>high</value></data>
+  <data name="CompassN" xml:space="preserve"><value>north</value></data>
+  <data name="CompassNE" xml:space="preserve"><value>northeast</value></data>
+  <data name="CompassE" xml:space="preserve"><value>east</value></data>
+  <data name="CompassSE" xml:space="preserve"><value>southeast</value></data>
+  <data name="CompassS" xml:space="preserve"><value>south</value></data>
+  <data name="CompassSW" xml:space="preserve"><value>southwest</value></data>
+  <data name="CompassW" xml:space="preserve"><value>west</value></data>
+  <data name="CompassNW" xml:space="preserve"><value>northwest</value></data>
+  <data name="SpeakSunUp" xml:space="preserve"><value>Sun is {0} in the {1}</value></data>
+  <data name="SpeakSunDown" xml:space="preserve"><value>Sun is below the horizon</value></data>
+  <data name="SpeakMoonUp" xml:space="preserve"><value>{0}, {1} lit, {2} in the {3}</value></data>
+  <data name="SpeakMoonDown" xml:space="preserve"><value>{0}, {1} lit, below the horizon</value></data>
+  <data name="SpeakMoonSets" xml:space="preserve"><value>sets at {0}</value></data>
+  <data name="SpeakMoonRises" xml:space="preserve"><value>rises at {0}</value></data>
+</root>

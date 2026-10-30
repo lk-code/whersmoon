@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Sunrise" xml:space="preserve"><value>Sonnenaufgang</value></data>
+  <data name="Sunset" xml:space="preserve"><value>Sonnenuntergang</value></data>
+  <data name="Moonrise" xml:space="preserve"><value>Mondaufgang</value></data>
+  <data name="Moonset" xml:space="preserve"><value>Monduntergang</value></data>
+  <data name="NoSunrise" xml:space="preserve"><value>Kein Sonnenaufgang heute</value></data>
+  <data name="NoSunset" xml:space="preserve"><value>Kein Sonnenuntergang heute</value></data>
+  <data name="NoMoonrise" xml:space="preserve"><value>Kein Mondaufgang heute</value></data>
+  <data name="NoMoonset" xml:space="preserve"><value>Kein Monduntergang heute</value></data>
+  <data name="PhaseNewMoon" xml:space="preserve"><value>Neumond</value></data>
+  <data name="PhaseWaxingCrescent" xml:space="preserve"><value>Zunehmende Sichel</value></data>
+  <data name="PhaseFirstQuarter" xml:space="preserve"><value>Erstes Viertel</value></data>
+  <data name="PhaseWaxingGibbous" xml:space="preserve"><value>Zunehmender Mond</value></data>
+  <data name="PhaseFullMoon" xml:space="preserve"><value>Vollmond</value></data>
+  <data name="PhaseWaningGibbous" xml:space="preserve"><value>Abnehmender Mond</value></data>
+  <data name="PhaseLastQuarter" xml:space="preserve"><value>Letztes Viertel</value></data>
+  <data name="PhaseWaningCrescent" xml:space="preserve"><value>Abnehmende Sichel</value></data>
+  <data name="LocationMissing" xml:space="preserve"><value>Standort festlegen, um Sonne und Mond zu sehen</value></data>
+  <data name="SettingsButton" xml:space="preserve"><value>Einstellungen und Info</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="LocationHeader" xml:space="preserve"><value>Standort</value></data>
+  <data name="LocationAutomatic" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="LocationManual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="Latitude" xml:space="preserve"><value>Breite (-90 bis 90)</value></data>
+  <data name="Longitude" xml:space="preserve"><value>Länge (-180 bis 180)</value></data>
+  <data name="Elevation" xml:space="preserve"><value>Höhe in Metern (optional)</value></data>
+  <data name="Apply" xml:space="preserve"><value>Übernehmen</value></data>
+  <data name="InvalidCoordinates" xml:space="preserve"><value>Bitte eine Breite von -90 bis 90 und eine Länge von -180 bis 180 eingeben.</value></data>
+  <data name="LocationDenied" xml:space="preserve"><value>Der Standortzugriff ist aus. Gib Koordinaten ein, um die App zu nutzen.</value></data>
+  <data name="LocationUnavailable" xml:space="preserve"><value>Der Standort konnte gerade nicht ermittelt werden.</value></data>
+  <data name="LocationCurrent" xml:space="preserve"><value>Aktueller Standort: {0}, {1}</value></data>
+  <data name="AboutHeader" xml:space="preserve"><value>Info</value></data>
+  <data name="AboutText" xml:space="preserve"><value>Where's Moon? zeigt, wo Sonne und Mond gerade stehen. Alle Berechnungen laufen auf diesem Gerät. Die App nutzt kein Netzwerk, kein Tracking und keine Analysen.</value></data>
+  <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="LicensesHeader" xml:space="preserve"><value>Lizenzen</value></data>
+  <data name="LicenseAstronomy" xml:space="preserve"><value>Astronomy Engine, MIT-Lizenz</value></data>
+  <data name="LicenseManrope" xml:space="preserve"><value>Manrope, SIL Open Font License 1.1</value></data>
+  <data name="ShowLicense" xml:space="preserve"><value>Lizenztext anzeigen</value></data>
+  <data name="HideLicense" xml:space="preserve"><value>Lizenztext ausblenden</value></data>
+  <data name="AltitudeLow" xml:space="preserve"><value>tief</value></data>
+  <data name="AltitudeMedium" xml:space="preserve"><value>halbhoch</value></data>
+  <data name="AltitudeHigh" xml:space="preserve"><value>hoch</value></data>
+  <data name="CompassN" xml:space="preserve"><value>Norden</value></data>
+  <data name="CompassNE" xml:space="preserve"><value>Nordosten</value></data>
+  <data name="CompassE" xml:space="preserve"><value>Osten</value></data>
+  <data name="CompassSE" xml:space="preserve"><value>Südosten</value></data>
+  <data name="CompassS" xml:space="preserve"><value>Süden</value></data>
+  <data name="CompassSW" xml:space="preserve"><value>Südwesten</value></data>
+  <data name="CompassW" xml:space="preserve"><value>Westen</value></data>
+  <data name="CompassNW" xml:space="preserve"><value>Nordwesten</value></data>
+  <data name="SpeakSunUp" xml:space="preserve"><value>Sonne steht {0} im {1}</value></data>
+  <data name="SpeakSunDown" xml:space="preserve"><value>Sonne steht unter dem Horizont</value></data>
+  <data name="SpeakMoonUp" xml:space="preserve"><value>{0}, zu {1} beleuchtet, steht {2} im {3}</value></data>
+  <data name="SpeakMoonDown" xml:space="preserve"><value>{0}, zu {1} beleuchtet, steht unter dem Horizont</value></data>
+  <data name="SpeakMoonSets" xml:space="preserve"><value>geht um {0} unter</value></data>
+  <data name="SpeakMoonRises" xml:space="preserve"><value>geht um {0} auf</value></data>
+</root>

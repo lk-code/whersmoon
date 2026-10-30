@@ -17,6 +17,20 @@ public static class ArcGeometry
         double theta = Math.PI * (1.0 - t);
         return new PointD(centerX + radiusX * Math.Cos(theta), horizonY - radiusY * Math.Sin(theta));
     }
+
+    /// <summary>The whole arc from its left to its right end.</summary>
+    public static CubicPath Outline(double centerX, double horizonY, double radiusX, double radiusY)
+    {
+        double kx = radiusX * MoonShape.Kappa;
+        double ky = radiusY * MoonShape.Kappa;
+        double top = horizonY - radiusY;
+
+        return new CubicPath(new PointD(centerX - radiusX, horizonY),
+        [
+            new(new(centerX - radiusX, horizonY - ky), new(centerX - kx, top), new(centerX, top)),
+            new(new(centerX + kx, top), new(centerX + radiusX, horizonY - ky), new(centerX + radiusX, horizonY)),
+        ]);
+    }
 }
 
 /// <summary>The two hill outlines from the design reference.</summary>
@@ -59,7 +73,7 @@ public static class HillShapes
 public static class MoonShape
 {
     /// <summary>Control point distance that makes a cubic Bézier follow a quarter circle.</summary>
-    private const double Kappa = 0.5522847498;
+    internal const double Kappa = 0.5522847498;
 
     /// <summary>
     /// Builds the lit area: half of the limb plus the terminator, which is a half ellipse.
