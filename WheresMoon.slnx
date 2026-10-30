@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WheresMoon.App/WheresMoon.App.csproj" />
+    <Project Path="src/WheresMoon.Core/WheresMoon.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WheresMoon.Core.Tests/WheresMoon.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/WheresMoon.SceneRenderer/WheresMoon.SceneRenderer.csproj" />
+  </Folder>
+</Solution>
