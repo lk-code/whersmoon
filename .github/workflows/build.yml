@@ -70,7 +70,7 @@ jobs:
       # Publishing for iOS only accepts signed device builds. This flag is what publish sets internally.
       - name: iOS release with NativeAOT
         run: |
-          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:_IsPublishing=true -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
+          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:_IsPublishing=true -p:TrimmerSingleWarn=false -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
       - name: Mac Catalyst release with NativeAOT
         run: |
           dotnet publish src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Release -r maccatalyst-arm64 -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false -p:CreatePackage=false 2>&1 | tee mac-release.log
