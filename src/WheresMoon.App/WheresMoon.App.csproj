@@ -54,6 +54,10 @@
 		<PublishAot>true</PublishAot>
 	</PropertyGroup>
 
+	<!-- The Mac bundle folder is named after the title, and an apostrophe in that path breaks the SDK's build conditions. Info.plist keeps the visible name. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+		<ApplicationTitle>WheresMoon</ApplicationTitle>
+	</PropertyGroup>
 
 	<!-- Android uses profiled AOT by default in Release. Windows uses ReadyToRun and stays untrimmed. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">

@@ -51,6 +51,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>CFBundleName</key>
+	<string>Where's Moon?</string>
+	<key>CFBundleDisplayName</key>
+	<string>Where's Moon?</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
