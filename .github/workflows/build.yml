@@ -66,4 +66,5 @@ jobs:
       # Job logs need a login to read, annotations do not.
       - name: Report build errors
         if: failure()
-        run: cat ios.log mac.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/'
+        run: |
+          cat ios.log mac.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/'
