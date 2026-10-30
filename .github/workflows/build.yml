@@ -58,9 +58,7 @@ jobs:
       - run: dotnet workload install maui --from-rollback-file .github/workload-versions.json
       - name: Report tool versions
         run: |
-          echo "::notice::Active: $(xcodebuild -version | tr '
-' ' ') Installed: $(ls /Applications | grep '^Xcode' | tr '
-' ' ')"
+          echo "::notice::Active: $(xcodebuild -version | paste -sd ' ' -) Installed: $(ls /Applications | grep '^Xcode' | paste -sd ' ' -)"
           dotnet workload list
       - name: iOS simulator
         run: |
