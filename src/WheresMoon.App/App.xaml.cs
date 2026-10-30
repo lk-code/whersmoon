@@ -4,6 +4,8 @@ public partial class App : Application
 {
 	private const double MinimumWindowWidth = 320;
 	private const double MinimumWindowHeight = 400;
+	private const double InitialWindowWidth = 520;
+	private const double InitialWindowHeight = 900;
 
 	public App()
 	{
@@ -22,6 +24,8 @@ public partial class App : Application
 #if WINDOWS || MACCATALYST
 		// Lets the sky run all the way to the top of the window.
 		window.TitleBar = new TitleBar { IsVisible = false };
+		window.Width = InitialWindowWidth;
+		window.Height = InitialWindowHeight;
 #endif
 
 		return window;
