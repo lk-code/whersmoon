@@ -54,9 +54,14 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - run: dotnet workload install maui
-      - name: Show Xcode
-        run: xcodebuild -version
+      # The newest workload needs an Xcode that runners may not have yet, so this stays on known versions.
+      - run: dotnet workload install maui --from-rollback-file .github/workload-versions.json
+      - name: Report tool versions
+        run: |
+          echo "::notice::Active: $(xcodebuild -version | tr '
+' ' ') Installed: $(ls /Applications | grep '^Xcode' | tr '
+' ' ')"
+          dotnet workload list
       - name: iOS simulator
         run: |
           dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Debug -r iossimulator-arm64 -p:ValidateXcodeVersion=false 2>&1 | tee ios.log
@@ -67,4 +72,4 @@ jobs:
       - name: Report build errors
         if: failure()
         run: |
-          cat ios.log mac.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/'
+          cat ios.log mac.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/' || true

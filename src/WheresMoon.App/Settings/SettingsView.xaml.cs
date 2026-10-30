@@ -15,6 +15,12 @@ public partial class SettingsView : ContentView
 
 	public event EventHandler? CloseRequested;
 
+	/// <summary>Raised when the content grows or shrinks, for example when a license text opens.</summary>
+	public event EventHandler? PreferredHeightChanged;
+
+	/// <summary>Height that shows everything without scrolling.</summary>
+	public double PreferredHeight => Header.Height + Sections.Height + Scroller.Padding.VerticalThickness;
+
 	internal SettingsView(LocationService location)
 	{
 		InitializeComponent();
@@ -23,6 +29,9 @@ public partial class SettingsView : ContentView
 
 		ApplyStyle(SettingsStyle.Current);
 		ApplyTexts();
+
+		Header.SizeChanged += (_, _) => PreferredHeightChanged?.Invoke(this, EventArgs.Empty);
+		Sections.SizeChanged += (_, _) => PreferredHeightChanged?.Invoke(this, EventArgs.Empty);
 
 		AutomaticOption.IsChecked = !location.IsManual;
 		ManualOption.IsChecked = location.IsManual;

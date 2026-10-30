@@ -223,10 +223,7 @@ public partial class MainPage : ContentPage
 
 		SettingsCard.Content = _settings;
 		SettingsCard.SetAppThemeColor(BackgroundColorProperty, style.Surface.Light, style.Surface.Dark);
-		SettingsCard.StrokeShape = style.IsBottomSheet
-			? new RoundRectangle { CornerRadius = new CornerRadius(style.CornerRadius, style.CornerRadius, 0, 0) }
-			: new RoundRectangle { CornerRadius = style.CornerRadius };
-		SettingsCard.VerticalOptions = style.IsBottomSheet ? LayoutOptions.End : LayoutOptions.Center;
+		_settings.PreferredHeightChanged += (_, _) => SizeSettingsCard();
 
 		SizeSettingsCard();
 		SettingsOverlay.IsVisible = true;
@@ -276,11 +273,23 @@ public partial class MainPage : ContentPage
 
 	private void SizeSettingsCard()
 	{
-		bool isBottomSheet = SettingsStyle.Current.IsBottomSheet && Width < DialogMaximumWidth * 1.5;
+		SettingsStyle style = SettingsStyle.Current;
+		bool isBottomSheet = style.IsBottomSheet && Width < DialogMaximumWidth * 1.5;
 
 		// A fixed width, because a maximum only limits the card on Windows and not its content.
 		SettingsCard.WidthRequest = isBottomSheet ? -1.0 : Math.Min(DialogMaximumWidth, Width - 2.0 * DialogMargin);
-		SettingsCard.MaximumHeightRequest = Math.Max(0.0, Height * DialogMaximumHeightFraction);
+		SettingsCard.VerticalOptions = isBottomSheet ? LayoutOptions.End : LayoutOptions.Center;
+		SettingsCard.StrokeShape = isBottomSheet
+			? new RoundRectangle { CornerRadius = new CornerRadius(style.CornerRadius, style.CornerRadius, 0, 0) }
+			: new RoundRectangle { CornerRadius = style.CornerRadius };
+
+		// A sheet runs to the screen edge behind the gesture bar, so its content keeps clear by itself.
+		SettingsHost.SafeAreaEdges = isBottomSheet ? new SafeAreaEdges(SafeAreaRegions.SoftInput) : SafeAreaEdges.All;
+		SettingsCard.Padding = new Thickness(0, 0, 0, isBottomSheet ? _insets.Bottom : 0.0);
+
+		double preferred = (_settings?.PreferredHeight ?? 0.0) + SettingsCard.Padding.VerticalThickness;
+		double available = Math.Max(0.0, Height * DialogMaximumHeightFraction);
+		SettingsCard.HeightRequest = preferred > 0.0 ? Math.Min(preferred, available) : available;
 	}
 
 	/// <summary>Keeps screen readers inside the dialog while it is open.</summary>

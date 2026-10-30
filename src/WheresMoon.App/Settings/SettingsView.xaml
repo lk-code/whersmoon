@@ -5,19 +5,19 @@
 
     <Grid RowDefinitions="Auto,*">
 
-        <Grid ColumnDefinitions="*,Auto" Padding="24,20,16,8">
+        <Grid x:Name="Header" ColumnDefinitions="*,Auto" Padding="24,20,16,8">
             <Label x:Name="TitleLabel" FontAttributes="Bold" VerticalOptions="Center"
                    SemanticProperties.HeadingLevel="Level1" />
             <Button x:Name="CloseButton" Grid.Column="1" BackgroundColor="Transparent"
                     BorderWidth="0" Clicked="OnCloseClicked" />
         </Grid>
 
-        <ScrollView Grid.Row="1" Padding="24,0,24,24">
-            <VerticalStackLayout Spacing="8">
+        <ScrollView x:Name="Scroller" Grid.Row="1" Padding="24,0,24,24">
+            <VerticalStackLayout x:Name="Sections" Spacing="8">
 
                 <Label x:Name="LocationHeader" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level2" />
-                <RadioButton x:Name="AutomaticOption" GroupName="LocationMode" CheckedChanged="OnModeChanged" />
-                <RadioButton x:Name="ManualOption" GroupName="LocationMode" CheckedChanged="OnModeChanged" />
+                <RadioButton x:Name="AutomaticOption" GroupName="LocationMode" BackgroundColor="Transparent" CheckedChanged="OnModeChanged" />
+                <RadioButton x:Name="ManualOption" GroupName="LocationMode" BackgroundColor="Transparent" CheckedChanged="OnModeChanged" />
                 <Label x:Name="StatusLabel" FontSize="13" />
 
                 <VerticalStackLayout x:Name="ManualFields" Spacing="8" IsVisible="False">

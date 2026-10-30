@@ -43,7 +43,7 @@
                     <TapGestureRecognizer Tapped="OnScrimTapped" />
                 </BoxView.GestureRecognizers>
             </BoxView>
-            <Grid SafeAreaEdges="All" CascadeInputTransparent="False" InputTransparent="True">
+            <Grid x:Name="SettingsHost" SafeAreaEdges="All" CascadeInputTransparent="False" InputTransparent="True">
                 <Border x:Name="SettingsCard" StrokeThickness="0" InputTransparent="False" />
             </Grid>
         </Grid>
