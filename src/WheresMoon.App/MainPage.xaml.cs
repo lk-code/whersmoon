@@ -110,7 +110,11 @@ public partial class MainPage : ContentPage
 
 		if (Window is Window window)
 		{
-			window.Resumed += (_, _) => Refresh();
+			window.Resumed += async (_, _) =>
+			{
+				Refresh();
+				await _location.UpdateAsync();
+			};
 			window.Activated += (_, _) => Refresh();
 			window.Stopped += (_, _) => _timer.Stop();
 		}

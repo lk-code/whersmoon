@@ -54,6 +54,12 @@
 		<PublishAot>true</PublishAot>
 	</PropertyGroup>
 
+	<!-- Trimming warnings come from the frameworks too and are not ours to fix, so they must not stop the build. -->
+	<PropertyGroup>
+		<ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+		<IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
+	</PropertyGroup>
+
 	<!-- Android uses profiled AOT by default in Release. Windows uses ReadyToRun and stays untrimmed. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<TrimMode>full</TrimMode>
