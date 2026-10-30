@@ -37,6 +37,9 @@ public static class DesignTokens
         public const double Line2ToPhase = 0.0783;
         public const double PhaseToBlockEnd = 0.024;
 
+        /// <summary>Half the width of the longest text line.</summary>
+        public const double TextHalfWidth = 0.46;
+
         /// <summary>Smallest gap between text block and the sun disc at the arc's apex.</summary>
         public const double TextToArcGap = 0.02;
 

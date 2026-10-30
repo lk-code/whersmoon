@@ -304,6 +304,16 @@ public class SceneTests
     }
 
     [Fact]
+    public void Text_block_area_covers_the_text_and_nothing_beside_it()
+    {
+        SceneLayout layout = SceneLayout.Compute(900, 900, SafeInsets.None);
+
+        Assert.True(layout.IsInTextBlock(layout.CenterX, layout.PhaseLineCenterY));
+        Assert.False(layout.IsInTextBlock(layout.CenterX, layout.TextBottom + 1));
+        Assert.False(layout.IsInTextBlock(10, layout.PhaseLineCenterY));
+    }
+
+    [Fact]
     public void Hills_span_the_full_width()
     {
         CubicPath back = HillShapes.Back(1000, 500, 300);

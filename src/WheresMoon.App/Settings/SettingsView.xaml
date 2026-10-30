@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WheresMoon.App.Settings.SettingsView">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Grid ColumnDefinitions="*,Auto" Padding="24,20,16,8">
+            <Label x:Name="TitleLabel" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Button x:Name="CloseButton" Grid.Column="1" BackgroundColor="Transparent"
+                    BorderWidth="0" Clicked="OnCloseClicked" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" Padding="24,0,24,24">
+            <VerticalStackLayout Spacing="8">
+
+                <Label x:Name="LocationHeader" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level2" />
+                <RadioButton x:Name="AutomaticOption" GroupName="LocationMode" CheckedChanged="OnModeChanged" />
+                <RadioButton x:Name="ManualOption" GroupName="LocationMode" CheckedChanged="OnModeChanged" />
+                <Label x:Name="StatusLabel" FontSize="13" />
+
+                <VerticalStackLayout x:Name="ManualFields" Spacing="8" IsVisible="False">
+                    <Entry x:Name="LatitudeEntry" Keyboard="Text" ClearButtonVisibility="WhileEditing" />
+                    <Entry x:Name="LongitudeEntry" Keyboard="Text" ClearButtonVisibility="WhileEditing" />
+                    <Entry x:Name="ElevationEntry" Keyboard="Text" ClearButtonVisibility="WhileEditing" />
+                    <Label x:Name="ErrorLabel" FontSize="13" IsVisible="False" />
+                    <Button x:Name="ApplyButton" HorizontalOptions="Start" Clicked="OnApplyClicked" />
+                </VerticalStackLayout>
+
+                <Label x:Name="AboutHeader" FontAttributes="Bold" Margin="0,16,0,0" SemanticProperties.HeadingLevel="Level2" />
+                <Label x:Name="AboutLabel" />
+                <Label x:Name="VersionLabel" FontSize="13" />
+
+                <Label x:Name="LicensesHeader" FontAttributes="Bold" Margin="0,16,0,0" SemanticProperties.HeadingLevel="Level2" />
+
+                <Label x:Name="AstronomyLicenseName" />
+                <Button x:Name="AstronomyLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
+                        BorderWidth="0" Clicked="OnAstronomyLicenseClicked" />
+                <Label x:Name="AstronomyLicenseText" FontSize="12" IsVisible="False" />
+
+                <Label x:Name="ManropeLicenseName" Margin="0,8,0,0" />
+                <Button x:Name="ManropeLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
+                        BorderWidth="0" Clicked="OnManropeLicenseClicked" />
+                <Label x:Name="ManropeLicenseText" FontSize="12" IsVisible="False" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentView>

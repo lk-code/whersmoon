@@ -46,6 +46,10 @@ public sealed record SceneLayout
     /// <summary>Factor for sky stop positions, so that the horizon colour stays at the horizon line.</summary>
     public required double SkyStopScale { get; init; }
 
+    /// <summary>True for a point inside the area the text lines can occupy.</summary>
+    public bool IsInTextBlock(double x, double y) =>
+        y >= TextTop && y <= TextBottom && Math.Abs(x - CenterX) <= DesignTokens.Size.TextHalfWidth * Unit;
+
     public static SceneLayout Compute(double width, double height, SafeInsets insets)
     {
         // The arcs are centred on the window, so the wider inset limits both sides.

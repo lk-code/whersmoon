@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Windows.System;
 
 namespace WheresMoon.App.Platforms.Windows;
 
@@ -9,7 +10,7 @@ internal static class WindowChrome
 {
 	private static readonly string[] TitleBarMarginResources = ["NavigationViewContentMargin", "NavigationViewMinimalContentMargin"];
 
-	public static void Apply(VisualElement page, VisualElement initialFocus)
+	public static void Apply(VisualElement page, VisualElement initialFocus, Action onEscape)
 	{
 		if (page.Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window window ||
 			page.Handler?.PlatformView is not FrameworkElement content)
@@ -24,6 +25,14 @@ internal static class WindowChrome
 		titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
 		titleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
 		titleBar.ButtonInactiveForegroundColor = Microsoft.UI.Colors.White;
+
+		content.PreviewKeyDown += (_, e) =>
+		{
+			if (e.Key == VirtualKey.Escape)
+			{
+				onEscape();
+			}
+		};
 
 		// WinUI focuses the first tab stop on launch, which would draw a focus ring around
 		// the settings button. Starting on the scene also lets screen readers begin with it.

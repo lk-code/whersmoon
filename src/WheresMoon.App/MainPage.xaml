@@ -36,6 +36,18 @@
                          Clicked="OnSettingsClicked" />
         </Grid>
 
+        <!-- Settings dialog everywhere except iOS, where it is a system sheet. -->
+        <Grid x:Name="SettingsOverlay" SafeAreaEdges="None" IsVisible="False">
+            <BoxView x:Name="Scrim" Color="#99000000">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnScrimTapped" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+            <Grid SafeAreaEdges="All" CascadeInputTransparent="False" InputTransparent="True">
+                <Border x:Name="SettingsCard" StrokeThickness="0" InputTransparent="False" />
+            </Grid>
+        </Grid>
+
     </Grid>
 
 </ContentPage>

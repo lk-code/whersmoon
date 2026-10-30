@@ -48,8 +48,17 @@ public sealed class SceneDrawable : IDrawable
 
 		foreach (StarField.Star star in StarField.Stars)
 		{
+			double x = star.X * layout.Width;
+			double y = star.Y * layout.HorizonY;
+
+			// A faint star next to a text line reads like a stray punctuation mark.
+			if (layout.IsInTextBlock(x, y))
+			{
+				continue;
+			}
+
 			canvas.FillColor = Colors.White.WithAlpha((float)(star.Opacity * visibility));
-			canvas.FillCircle((float)(star.X * layout.Width), (float)(star.Y * layout.HorizonY), (float)(star.Radius * layout.DetailScale));
+			canvas.FillCircle((float)x, (float)y, (float)(star.Radius * layout.DetailScale));
 		}
 	}
 

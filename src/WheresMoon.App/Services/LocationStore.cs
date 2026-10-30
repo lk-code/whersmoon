@@ -19,6 +19,11 @@ internal static class LocationStore
 		{
 #if DEBUG
 			string? simulated = Environment.GetEnvironmentVariable("WHERESMOON_SIM_LOCATION");
+			if (simulated == "none")
+			{
+				return null;
+			}
+
 			if (simulated is not null)
 			{
 				double[] parts = simulated.Split(',').Select(p => double.Parse(p, CultureInfo.InvariantCulture)).ToArray();
