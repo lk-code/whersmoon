@@ -10,6 +10,12 @@ internal static class WindowChrome
 {
 	private static readonly string[] TitleBarMarginResources = ["NavigationViewContentMargin", "NavigationViewMinimalContentMargin"];
 
+	/// <summary>Height of the caption area in device independent units. Text must stay below the buttons.</summary>
+	public static double CaptionHeight(VisualElement page) =>
+		page.Window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window window
+			? window.AppWindow.TitleBar.Height / page.Window.DisplayDensity
+			: 0.0;
+
 	public static void Apply(VisualElement page, VisualElement initialFocus, Action onEscape)
 	{
 		if (page.Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window window ||

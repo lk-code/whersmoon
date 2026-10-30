@@ -148,7 +148,7 @@ public partial class MainPage : ContentPage
 		Rect probe = SafeAreaProbe.Frame;
 		var insets = new SafeInsets(
 			probe.Left,
-			probe.Top,
+			TopInset(probe),
 			Math.Max(0.0, SafeArea.Width - probe.Right),
 			Math.Max(0.0, SafeArea.Height - probe.Bottom));
 
@@ -157,6 +157,16 @@ public partial class MainPage : ContentPage
 			_insets = insets;
 			ApplyLayout();
 		}
+	}
+
+	private double TopInset(Rect probe)
+	{
+#if WINDOWS
+		// Windows has no safe areas, but the caption buttons lie over the page.
+		return Math.Max(probe.Top, Platforms.Windows.WindowChrome.CaptionHeight(this));
+#else
+		return probe.Top;
+#endif
 	}
 
 	private void ApplyLayout()
