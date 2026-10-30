@@ -52,6 +52,10 @@
 	<!-- Fast start. Conditions go by platform, not by configuration, so that debug builds show the same problems. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' Or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
 		<PublishAot>true</PublishAot>
+
+		<!-- MAUI's HybridWebView, which this app does not use, always warns under NativeAOT. CI fails on any other AOT warning. -->
+		<IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
 	</PropertyGroup>
 
 	<!-- The Mac bundle folder is named after the title, and an apostrophe in that path breaks the SDK's build conditions. Info.plist keeps the visible name. -->

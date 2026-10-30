@@ -70,10 +70,21 @@ jobs:
       # Publishing for iOS only accepts signed device builds. This flag is what publish sets internally.
       - name: iOS release with NativeAOT
         run: |
-          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:_IsPublishing=true -p:TrimmerSingleWarn=false -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
+          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:_IsPublishing=true -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
       - name: Mac Catalyst release with NativeAOT
         run: |
           dotnet publish src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Release -r maccatalyst-arm64 -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false -p:CreatePackage=false 2>&1 | tee mac-release.log
+      # AOT warnings do not stop the compiler, because HybridWebView always causes some. Any other one
+      # could mean a crash at runtime that no build shows, so that fails here.
+      - name: Check AOT warnings
+        run: |
+          found=$(cat ios-release.log mac-release.log | grep -E ' IL[0-9]{4}: ' | sort -u || true)
+          others=$(echo "$found" | grep -v 'HybridWebView' | grep -E 'IL[0-9]{4}' || true)
+          echo "::notice::AOT warnings: $(echo "$found" | grep -c 'IL' || true) in total, $(echo "$others" | grep -c 'IL' || true) outside HybridWebView"
+          if [ -n "$others" ]; then
+            echo "$others" | cut -c1-300 | head -9 | sed 's/^/::error::/'
+            exit 1
+          fi
       # Job logs need a login to read, annotations do not.
       - name: Report build errors
         if: failure()
