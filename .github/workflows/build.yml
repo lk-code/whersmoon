@@ -66,8 +66,15 @@ jobs:
       - name: Mac Catalyst
         run: |
           dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Debug -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false 2>&1 | tee mac.log
+      # NativeAOT only takes effect when publishing, so the debug builds above say nothing about it.
+      - name: iOS release with NativeAOT
+        run: |
+          dotnet publish src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
+      - name: Mac Catalyst release with NativeAOT
+        run: |
+          dotnet publish src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Release -r maccatalyst-arm64 -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false -p:CreatePackage=false 2>&1 | tee mac-release.log
       # Job logs need a login to read, annotations do not.
       - name: Report build errors
         if: failure()
         run: |
-          cat ios.log mac.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/' || true
+          cat *.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/' || true
