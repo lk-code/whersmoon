@@ -421,6 +421,38 @@ public class SceneTests
         Assert.Equal(expectedDepth, point.Y, 9);
     }
 
+    [Theory]
+    [InlineData(0.0, 0.0, 0.0, -1.0)]
+    [InlineData(90.0, 0.0, 1.0, 0.0)]
+    [InlineData(180.0, 0.0, 0.0, 1.0)]
+    [InlineData(270.0, 0.0, -1.0, 0.0)]
+    [InlineData(90.0, 90.0, 0.0, -1.0)]
+    [InlineData(0.0, 90.0, -1.0, 0.0)]
+    [InlineData(10.0, 370.0, 0.0, -1.0)]
+    public void Compass_points_to_the_real_direction(double azimuth, double heading, double expectedX, double expectedY)
+    {
+        PointD point = CompassGeometry.PointAt(new PointD(0, 0), 1.0, azimuth, heading);
+
+        Assert.Equal(expectedX, point.X, 9);
+        Assert.Equal(expectedY, point.Y, 9);
+    }
+
+    [Theory]
+    [InlineData('N')]
+    [InlineData('E')]
+    [InlineData('O')]
+    [InlineData('S')]
+    [InlineData('W')]
+    public void Compass_letters_fit_their_height_around_the_centre(char letter)
+    {
+        IReadOnlyList<CubicPath> contours = CompassGlyphs.Place(letter, new PointD(100, 50), 10.0);
+
+        List<PointD> points = contours.SelectMany(Flatten).ToList();
+        Assert.InRange(points.Min(p => p.Y), 44.0, 46.0);
+        Assert.InRange(points.Max(p => p.Y), 54.0, 56.0);
+        Assert.Equal(100.0, (points.Min(p => p.X) + points.Max(p => p.X)) / 2.0, 0);
+    }
+
     [Fact]
     public void Hills_span_the_full_width()
     {

@@ -14,6 +14,9 @@ internal static class LocationStore
 	private const string ManualKey = "location.manual";
 	private const string PlaceKey = "location.place";
 	private const string RecentKey = "location.recent";
+	private const string HasDeviceKey = "location.device.saved";
+	private const string DeviceLatitudeKey = "location.device.latitude";
+	private const string DeviceLongitudeKey = "location.device.longitude";
 
 	private const int RecentLimit = 5;
 
@@ -52,6 +55,23 @@ internal static class LocationStore
 	{
 		get => Preferences.Default.Get(ManualKey, false);
 		set => Preferences.Default.Set(ManualKey, value);
+	}
+
+	/// <summary>Where the device was last seen, whichever place is on display.</summary>
+	public static GeoLocation? DeviceLocation
+	{
+		get => Preferences.Default.Get(HasDeviceKey, false)
+			? new GeoLocation(Preferences.Default.Get(DeviceLatitudeKey, 0.0), Preferences.Default.Get(DeviceLongitudeKey, 0.0))
+			: null;
+		set
+		{
+			if (value is GeoLocation location)
+			{
+				Preferences.Default.Set(DeviceLatitudeKey, location.Latitude);
+				Preferences.Default.Set(DeviceLongitudeKey, location.Longitude);
+				Preferences.Default.Set(HasDeviceKey, true);
+			}
+		}
 	}
 
 	/// <summary>The manually chosen place, or null when only coordinates from an older version are known.</summary>

@@ -175,6 +175,30 @@ public static class DesignTokens
         public const double BottomLimit = 0.92;
     }
 
+    public static class Compass
+    {
+        /// <summary>Radii relative to the outer ring.</summary>
+        public const double InnerRing = 0.66;
+        public const double LetterRing = 0.38;
+        public const double LetterHeight = 0.15;
+        public const double NorthLetterHeight = 0.18;
+        public const double SunMarker = 0.11;
+        public const double MoonMarker = 0.1;
+
+        /// <summary>Largest shift of the rings by device movement, relative to their diameter.</summary>
+        public const double LargestShift = 0.04;
+
+        /// <summary>Everything the compass can reach from its centre, relative to the outer ring.</summary>
+        public const double Reach = 1.0 + SunMarker + 2.0 * LargestShift;
+
+        public const double RingOpacity = 0.24;
+        public const double LetterOpacity = 0.5;
+        public const double NorthOpacity = 0.9;
+
+        /// <summary>Marker of a body below the horizon.</summary>
+        public const double BelowHorizonOpacity = 0.32;
+    }
+
     public static class Sky
     {
         private const double MidPosition = 0.38;

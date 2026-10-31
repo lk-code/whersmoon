@@ -35,6 +35,9 @@ internal sealed class LocationService
 
 	public IReadOnlyList<Place> RecentPlaces => LocationStore.RecentPlaces;
 
+	/// <summary>Where the compass really is. A chosen place changes the sky, not the device's surroundings.</summary>
+	public GeoLocation? CompassLocation => LocationStore.DeviceLocation ?? Current;
+
 	/// <summary>Outcome of the last lookup, shown in the settings.</summary>
 	public LocationStatus Status { get; private set; } = LocationStatus.Found;
 
@@ -60,6 +63,7 @@ internal sealed class LocationService
 
 		if (lookup.Location is GeoLocation location)
 		{
+			LocationStore.DeviceLocation = location;
 			Use(location);
 		}
 	}

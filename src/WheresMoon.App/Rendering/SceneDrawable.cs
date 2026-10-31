@@ -18,6 +18,12 @@ public sealed class SceneDrawable : IDrawable
 
 	public int PageCount { get; set; } = 3;
 
+	/// <summary>Direction the user faces in degrees from true north. Stays 0 without a compass, which shows north up.</summary>
+	public double Heading { get; set; }
+
+	/// <summary>Letter for east on the compass, which is "O" in German.</summary>
+	public char EastLetter { get; set; } = 'E';
+
 	public void Draw(ICanvas canvas, RectF dirtyRect)
 	{
 		SceneLayout layout = Layout ?? SceneLayout.Compute(dirtyRect.Width, dirtyRect.Height, SafeInsets.None);
@@ -33,6 +39,7 @@ public sealed class SceneDrawable : IDrawable
 		DrawHill(canvas, layout, HillShapes.Front(layout.Width, layout.Unit, layout.HorizonY), colors.FrontHill);
 		DrawSunBelow(canvas, layout, state);
 		DrawMoonBelow(canvas, layout, state);
+		DrawCompass(canvas, layout, state);
 		DrawPageDots(canvas, layout);
 	}
 
@@ -197,6 +204,49 @@ public sealed class SceneDrawable : IDrawable
 		FillWithPaint(canvas, paint, bounds, () => canvas.FillCircle((float)center.X, (float)center.Y, (float)radius));
 	}
 
+	private void DrawCompass(ICanvas canvas, SceneLayout layout, SceneState state)
+	{
+		double radius = layout.CompassRadius;
+		var center = new PointD(layout.CenterX, layout.CompassCenterY);
+
+		canvas.SaveState();
+		canvas.StrokeSize = (float)(DesignTokens.Size.ArcStrokeWidth * layout.DetailScale);
+		canvas.StrokeColor = Colors.White.WithAlpha((float)DesignTokens.Compass.RingOpacity);
+		canvas.DrawCircle((float)center.X, (float)center.Y, (float)radius);
+		canvas.DrawCircle((float)center.X, (float)center.Y, (float)(radius * DesignTokens.Compass.InnerRing));
+		canvas.RestoreState();
+
+		double letterRing = radius * DesignTokens.Compass.LetterRing;
+		DrawLetter(canvas, 'N', CompassGeometry.PointAt(center, letterRing, 0.0, Heading), radius * DesignTokens.Compass.NorthLetterHeight, DesignTokens.Compass.NorthOpacity);
+		DrawLetter(canvas, EastLetter, CompassGeometry.PointAt(center, letterRing, 90.0, Heading), radius * DesignTokens.Compass.LetterHeight, DesignTokens.Compass.LetterOpacity);
+		DrawLetter(canvas, 'S', CompassGeometry.PointAt(center, letterRing, 180.0, Heading), radius * DesignTokens.Compass.LetterHeight, DesignTokens.Compass.LetterOpacity);
+		DrawLetter(canvas, 'W', CompassGeometry.PointAt(center, letterRing, 270.0, Heading), radius * DesignTokens.Compass.LetterHeight, DesignTokens.Compass.LetterOpacity);
+
+		PointD sun = CompassGeometry.PointAt(center, radius, state.SunAzimuth, Heading);
+		canvas.FillColor = ToColor(DesignTokens.Sun.Disc, MarkerOpacity(state.SunOpacity));
+		canvas.FillCircle((float)sun.X, (float)sun.Y, (float)(radius * DesignTokens.Compass.SunMarker));
+
+		PointD moon = CompassGeometry.PointAt(center, radius * DesignTokens.Compass.InnerRing, state.MoonAzimuth, Heading);
+		DrawMoonDisc(canvas, moon, radius * DesignTokens.Compass.MoonMarker, state, MarkerOpacity(state.MoonOpacity));
+	}
+
+	private static double MarkerOpacity(double aboveHorizon) => Blend(DesignTokens.Compass.BelowHorizonOpacity, 1.0, aboveHorizon);
+
+	private static void DrawLetter(ICanvas canvas, char letter, PointD center, double height, double opacity)
+	{
+		var path = new PathF();
+
+		foreach (CubicPath contour in CompassGlyphs.Place(letter, center, height))
+		{
+			path.MoveTo((float)contour.Start.X, (float)contour.Start.Y);
+			AddSegments(path, contour);
+			path.Close();
+		}
+
+		canvas.FillColor = Colors.White.WithAlpha((float)opacity);
+		canvas.FillPath(path, WindingMode.EvenOdd);
+	}
+
 	private void DrawPageDots(ICanvas canvas, SceneLayout layout)
 	{
 		double spacing = DesignTokens.Size.DotSpacing * layout.Unit;
@@ -241,7 +291,12 @@ public sealed class SceneDrawable : IDrawable
 	private static PathF ToPath(CubicPath source)
 	{
 		var path = new PathF((float)source.Start.X, (float)source.Start.Y);
+		AddSegments(path, source);
+		return path;
+	}
 
+	private static void AddSegments(PathF path, CubicPath source)
+	{
 		foreach (CubicSegment segment in source.Segments)
 		{
 			path.CurveTo(
@@ -249,8 +304,6 @@ public sealed class SceneDrawable : IDrawable
 				(float)segment.Control2.X, (float)segment.Control2.Y,
 				(float)segment.End.X, (float)segment.End.Y);
 		}
-
-		return path;
 	}
 
 	private static Rgba Warmed(Rgba color, double amount) =>

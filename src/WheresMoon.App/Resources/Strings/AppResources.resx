@@ -355,4 +355,5 @@
   <data name="CountryZM" xml:space="preserve"><value>Zambia</value></data>
   <data name="CountryZW" xml:space="preserve"><value>Zimbabwe</value></data>
   <data name="LicenseUnicode" xml:space="preserve"><value>Unicode CLDR, Unicode License</value></data>
+  <data name="CompassLetterEast" xml:space="preserve"><value>E</value></data>
 </root>

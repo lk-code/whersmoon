@@ -62,6 +62,8 @@ public sealed record SceneLayout
     /// <summary>Factor for sky stop positions, so that the horizon colour stays at the horizon line.</summary>
     public required double SkyStopScale { get; init; }
 
+    public double CompassRadius => CompassReach / DesignTokens.Compass.Reach;
+
     public double RowCenterY(int row) => FirstRowCenterY + row * RowPitch;
 
     /// <summary>True for a point inside the area the text lines can occupy.</summary>

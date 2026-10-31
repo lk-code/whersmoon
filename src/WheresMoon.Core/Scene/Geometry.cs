@@ -40,6 +40,17 @@ public static class ArcGeometry
     }
 }
 
+/// <summary>Positions on the compass, whose top is the direction the user faces.</summary>
+public static class CompassGeometry
+{
+    /// <summary>Point on a ring in the direction of an azimuth, for a user facing <paramref name="heading"/>.</summary>
+    public static PointD PointAt(PointD center, double radius, double azimuth, double heading)
+    {
+        double bearing = (azimuth - heading) * Math.PI / 180.0;
+        return new PointD(center.X + radius * Math.Sin(bearing), center.Y - radius * Math.Cos(bearing));
+    }
+}
+
 /// <summary>The two hill outlines from the design reference.</summary>
 public static class HillShapes
 {

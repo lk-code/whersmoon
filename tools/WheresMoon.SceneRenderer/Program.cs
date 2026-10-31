@@ -8,6 +8,8 @@ using WheresMoon.Core.Scene;
 // look at formats and times of day that are hard to reach on a device.
 // Usage: dotnet run --project tools/WheresMoon.SceneRenderer -- <output folder>
 
+const double Heading = 20.0;
+
 string output = args.Length > 0 ? args[0] : "scene-output";
 Directory.CreateDirectory(output);
 
@@ -49,6 +51,8 @@ var day = new SceneState
     MoonOpacity = 1,
     MoonFraction = 0.18,
     MoonZenithAngle = 80,
+    SunAzimuth = 140,
+    MoonAzimuth = 250,
 };
 
 var moonBelow = day with { MoonOpacity = 0, MoonBelowProgress = 0.55, MoonBelowOpacity = 1 };
@@ -65,6 +69,8 @@ var night = new SceneState
     MoonOpacity = 1,
     MoonFraction = 0.18,
     MoonZenithAngle = 215,
+    SunAzimuth = 285,
+    MoonAzimuth = 200,
 };
 
 Render("day.png", 390, 844, 2, SafeInsets.None, day, dayTexts);
@@ -111,7 +117,7 @@ void DrawScene(SKCanvas target, int width, int height, SafeInsets insets, SceneS
 {
     SceneLayout layout = SceneLayout.Compute(width, height, insets);
     using var canvas = new SkiaCanvas { Canvas = target };
-    new SceneDrawable { State = state, Layout = layout }.Draw(canvas, new RectF(0, 0, width, height));
+    new SceneDrawable { State = state, Layout = layout, EastLetter = 'O', Heading = Heading }.Draw(canvas, new RectF(0, 0, width, height));
     DrawTexts(target, layout, texts);
 }
 

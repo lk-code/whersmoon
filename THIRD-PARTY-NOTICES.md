@@ -30,6 +30,13 @@ Where's Moon? includes the following third-party software. The full license text
 - License: Unicode License v3, Copyright (c) Unicode, Inc.
 - Location in this repository: the `Country` entries in `src/WheresMoon.App/Resources/Strings`
 
+## World Magnetic Model
+
+- Source: https://www.ncei.noaa.gov/products/world-magnetic-model, file `WMM2025COF.zip`
+- Version: WMM2025, valid until the end of 2029
+- License: public domain, as a work of NOAA and the British Geological Survey. No license text applies.
+- Location in this repository: `src/WheresMoon.Core/Compass/WmmCoefficients.cs`
+
 ## Reference data in tests
 
-The test project contains rise and set times from the US Naval Observatory and moon positions from NASA/JPL Horizons, both public services. They are used for comparison only and are not part of the app.
+The test project contains rise and set times from the US Naval Observatory, moon positions from NASA/JPL Horizons, moon phases from Fred Espenak's tables, lunar eclipses from NASA's catalogue, supermoon dates from EarthSky and the official WMM2025 test values from NOAA. They are used for comparison only and are not part of the app.

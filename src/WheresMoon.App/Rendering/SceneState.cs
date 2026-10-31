@@ -17,6 +17,8 @@ public sealed record SceneState
 	public double MoonBelowOpacity { get; init; }
 	public double MoonFraction { get; init; }
 	public double MoonZenithAngle { get; init; }
+	public double SunAzimuth { get; init; }
+	public double MoonAzimuth { get; init; }
 
 	public static SceneState From(SkySnapshot sky, SceneState? previous) => new()
 	{
@@ -32,6 +34,8 @@ public sealed record SceneState
 		MoonBelowOpacity = sky.Moon.Body.BelowProgress is null ? 0.0 : 1.0,
 		MoonFraction = sky.Moon.IlluminatedFraction,
 		MoonZenithAngle = sky.Moon.BrightLimbZenithAngle,
+		SunAzimuth = sky.Sun.Body.Azimuth,
+		MoonAzimuth = sky.Moon.Body.Azimuth,
 	};
 
 	public static SceneState Lerp(SceneState from, SceneState to, double t) => new()
@@ -48,6 +52,8 @@ public sealed record SceneState
 		MoonBelowOpacity = Blend(from.MoonBelowOpacity, to.MoonBelowOpacity, t),
 		MoonFraction = Blend(from.MoonFraction, to.MoonFraction, t),
 		MoonZenithAngle = BlendAngle(from.MoonZenithAngle, to.MoonZenithAngle, t),
+		SunAzimuth = BlendAngle(from.SunAzimuth, to.SunAzimuth, t),
+		MoonAzimuth = BlendAngle(from.MoonAzimuth, to.MoonAzimuth, t),
 	};
 
 	private static double Blend(double from, double to, double t) => from + (to - from) * t;

@@ -52,6 +52,7 @@ public partial class MainPage : ContentPage
 	private readonly PointerGesture _gesture = new();
 	private readonly Stopwatch _gestureClock = Stopwatch.StartNew();
 	private readonly TimeScrubber _scrubber = new();
+	private readonly SceneMotion _motion;
 
 	private SafeInsets _insets = SafeInsets.None;
 	private SceneLayout? _layout;
@@ -60,6 +61,7 @@ public partial class MainPage : ContentPage
 	private SnapPoints? _snapPoints;
 	private GeoLocation? _eventsLocation;
 	private string? _eventsZone;
+	private GeoLocation? _compassReference;
 	private DateTimeOffset? _selectedTime;
 	private TimeSpan _lastWheel;
 	private bool _isSliding;
@@ -72,6 +74,9 @@ public partial class MainPage : ContentPage
 
 		Scene.Drawable = _drawable;
 		_animator = new SceneAnimator(Scene, _drawable);
+		_motion = new SceneMotion(Dispatcher);
+		_motion.Moved += OnMotion;
+		_drawable.EastLetter = Strings.Get("CompassLetterEast")[0];
 		TextLayer.Add(_slider);
 
 		_timer = Dispatcher.CreateTimer();
@@ -128,6 +133,23 @@ public partial class MainPage : ContentPage
 		DateTimeOffset now = AppClock.Now;
 		Show(_selectedTime ?? now, isFollowingFinger: false);
 		ScheduleNextTick(now);
+		UpdateCompassReference();
+	}
+
+	/// <summary>The magnetic model is only worth loading for a device that has a compass.</summary>
+	private void UpdateCompassReference()
+	{
+		if (_motion.HasCompass && _location.CompassLocation is GeoLocation location && location != _compassReference)
+		{
+			_compassReference = location;
+			_motion.SetReferenceLocation(location);
+		}
+	}
+
+	private void OnMotion()
+	{
+		_drawable.Heading = _motion.Heading;
+		Scene.Invalidate();
 	}
 
 	/// <summary>Reacts to a key that is not meant for a text field. Returns whether it was used.</summary>
@@ -207,12 +229,18 @@ public partial class MainPage : ContentPage
 			window.Resumed += async (_, _) =>
 			{
 				Refresh();
+				UpdateMotion();
 				await _location.UpdateAsync();
 			};
 			window.Activated += (_, _) => Refresh();
-			window.Stopped += (_, _) => _timer.Stop();
+			window.Stopped += (_, _) =>
+			{
+				_timer.Stop();
+				_motion.Stop();
+			};
 		}
 
+		UpdateMotion();
 		await _location.UpdateAsync();
 
 		if (_location.Current is null)
@@ -423,6 +451,19 @@ public partial class MainPage : ContentPage
 
 	private void OnPagerClicked(object? sender, EventArgs e) => _slider.ShowNext();
 
+	/// <summary>Nothing moves behind the settings, so the sensors can rest there too.</summary>
+	private void UpdateMotion()
+	{
+		if (_settings is null)
+		{
+			_motion.Start();
+		}
+		else
+		{
+			_motion.Stop();
+		}
+	}
+
 	private void ScheduleNextTick(DateTimeOffset now)
 	{
 		TimeSpan untilNextMinute = TimeSpan.FromMinutes(1) - TimeSpan.FromTicks(now.Ticks % TimeSpan.TicksPerMinute);
@@ -468,6 +509,7 @@ public partial class MainPage : ContentPage
 		SceneLayout layout = SceneLayout.Compute(Width, Height, _insets);
 		_layout = layout;
 		_drawable.Layout = layout;
+		_motion.ScreenRotation = (int)DeviceDisplay.Current.MainDisplayInfo.Rotation * 90;
 
 		ClockLabel.CharacterSpacing = ClockTracking * layout.ClockFontSize;
 		Place(ClockLabel, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0);
@@ -504,6 +546,7 @@ public partial class MainPage : ContentPage
 
 		_settings = new SettingsView(_location);
 		_settings.CloseRequested += (_, _) => CloseSettings();
+		UpdateMotion();
 
 #if IOS
 		PresentSheet(_settings);
@@ -528,7 +571,11 @@ public partial class MainPage : ContentPage
 		sheet.SetAppThemeColor(BackgroundColorProperty, SettingsStyle.Current.Surface.Light, SettingsStyle.Current.Surface.Dark);
 
 		// The sheet can also be swiped away, which never reaches CloseSettings.
-		sheet.Disappearing += (_, _) => _settings = null;
+		sheet.Disappearing += (_, _) =>
+		{
+			_settings = null;
+			UpdateMotion();
+		};
 
 		Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific.Page.SetModalPresentationStyle(
 			sheet.On<Microsoft.Maui.Controls.PlatformConfiguration.iOS>(),
@@ -557,6 +604,7 @@ public partial class MainPage : ContentPage
 		SettingsCard.Content = null;
 		SetBackgroundAccessible(true);
 		SettingsButton.Focus();
+		UpdateMotion();
 	}
 #endif
 
