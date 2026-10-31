@@ -209,18 +209,65 @@ public class SceneTests
         Assert.Equal(expected, StarField.Visibility(altitude), 6);
     }
 
+    [Theory]
+    [InlineData(1920, 1080, 0.5)] // 16:9 landscape
+    [InlineData(1000, 1000, 0.5)] // square
+    [InlineData(1000, 1600, 2.0 / 3.0)] // start of the tall range
+    [InlineData(900, 1950, 2.0 / 3.0)] // 9:19.5 portrait
+    [InlineData(1000, 1300, 0.5 + (2.0 / 3.0 - 0.5) / 2.0)] // halfway between
+    public void Horizon_follows_the_aspect_ratio(double width, double height, double expected)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, SafeInsets.None);
+
+        Assert.Equal(expected * height, layout.HorizonY, 6);
+    }
+
     [Fact]
-    public void Layout_reproduces_the_reference_format()
+    public void Horizon_does_not_depend_on_the_safe_area()
+    {
+        SceneLayout plain = SceneLayout.Compute(844, 390, SafeInsets.None);
+        SceneLayout notch = SceneLayout.Compute(844, 390, new SafeInsets(59, 0, 59, 21));
+
+        Assert.Equal(plain.HorizonY, notch.HorizonY, 6);
+    }
+
+    [Fact]
+    public void Horizon_never_jumps_while_a_window_is_resized()
+    {
+        double previous = SceneLayout.HorizonFraction(1000, 500);
+
+        for (double height = 500; height <= 2200; height += 1)
+        {
+            double current = SceneLayout.HorizonFraction(1000, height);
+
+            Assert.True(current >= previous, $"horizon moved back at height {height}");
+            Assert.True(current - previous < 0.001, $"jump at height {height}");
+            previous = current;
+        }
+    }
+
+    [Theory]
+    [InlineData(390, 844)]
+    [InlineData(1000, 1300)]
+    [InlineData(1920, 1080)]
+    public void Sky_gradient_reaches_the_horizon_and_the_ground_the_bottom(double width, double height)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, SafeInsets.None);
+
+        double scaled = DesignTokens.Size.SkyStopHorizon * layout.SkyStopScale * height;
+        Assert.Equal(layout.HorizonY, scaled, 6);
+    }
+
+    [Fact]
+    public void Layout_fills_a_phone_held_upright()
     {
         SceneLayout layout = SceneLayout.Compute(390, 844, SafeInsets.None);
 
         Assert.Equal(390.0, layout.Unit, 6);
-        Assert.Equal(0.62 * 844, layout.HorizonY, 6);
+        Assert.Equal(2.0 / 3.0 * 844, layout.HorizonY, 6);
         Assert.Equal(0.423 * 390, layout.SunArcRadiusX, 6);
-        Assert.Equal(0.538 * 390, layout.SunArcRadiusY, 6);
         Assert.Equal(0.164 * 390, layout.ClockFontSize, 6);
         Assert.Equal(0.09 * 844, layout.TextTop, 6);
-        Assert.Equal(1.0, layout.SkyStopScale, 6);
     }
 
     public static TheoryData<double, double, SafeInsets> Formats()
@@ -268,11 +315,24 @@ public class SceneTests
         double sunTop = layout.HorizonY - layout.SunArcRadiusY - layout.SunRadius;
         Assert.True(sunTop >= layout.TextBottom, $"sun at {sunTop:F1} reaches the text ending at {layout.TextBottom:F1}");
         Assert.True(layout.TextTop >= insets.Top, "text enters the top safe area");
+        Assert.True(layout.TextHalfWidth * 2.0 <= width - insets.Left - insets.Right + 0.001, "text wider than the safe area");
+    }
 
-        double groundEnd = layout.HorizonY + DesignTokens.Size.MinimumGround * layout.Unit;
-        Assert.True(groundEnd <= height - insets.Bottom + 0.001, $"horizon at {layout.HorizonY:F1} leaves too little ground");
+    [Theory]
+    [MemberData(nameof(Formats))]
+    public void Ground_holds_the_lower_paths_and_below_them_the_compass(double width, double height, SafeInsets insets)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
 
-        Assert.True(layout.Unit <= width - insets.Left - insets.Right, "text wider than the safe area");
+        double pathBottom = layout.HorizonY + layout.SunLowerRadiusY + layout.SunRadius;
+        double compassTop = layout.CompassCenterY - layout.CompassReach;
+        double compassBottom = layout.CompassCenterY + layout.CompassReach;
+
+        Assert.True(layout.SunLowerRadiusY > 0, "no room for the lower path");
+        Assert.True(layout.CompassReach > 0, "no room for the compass");
+        Assert.True(pathBottom <= compassTop + 0.001, $"lower path ending at {pathBottom:F1} reaches the compass at {compassTop:F1}");
+        Assert.True(compassBottom <= height - insets.Bottom + 0.001, "compass leaves the ground");
+        Assert.True(layout.MoonLowerRadiusY + layout.MoonRadius <= layout.SunLowerRadiusY + layout.SunRadius, "moon below the sun's path");
     }
 
     [Theory]
@@ -281,9 +341,35 @@ public class SceneTests
     {
         SceneLayout layout = SceneLayout.Compute(width, height, insets);
 
-        Assert.True(layout.RiseSetLine2CenterY - layout.RiseSetLine1CenterY >= layout.RiseSetFontSize * 1.15, "rise and set lines");
-        Assert.True(layout.PhaseLineCenterY - layout.RiseSetLine2CenterY >= (layout.RiseSetFontSize + layout.PhaseFontSize) * 0.575, "phase line");
-        Assert.True(layout.RiseSetLine1CenterY - layout.RiseSetFontSize * 0.6 >= layout.TextTop + layout.ClockFontSize, "clock");
+        Assert.True(layout.RowPitch >= layout.RiseSetFontSize * 1.15, "rows");
+        Assert.True(layout.FirstRowCenterY - layout.ContextCenterY >= (layout.RiseSetFontSize + layout.CaptionFontSize) * 0.575, "context line");
+        Assert.True(layout.ContextCenterY - layout.CaptionFontSize * 0.6 >= layout.TextTop + layout.ClockFontSize, "clock");
+        Assert.True(layout.DotsCenterY - layout.RowCenterY(DesignTokens.Size.TextRows - 1) >= layout.RiseSetFontSize * 0.6 - 0.001, "dots");
+        Assert.True(layout.DotsCenterY <= layout.TextBottom, "dots below the block");
+    }
+
+    [Theory]
+    [InlineData(200, 150)]
+    [InlineData(160, 90)]
+    [InlineData(120, 300)]
+    [InlineData(80, 80)]
+    public void Very_small_windows_shrink_everything_alike(double width, double height)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, SafeInsets.None);
+
+        Assert.Equal(SceneLayout.HorizonFraction(width, height) * height, layout.HorizonY, 6);
+        Assert.True(layout.TextBottom <= layout.HorizonY, "text runs into the ground");
+        Assert.True(layout.TextHalfWidth * 2.0 <= width + 0.001, "text wider than the window");
+        Assert.True(layout.SunArcRadiusY > 0 && layout.SunArcRadiusX > 0, "no arcs left");
+        Assert.True(layout.CompassCenterY + layout.CompassReach <= height + 0.001, "compass leaves the window");
+        Assert.True(layout.ClockFontSize > 0 && layout.RiseSetFontSize > 0, "no text left");
+    }
+
+    [Fact]
+    public void Text_keeps_its_minimum_size_in_windows_that_have_room()
+    {
+        Assert.Equal(11.0, SceneLayout.Compute(844, 390, new SafeInsets(59, 0, 59, 21)).RiseSetFontSize, 6);
+        Assert.Equal(11.0, SceneLayout.Compute(320, 480, SafeInsets.None).RiseSetFontSize, 6);
     }
 
     [Fact]
@@ -294,13 +380,23 @@ public class SceneTests
         Assert.Equal(2.0, SceneLayout.Compute(780, 1688, SafeInsets.None).DetailScale, 6);
     }
 
-    [Fact]
-    public void Wide_windows_get_flatter_wider_arcs_within_the_limit()
+    [Theory]
+    [MemberData(nameof(Formats))]
+    public void Arcs_use_the_width_unless_the_sky_is_too_narrow_for_it(double width, double height, SafeInsets insets)
     {
-        SceneLayout layout = SceneLayout.Compute(844, 390, new SafeInsets(59, 0, 59, 21));
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
+        double side = Math.Max(insets.Left, insets.Right);
+        double margin = DesignTokens.Size.ArcSideMargin * layout.Unit + layout.SunRadius;
 
-        Assert.Equal(0.423 * layout.Unit * 1.5, layout.SunArcRadiusX, 6);
-        Assert.Equal(0.538 * layout.Unit, layout.SunArcRadiusY, 6);
+        Assert.Equal(width / 2.0 - side - margin, layout.SunArcRadiusX, 6);
+    }
+
+    [Fact]
+    public void Narrow_windows_do_not_turn_the_arcs_into_a_spike()
+    {
+        SceneLayout layout = SceneLayout.Compute(500, 2000, SafeInsets.None);
+
+        Assert.True(layout.SunArcRadiusY <= 1.5 * layout.SunArcRadiusX + 0.001);
     }
 
     [Fact]
@@ -308,9 +404,21 @@ public class SceneTests
     {
         SceneLayout layout = SceneLayout.Compute(900, 900, SafeInsets.None);
 
-        Assert.True(layout.IsInTextBlock(layout.CenterX, layout.PhaseLineCenterY));
+        Assert.True(layout.IsInTextBlock(layout.CenterX, layout.RowCenterY(2)));
         Assert.False(layout.IsInTextBlock(layout.CenterX, layout.TextBottom + 1));
-        Assert.False(layout.IsInTextBlock(10, layout.PhaseLineCenterY));
+        Assert.False(layout.IsInTextBlock(10, layout.RowCenterY(2)));
+    }
+
+    [Theory]
+    [InlineData(0.0, 1.0, 0.0)]
+    [InlineData(0.5, 0.0, 1.0)]
+    [InlineData(1.0, -1.0, 0.0)]
+    public void Lower_path_runs_from_right_through_the_lowest_point_to_left(double t, double expectedX, double expectedDepth)
+    {
+        PointD point = ArcGeometry.LowerPointAt(t, 0, 0, 1, 1);
+
+        Assert.Equal(expectedX, point.X, 9);
+        Assert.Equal(expectedDepth, point.Y, 9);
     }
 
     [Fact]

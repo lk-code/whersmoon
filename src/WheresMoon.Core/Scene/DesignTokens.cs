@@ -16,10 +16,18 @@ public static class DesignTokens
 
     public static class Size
     {
-        public const double SunArcRadiusX = 0.423;
-        public const double SunArcRadiusY = 0.538;
-        public const double MoonArcRadiusX = 0.346;
-        public const double MoonArcRadiusY = 0.423;
+        /// <summary>Free space between the sun disc at the arc's end and the safe area.</summary>
+        public const double ArcSideMargin = 0.039;
+
+        /// <summary>Lowest height of the sun arc above the horizon, disc included, that the text may leave.</summary>
+        public const double MinimumArcHeight = 0.45;
+
+        /// <summary>Tallest sun arc relative to half its width, so that narrow windows do not get a spike.</summary>
+        public const double MaximumArcTallness = 1.5;
+
+        /// <summary>Size of the moon arc relative to the sun arc.</summary>
+        public const double MoonArcWidthShare = 0.818;
+        public const double MoonArcHeightShare = 0.786;
 
         public const double SunRadius = 0.038;
         public const double SunGlowRadius = 0.123;
@@ -29,22 +37,39 @@ public static class DesignTokens
         public const double ClockFont = 0.164;
         public const double RiseSetFont = 0.036;
         public const double PhaseFont = 0.033;
+        public const double CaptionFont = 0.029;
+
+        /// <summary>Smallest font in windows that have room for it. Below that it shrinks with everything else.</summary>
         public const double SmallestFont = 11.0;
 
-        /// <summary>Distances between the text lines' centres, measured on the reference images.</summary>
-        public const double ClockToLine1 = 0.0616;
-        public const double Line1ToLine2 = 0.0641;
-        public const double Line2ToPhase = 0.0783;
-        public const double PhaseToBlockEnd = 0.024;
+        /// <summary>Sky height and width that hold the text at <see cref="SmallestFont"/>.</summary>
+        public const double ComfortableSky = 160.0;
+        public const double ComfortableWidth = SmallestFont / RiseSetFont;
 
-        /// <summary>Half the width of the longest text line.</summary>
-        public const double TextHalfWidth = 0.46;
+        /// <summary>Distances between the centres of the text lines.</summary>
+        public const double ClockToContext = 0.044;
+        public const double ContextToRows = 0.062;
+        public const double RowPitch = 0.066;
+        public const double RowsToDots = 0.052;
+        public const double DotsToBlockEnd = 0.016;
+
+        /// <summary>Text rows of the tallest page.</summary>
+        public const int TextRows = 5;
+
+        /// <summary>Half the width of the longest text line, in multiples of its font size.</summary>
+        public const double TextHalfWidthEm = 12.8;
 
         /// <summary>Smallest gap between text block and the sun disc at the arc's apex.</summary>
         public const double TextToArcGap = 0.02;
 
-        /// <summary>Ground that must stay visible below the horizon line.</summary>
-        public const double MinimumGround = 0.16;
+        /// <summary>Share of the ground kept for the lower paths of sun and moon.</summary>
+        public const double GroundLaneShare = 0.38;
+
+        /// <summary>Deepest lower sun path, so that the lane does not dominate large windows.</summary>
+        public const double MaximumLowerArc = 0.25;
+
+        /// <summary>Depth of the lower moon path relative to the sun's.</summary>
+        public const double MoonLowerShare = 0.8;
 
         /// <summary>Text block offset below the top safe area, relative to the height.</summary>
         public const double TextTopFraction = 0.09;
@@ -58,11 +83,19 @@ public static class DesignTokens
         /// <summary>Width of the reference format, from which fine details such as lines scale up.</summary>
         public const double ReferenceWidth = 390.0;
 
-        /// <summary>Horizon line on the reference format, relative to the height.</summary>
-        public const double HorizonFraction = 0.62;
+        /// <summary>Horizon relative to the height, up to the aspect ratio (height / width) of a square.</summary>
+        public const double HorizonWide = 0.5;
+        public const double WideAspect = 1.0;
 
-        /// <summary>How much wider than proportional the arcs may become in wide windows.</summary>
-        public const double MaximumArcWidening = 1.5;
+        /// <summary>Horizon relative to the height from this aspect ratio on, as on a phone held upright.</summary>
+        public const double HorizonTall = 2.0 / 3.0;
+        public const double TallAspect = 1.6;
+
+        /// <summary>Horizon on the format the sky stops were defined on, relative to the height.</summary>
+        public const double SkyStopHorizon = 0.62;
+
+        /// <summary>Largest distance from the compass centre, so that it stays a small detail in big windows.</summary>
+        public const double CompassLargestReach = 0.26;
 
         public const double ArcStrokeWidth = 1.2;
         public const double MoonArcDash = 2.0;
@@ -77,6 +110,11 @@ public static class DesignTokens
         public const double MoonArcNight = 0.22;
         public const double Earthshine = 0.11;
         public const double PhaseText = 0.80;
+        public const double CaptionText = 0.65;
+
+        /// <summary>Disc and halo of a body below the horizon.</summary>
+        public const double BelowDisc = 0.55;
+        public const double BelowHalo = 0.12;
     }
 
     public static class Sun

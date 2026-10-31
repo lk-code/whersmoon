@@ -185,9 +185,9 @@ public partial class MainPage : ContentPage
 
 		ClockLabel.CharacterSpacing = ClockTracking * layout.ClockFontSize;
 		Place(ClockLabel, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0);
-		Place(SunLabel, layout.RiseSetFontSize, layout.RiseSetLine1CenterY);
-		Place(MoonLabel, layout.RiseSetFontSize, layout.RiseSetLine2CenterY);
-		Place(PhaseLabel, layout.PhaseFontSize, layout.PhaseLineCenterY);
+		Place(SunLabel, layout.RiseSetFontSize, layout.RowCenterY(0));
+		Place(MoonLabel, layout.RiseSetFontSize, layout.RowCenterY(1));
+		Place(PhaseLabel, layout.PhaseFontSize, layout.RowCenterY(2));
 
 		SizeSettingsCard();
 		Scene.Invalidate();

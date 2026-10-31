@@ -54,6 +54,12 @@ public sealed record BodyInfo
     /// Null while the body is below the horizon.
     /// </summary>
     public required double? ArcProgress { get; init; }
+
+    /// <summary>
+    /// Position on the path below the horizon: 0 is the right end, where the body set, 1 the left
+    /// end, where it rises. Null while the body is up.
+    /// </summary>
+    public required double? BelowProgress { get; init; }
 }
 
 public sealed record SunInfo

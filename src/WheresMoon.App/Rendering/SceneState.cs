@@ -9,8 +9,12 @@ public sealed record SceneState
 	public bool SunIsRising { get; init; }
 	public double SunProgress { get; init; } = 0.5;
 	public double SunOpacity { get; init; }
+	public double SunBelowProgress { get; init; } = 0.5;
+	public double SunBelowOpacity { get; init; }
 	public double MoonProgress { get; init; } = 0.5;
 	public double MoonOpacity { get; init; }
+	public double MoonBelowProgress { get; init; } = 0.5;
+	public double MoonBelowOpacity { get; init; }
 	public double MoonFraction { get; init; }
 	public double MoonZenithAngle { get; init; }
 
@@ -20,8 +24,12 @@ public sealed record SceneState
 		SunIsRising = sky.Sun.IsRising,
 		SunProgress = sky.Sun.Body.ArcProgress ?? previous?.SunProgress ?? 0.5,
 		SunOpacity = sky.Sun.Body.ArcProgress is null ? 0.0 : 1.0,
+		SunBelowProgress = sky.Sun.Body.BelowProgress ?? previous?.SunBelowProgress ?? 0.5,
+		SunBelowOpacity = sky.Sun.Body.BelowProgress is null ? 0.0 : 1.0,
 		MoonProgress = sky.Moon.Body.ArcProgress ?? previous?.MoonProgress ?? 0.5,
 		MoonOpacity = sky.Moon.Body.ArcProgress is null ? 0.0 : 1.0,
+		MoonBelowProgress = sky.Moon.Body.BelowProgress ?? previous?.MoonBelowProgress ?? 0.5,
+		MoonBelowOpacity = sky.Moon.Body.BelowProgress is null ? 0.0 : 1.0,
 		MoonFraction = sky.Moon.IlluminatedFraction,
 		MoonZenithAngle = sky.Moon.BrightLimbZenithAngle,
 	};
@@ -32,8 +40,12 @@ public sealed record SceneState
 		SunIsRising = to.SunIsRising,
 		SunProgress = BlendProgress(from.SunProgress, from.SunOpacity, to.SunProgress, t),
 		SunOpacity = Blend(from.SunOpacity, to.SunOpacity, t),
+		SunBelowProgress = BlendProgress(from.SunBelowProgress, from.SunBelowOpacity, to.SunBelowProgress, t),
+		SunBelowOpacity = Blend(from.SunBelowOpacity, to.SunBelowOpacity, t),
 		MoonProgress = BlendProgress(from.MoonProgress, from.MoonOpacity, to.MoonProgress, t),
 		MoonOpacity = Blend(from.MoonOpacity, to.MoonOpacity, t),
+		MoonBelowProgress = BlendProgress(from.MoonBelowProgress, from.MoonBelowOpacity, to.MoonBelowProgress, t),
+		MoonBelowOpacity = Blend(from.MoonBelowOpacity, to.MoonBelowOpacity, t),
 		MoonFraction = Blend(from.MoonFraction, to.MoonFraction, t),
 		MoonZenithAngle = BlendAngle(from.MoonZenithAngle, to.MoonZenithAngle, t),
 	};

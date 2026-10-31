@@ -29,7 +29,8 @@ internal static class RiseSetResolver
     private const double SunRadiusDegrees = 0.2667;
     private const double MoonRadiusDegrees = 0.2589;
 
-    internal readonly record struct ArcState(bool IsUp, DateTimeOffset? Rise, DateTimeOffset? Set, double? Progress);
+    internal readonly record struct ArcState(
+        bool IsUp, DateTimeOffset? Rise, DateTimeOffset? Set, double? Progress, double? BelowProgress);
 
     /// <summary>Finds the applicable rise/set pair at <paramref name="now"/> and the arc position.</summary>
     internal static ArcState ResolveArc(Body body, Observer observer, AstroTime now, double geometricAltitude)
@@ -58,7 +59,12 @@ internal static class RiseSetResolver
             set = nextRise is null ? null : Find(body, observer, Direction.Set, nextRise, SearchDays);
         }
 
-        return new ArcState(isUp, ToOffset(rise), ToOffset(set), isUp ? Progress(body, observer, now, rise, set) : null);
+        return new ArcState(
+            isUp,
+            ToOffset(rise),
+            ToOffset(set),
+            isUp ? Progress(body, observer, now, rise, set) : null,
+            isUp ? null : BelowProgress(body, observer, now, nextRise));
     }
 
     /// <summary>
@@ -138,13 +144,31 @@ internal static class RiseSetResolver
         }
 
         // No usable window: the body circles the sky, so follow its culmination instead.
+        return Circling((CycleSinceTransit(body, observer, now) + 0.5) % 1.0);
+    }
+
+    private static double BelowProgress(Body body, Observer observer, AstroTime now, AstroTime? nextRise)
+    {
+        AstroTime? lastSet = Find(body, observer, Direction.Set, now, -SearchDays);
+
+        if (nextRise is not null && lastSet is not null && TimeSpan.FromDays(nextRise.ut - lastSet.ut) <= LongestArcWindow)
+        {
+            return Math.Clamp((now.ut - lastSet.ut) / (nextRise.ut - lastSet.ut), 0.0, 1.0);
+        }
+
+        // A polar night has no set and no rise to measure from. The lowest point is half a cycle after the highest.
+        return Circling(CycleSinceTransit(body, observer, now));
+    }
+
+    /// <summary>Share of the daily cycle since the last culmination, 0 to 1.</summary>
+    private static double CycleSinceTransit(Body body, Observer observer, AstroTime now)
+    {
         double lastTransit = Astronomy.SearchHourAngle(body, observer, 0.0, now, -1).time.ut;
         double cycleHours = body == Body.Moon ? LunarDayHours : SolarDayHours;
-        double sinceTransit = (now.ut - lastTransit) * 24.0 / cycleHours;
-        double cycle = (sinceTransit + 0.5) % 1.0;
-
-        return CirclingArcMargin + (1.0 - 2.0 * CirclingArcMargin) * cycle;
+        return (now.ut - lastTransit) * 24.0 / cycleHours % 1.0;
     }
+
+    private static double Circling(double cycle) => CirclingArcMargin + (1.0 - 2.0 * CirclingArcMargin) * cycle;
 
     private static double RadiusOf(Body body) => body == Body.Moon ? MoonRadiusDegrees : SunRadiusDegrees;
 }

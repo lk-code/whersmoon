@@ -31,12 +31,16 @@ var day = new SceneState
     MoonZenithAngle = 80,
 };
 
+var moonBelow = day with { MoonOpacity = 0, MoonBelowProgress = 0.55, MoonBelowOpacity = 1 };
+
 var night = new SceneState
 {
     SunAltitude = -19,
     SunIsRising = false,
     SunProgress = 0.9,
     SunOpacity = 0,
+    SunBelowProgress = 0.12,
+    SunBelowOpacity = 1,
     MoonProgress = 419.0 / 507.0,
     MoonOpacity = 1,
     MoonFraction = 0.18,
@@ -52,6 +56,9 @@ Render("format-phone-small.png", 320, 568, 2, new SafeInsets(0, 24, 0, 16), nigh
 Render("format-tablet-portrait.png", 820, 1180, 1, new SafeInsets(0, 24, 0, 20), day, dayTexts);
 Render("format-tablet-landscape.png", 1180, 820, 1, new SafeInsets(0, 24, 0, 20), night, nightTexts);
 Render("format-desktop.png", 1920, 1080, 1, SafeInsets.None, day, dayTexts);
+Render("format-square.png", 800, 800, 1, SafeInsets.None, moonBelow, dayTexts);
+Render("format-tablet-between.png", 800, 1040, 1, SafeInsets.None, night, nightTexts);
+Render("format-window-small.png", 360, 480, 2, SafeInsets.None, night, nightTexts);
 
 RenderSkySheet("sheet-sky.png", dayTexts);
 RenderMoonSheet("sheet-moon.png");
@@ -79,9 +86,9 @@ void DrawTexts(SKCanvas target, SceneLayout layout, Texts texts)
 {
     float centerX = (float)layout.CenterX;
     Line(texts.Clock, light, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0, 1f, -0.02f);
-    Line(texts.Sun, medium, layout.RiseSetFontSize, layout.RiseSetLine1CenterY, 1f, 0f);
-    Line(texts.Moon, medium, layout.RiseSetFontSize, layout.RiseSetLine2CenterY, 1f, 0f);
-    Line(texts.Phase, regular, layout.PhaseFontSize, layout.PhaseLineCenterY, (float)DesignTokens.Opacity.PhaseText, 0f);
+    Line(texts.Sun, medium, layout.RiseSetFontSize, layout.RowCenterY(0), 1f, 0f);
+    Line(texts.Moon, medium, layout.RiseSetFontSize, layout.RowCenterY(1), 1f, 0f);
+    Line(texts.Phase, regular, layout.PhaseFontSize, layout.RowCenterY(2), (float)DesignTokens.Opacity.PhaseText, 0f);
 
     void Line(string text, SKTypeface typeface, double size, double centerY, float opacity, float spacing)
     {

@@ -18,6 +18,13 @@ public static class ArcGeometry
         return new PointD(centerX + radiusX * Math.Cos(theta), horizonY - radiusY * Math.Sin(theta));
     }
 
+    /// <summary>Point on the path below the horizon: 0 is the right end, where the body set, 1 the left end, where it rises.</summary>
+    public static PointD LowerPointAt(double t, double centerX, double horizonY, double radiusX, double radiusY)
+    {
+        double theta = Math.PI * t;
+        return new PointD(centerX + radiusX * Math.Cos(theta), horizonY + radiusY * Math.Sin(theta));
+    }
+
     /// <summary>The whole arc from its left to its right end.</summary>
     public static CubicPath Outline(double centerX, double horizonY, double radiusX, double radiusY)
     {

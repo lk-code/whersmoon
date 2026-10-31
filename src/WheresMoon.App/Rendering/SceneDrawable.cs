@@ -26,6 +26,8 @@ public sealed class SceneDrawable : IDrawable
 		DrawMoon(canvas, layout, state);
 		DrawHill(canvas, layout, HillShapes.Back(layout.Width, layout.Unit, layout.HorizonY), colors.BackHill);
 		DrawHill(canvas, layout, HillShapes.Front(layout.Width, layout.Unit, layout.HorizonY), colors.FrontHill);
+		DrawSunBelow(canvas, layout, state);
+		DrawMoonBelow(canvas, layout, state);
 	}
 
 	private static void DrawSky(ICanvas canvas, SceneLayout layout, SkyColors colors)
@@ -130,11 +132,49 @@ public sealed class SceneDrawable : IDrawable
 			]);
 		}
 
-		canvas.FillColor = ToColor(DesignTokens.Moon.Earthshine, state.MoonOpacity);
-		canvas.FillCircle((float)center.X, (float)center.Y, (float)layout.MoonRadius);
+		DrawMoonDisc(canvas, center, layout.MoonRadius, state, state.MoonOpacity);
+	}
 
-		canvas.FillColor = ToColor(DesignTokens.Moon.Lit, state.MoonOpacity);
-		canvas.FillPath(ToPath(MoonShape.Lit(center, layout.MoonRadius, state.MoonFraction, state.MoonZenithAngle)));
+	private static void DrawMoonDisc(ICanvas canvas, PointD center, double radius, SceneState state, double opacity)
+	{
+		canvas.FillColor = ToColor(DesignTokens.Moon.Earthshine, opacity);
+		canvas.FillCircle((float)center.X, (float)center.Y, (float)radius);
+
+		canvas.FillColor = ToColor(DesignTokens.Moon.Lit, opacity);
+		canvas.FillPath(ToPath(MoonShape.Lit(center, radius, state.MoonFraction, state.MoonZenithAngle)));
+	}
+
+	private static void DrawSunBelow(ICanvas canvas, SceneLayout layout, SceneState state)
+	{
+		if (state.SunBelowOpacity <= 0.0)
+		{
+			return;
+		}
+
+		PointD center = ArcGeometry.LowerPointAt(state.SunBelowProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadiusX, layout.SunLowerRadiusY);
+
+		DrawHalo(canvas, center, 2.0 * layout.SunRadius, state.SunBelowOpacity);
+		canvas.FillColor = ToColor(DesignTokens.Sun.Disc, DesignTokens.Opacity.BelowDisc * state.SunBelowOpacity);
+		canvas.FillCircle((float)center.X, (float)center.Y, (float)layout.SunRadius);
+	}
+
+	private static void DrawMoonBelow(ICanvas canvas, SceneLayout layout, SceneState state)
+	{
+		if (state.MoonBelowOpacity <= 0.0)
+		{
+			return;
+		}
+
+		PointD center = ArcGeometry.LowerPointAt(state.MoonBelowProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadiusX, layout.MoonLowerRadiusY);
+
+		DrawHalo(canvas, center, 2.0 * layout.MoonRadius, state.MoonBelowOpacity);
+		DrawMoonDisc(canvas, center, layout.MoonRadius, state, DesignTokens.Opacity.BelowDisc * state.MoonBelowOpacity);
+	}
+
+	private static void DrawHalo(ICanvas canvas, PointD center, double radius, double opacity)
+	{
+		canvas.FillColor = Colors.White.WithAlpha((float)(DesignTokens.Opacity.BelowHalo * opacity));
+		canvas.FillCircle((float)center.X, (float)center.Y, (float)radius);
 	}
 
 	private static void DrawGlow(ICanvas canvas, PointD center, double radius, double opacity, PaintGradientStop[] stops)
