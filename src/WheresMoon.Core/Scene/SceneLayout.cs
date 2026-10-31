@@ -213,6 +213,9 @@ public sealed record SceneLayout
             const double HalfLine = 0.6;
             const double FullLine = 1.15;
 
+            // Distance from the last row to the dots, which sit lower than text does and need more room.
+            const double DotsLine = 1.05;
+
             double rowFont = Math.Max(smallestFont, DesignTokens.Size.RiseSetFont * unit);
             double secondaryFont = Math.Max(smallestFont, DesignTokens.Size.PhaseFont * unit);
             double captionFont = Math.Max(smallestFont, DesignTokens.Size.CaptionFont * unit);
@@ -222,7 +225,7 @@ public sealed record SceneLayout
             double firstRow = context + Math.Max(DesignTokens.Size.ContextToRows * unit, HalfLine * (captionFont + rowFont));
             double pitch = Math.Max(DesignTokens.Size.RowPitch * unit, FullLine * rowFont);
             double dots = firstRow + (DesignTokens.Size.TextRows - 1) * pitch
-                        + Math.Max(DesignTokens.Size.RowsToDots * unit, HalfLine * rowFont);
+                        + Math.Max(DesignTokens.Size.RowsToDots * unit, DotsLine * rowFont);
             double end = dots + Math.Max(DesignTokens.Size.DotsToBlockEnd * unit, HalfLine * smallestFont);
 
             return new TextMetrics(rowFont, secondaryFont, captionFont, context, firstRow, pitch, dots, end);

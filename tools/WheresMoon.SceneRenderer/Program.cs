@@ -86,6 +86,9 @@ Render("format-square.png", 800, 800, 1, SafeInsets.None, moonBelow, dayTexts);
 Render("format-tablet-between.png", 800, 1040, 1, SafeInsets.None, night, nightTexts);
 Render("format-window-small.png", 360, 480, 2, SafeInsets.None, night, nightTexts);
 Render("page-events.png", 320, 568, 2, SafeInsets.None, night, eventTexts);
+Render("window-320x400.png", 320, 400, 3, SafeInsets.None, night, eventTexts);
+Render("window-360x480.png", 360, 480, 3, SafeInsets.None, night, eventTexts);
+Render("window-480x360.png", 480, 360, 3, SafeInsets.None, night, eventTexts);
 Render("page-light.png", 390, 844, 2, SafeInsets.None, night, lightTexts);
 Render("page-events-en.png", 320, 568, 2, SafeInsets.None, night, eventTexts with
 {

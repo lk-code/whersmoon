@@ -9,14 +9,14 @@ public sealed class SceneDrawable : IDrawable
 	/// <summary>Hills start their colour ramp slightly above the horizon, where the highest crest lies.</summary>
 	private const double HillGradientTop = 0.04;
 
+	private const int PageCount = 3;
+
 	public SceneState State { get; set; } = new();
 
 	public SceneLayout? Layout { get; set; }
 
 	/// <summary>Position of the info pages, also between them.</summary>
 	public double PagePosition { get; set; }
-
-	public int PageCount { get; set; } = 3;
 
 	/// <summary>Direction the user faces in degrees from true north. Stays 0 without a compass, which shows north up.</summary>
 	public double Heading { get; set; }

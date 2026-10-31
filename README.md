@@ -10,6 +10,12 @@ Instead of complex 3D sky maps, the app shows two simple arcs above a horizon li
 
 This makes it easy to see how the sun and moon relate to each other, without any knowledge of astronomy. All calculations run locally on the device, so the app also works offline.
 
+- **Info pages:** Swipe the text below the clock to move between sun and moon with the day length, the next moon phases and eclipses, and the golden and blue hours.
+- **Time travel:** Swipe across the scene to move the time, a day per screen width, or a month on the events page. Slow movement catches on the events of the current page. Double tap, the Now button, Home or Escape return to the present. On a computer, drag with the mouse or use the wheel, the trackpad or the left and right arrow keys.
+- **Any place:** Follow the device, search 34,000 cities offline, or enter coordinates. Times then appear in the local time of that place.
+- **Compass:** Two rings in the ground show the directions to the sun and the moon and turn with the device, corrected to true north with the World Magnetic Model. They shift slightly as the device moves.
+- **Stars:** They lie on a band around you and move against every turn of the device. Computers without a compass show north up and still stars.
+
 The app is built with .NET MAUI for iOS, iPadOS, Android, Windows and macOS (through Mac Catalyst). It uses no network, no tracking and no analytics.
 
 ## Project structure
@@ -17,9 +23,10 @@ The app is built with .NET MAUI for iOS, iPadOS, Android, Windows and macOS (thr
 | Path | Purpose |
 | --- | --- |
 | `src/WheresMoon.Core` | All calculations and scene logic, with no MAUI dependency, so native apps can reuse it |
-| `src/WheresMoon.App` | The MAUI app: drawing, location and platform integration |
-| `tests/WheresMoon.Core.Tests` | Unit tests against USNO and JPL Horizons reference data |
+| `src/WheresMoon.App` | The MAUI app: drawing, location, sensors and platform integration |
+| `tests/WheresMoon.Core.Tests` | Unit tests against reference data from USNO, JPL Horizons, NASA and NOAA |
 | `tools/WheresMoon.SceneRenderer` | Renders the scene to PNG files without any UI, for checking formats and times of day |
+| `tools/BuildPlaceData.cs` | Builds the city list from the GeoNames dumps |
 
 ## Running the app
 
@@ -55,20 +62,15 @@ macOS, through Mac Catalyst:
 dotnet run --project src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -p:ValidateXcodeVersion=false
 ```
 
-iOS, in the default simulator:
+iOS, in a simulator. Look up the UDID of a simulator with `xcrun simctl list devices available`, then build for it:
 
 ```sh
-dotnet run --project src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -p:ValidateXcodeVersion=false
+dotnet build src/WheresMoon.App/WheresMoon.App.csproj -t:Run -f net10.0-ios -r iossimulator-arm64 -p:_DeviceName=:v2:udid=YOUR_UDID -p:ValidateXcodeVersion=false
 ```
 
-To choose a simulator, look up its UDID and build with it:
+If the app crashes on launch with `Could not register the assembly`, its build output comes from another workload version. Delete `src/WheresMoon.App/bin` and `src/WheresMoon.App/obj` and build again.
 
-```sh
-xcrun simctl list devices available
-dotnet build src/WheresMoon.App/WheresMoon.App.csproj -t:Run -f net10.0-ios -p:_DeviceName=:v2:udid=YOUR_UDID -p:ValidateXcodeVersion=false
-```
-
-The Apple targets build in CI, but these run commands have not been tried on a Mac yet. If `dotnet run` does not start the app, use `dotnet build src/WheresMoon.App/WheresMoon.App.csproj -t:Run` with the same options, which is the documented way for MAUI.
+A simulator has no compass, so the compass stays still there. The Android emulator does have sensors, which `adb emu sensor set` can move.
 
 ## Tests and tools
 
@@ -78,6 +80,12 @@ dotnet run --project tools/WheresMoon.SceneRenderer -- scene-output
 ```
 
 Debug builds accept two environment variables to look at any moment and place: `WHERESMOON_SIM_TIME` (for example `2026-10-30T17:47:00Z`) and `WHERESMOON_SIM_LOCATION` (for example `52.52,13.405`, or `none` for the state without a location).
+
+To update the city list, get `cities15000.txt` and `admin1CodesASCII.txt` from https://download.geonames.org/export/dump/ and run:
+
+```sh
+dotnet run tools/BuildPlaceData.cs -- cities15000.txt admin1CodesASCII.txt src/WheresMoon.App/Resources/Raw/places.tsv.gz
+```
 
 ## License
 

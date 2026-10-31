@@ -2,8 +2,10 @@
 
 public partial class App : Application
 {
-	private const double MinimumWindowWidth = 320;
-	private const double MinimumWindowHeight = 400;
+	/// <summary>Smallest window with all five text rows, the arcs and the compass at a readable size.</summary>
+	private const double MinimumWindowWidth = 360;
+	private const double MinimumWindowHeight = 480;
+
 	private const double InitialWindowWidth = 520;
 	private const double InitialWindowHeight = 900;
 

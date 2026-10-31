@@ -61,7 +61,6 @@ public partial class MainPage : ContentPage
 	private SnapPoints? _snapPoints;
 	private GeoLocation? _eventsLocation;
 	private string? _eventsZone;
-	private GeoLocation? _compassReference;
 	private DateTimeOffset? _selectedTime;
 	private TimeSpan _lastWheel;
 	private bool _isSliding;
@@ -133,17 +132,7 @@ public partial class MainPage : ContentPage
 		DateTimeOffset now = AppClock.Now;
 		Show(_selectedTime ?? now, isFollowingFinger: false);
 		ScheduleNextTick(now);
-		UpdateCompassReference();
-	}
-
-	/// <summary>The magnetic model is only worth loading for a device that has a compass.</summary>
-	private void UpdateCompassReference()
-	{
-		if (_motion.HasCompass && _location.CompassLocation is GeoLocation location && location != _compassReference)
-		{
-			_compassReference = location;
-			_motion.SetReferenceLocation(location);
-		}
+		_motion.CompassLocation = _location.CompassLocation;
 	}
 
 	private void OnMotion()
@@ -510,7 +499,13 @@ public partial class MainPage : ContentPage
 		SceneLayout layout = SceneLayout.Compute(Width, Height, _insets);
 		_layout = layout;
 		_drawable.Layout = layout;
-		_motion.ScreenRotation = (int)DeviceDisplay.Current.MainDisplayInfo.Rotation * 90;
+		_motion.ScreenRotation = DeviceDisplay.Current.MainDisplayInfo.Rotation switch
+		{
+			DisplayRotation.Rotation90 => 90,
+			DisplayRotation.Rotation180 => 180,
+			DisplayRotation.Rotation270 => 270,
+			_ => 0,
+		};
 
 		ClockLabel.CharacterSpacing = ClockTracking * layout.ClockFontSize;
 		Place(ClockLabel, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0);

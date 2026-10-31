@@ -388,10 +388,12 @@ public class SceneTests
     {
         SceneLayout layout = SceneLayout.Compute(width, height, insets);
 
-        Assert.True(layout.RowPitch >= layout.RiseSetFontSize * 1.15, "rows");
-        Assert.True(layout.FirstRowCenterY - layout.ContextCenterY >= (layout.RiseSetFontSize + layout.CaptionFontSize) * 0.575, "context line");
-        Assert.True(layout.ContextCenterY - layout.CaptionFontSize * 0.6 >= layout.TextTop + layout.ClockFontSize, "clock");
-        Assert.True(layout.DotsCenterY - layout.RowCenterY(DesignTokens.Size.TextRows - 1) >= layout.RiseSetFontSize * 0.6 - 0.001, "dots");
+        const double Rounding = 0.001;
+
+        Assert.True(layout.RowPitch >= layout.RiseSetFontSize * 1.15 - Rounding, "rows");
+        Assert.True(layout.FirstRowCenterY - layout.ContextCenterY >= (layout.RiseSetFontSize + layout.CaptionFontSize) * 0.575 - Rounding, "context line");
+        Assert.True(layout.ContextCenterY - layout.CaptionFontSize * 0.6 >= layout.TextTop + layout.ClockFontSize - Rounding, "clock");
+        Assert.True(layout.DotsCenterY - layout.RowCenterY(DesignTokens.Size.TextRows - 1) >= layout.RiseSetFontSize - Rounding, "dots");
         Assert.True(layout.DotsCenterY <= layout.TextBottom, "dots below the block");
     }
 

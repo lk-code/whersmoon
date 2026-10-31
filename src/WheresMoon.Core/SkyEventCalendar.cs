@@ -19,8 +19,19 @@ public sealed class SkyEventCalendar
     private const double NewMoonLongitude = 0.0;
     private const double LunationLimitDays = 40.0;
 
+    /// <summary>Clears the moon phase an eclipse belongs to, without reaching the next one.</summary>
+    private const double EclipseSearchStepDays = 10.0;
+
     /// <summary>Keeps a search from finding the event it started at.</summary>
     private static readonly TimeSpan StepPastEvent = TimeSpan.FromMinutes(1);
+
+    private static readonly TimeSpan EclipseSearchLead = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// How far a run reaches back when it has to restart. Scrubbing backwards goes earlier on every
+    /// frame, and starting over each time would repeat the whole search again and again.
+    /// </summary>
+    private static readonly TimeSpan BackwardMargin = TimeSpan.FromDays(120);
 
     private readonly object _gate = new();
     private readonly Series[] _series;
@@ -98,16 +109,40 @@ public sealed class SkyEventCalendar
         }
     }
 
-    private static SkyEvent NextLunarEclipse(DateTimeOffset after)
+    private static SkyEvent NextLunarEclipse(DateTimeOffset after) => NextEclipse(after, start =>
     {
-        LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(RiseSetResolver.ToAstroTime(after + StepPastEvent));
-        return new SkyEvent(SkyEventKind.LunarEclipse, RiseSetResolver.ToOffset(eclipse.peak)!.Value, ToType(eclipse.kind));
-    }
+        LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(start);
+        return (eclipse.peak, ToType(eclipse.kind));
+    }, SkyEventKind.LunarEclipse);
 
-    private static SkyEvent NextSolarEclipse(DateTimeOffset after, Observer observer)
+    private static SkyEvent NextSolarEclipse(DateTimeOffset after, Observer observer) => NextEclipse(after, start =>
     {
-        LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(RiseSetResolver.ToAstroTime(after + StepPastEvent), observer);
-        return new SkyEvent(SkyEventKind.SolarEclipse, RiseSetResolver.ToOffset(eclipse.peak.time)!.Value, ToType(eclipse.kind));
+        LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(start, observer);
+        return (eclipse.peak.time, ToType(eclipse.kind));
+    }, SkyEventKind.SolarEclipse);
+
+    /// <summary>
+    /// An eclipse search looks for the next full or new moon, and the peak can lie minutes on either side of
+    /// that moment. Starting at the time itself could miss a peak still to come, or find a peak already passed
+    /// and find it forever. So the search starts early and walks on until it is past the time. The same peak found
+    /// from another start differs by a few milliseconds, which is why it has to lie clearly after the time.
+    /// </summary>
+    private static SkyEvent NextEclipse(DateTimeOffset after, Func<AstroTime, (AstroTime Peak, EclipseType Type)> search, SkyEventKind kind)
+    {
+        AstroTime start = RiseSetResolver.ToAstroTime(after - EclipseSearchLead);
+
+        while (true)
+        {
+            (AstroTime peak, EclipseType type) = search(start);
+            DateTimeOffset time = RiseSetResolver.ToOffset(peak)!.Value;
+
+            if (time - after > StepPastEvent)
+            {
+                return new SkyEvent(kind, time, type);
+            }
+
+            start = peak.AddDays(EclipseSearchStepDays);
+        }
     }
 
     private static EclipseType ToType(EclipseKind kind) => kind switch
@@ -119,7 +154,7 @@ public sealed class SkyEventCalendar
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "A search only returns eclipses that happen."),
     };
 
-    /// <summary>A gapless run of events of one kind. Going back before its first event starts a new run.</summary>
+    /// <summary>A gapless run of events of one kind. Going back before its start begins a new run further back.</summary>
     private sealed class Series(Func<DateTimeOffset, SkyEvent> findNext)
     {
         private readonly List<SkyEvent> _events = [];
@@ -130,8 +165,8 @@ public sealed class SkyEventCalendar
             if (_events.Count == 0 || time < _coveredFrom)
             {
                 _events.Clear();
-                _coveredFrom = time;
-                _events.Add(findNext(time));
+                _coveredFrom = time - BackwardMargin;
+                _events.Add(findNext(_coveredFrom));
             }
 
             while (_events[^1].Time <= time)

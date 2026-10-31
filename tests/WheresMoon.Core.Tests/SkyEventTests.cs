@@ -130,6 +130,64 @@ public class SkyEventTests
         Assert.Equal(2, earlier.Time.Month);
     }
 
+    [Theory]
+    [InlineData(-2880)]
+    [InlineData(-30)]
+    [InlineData(-5)]
+    [InlineData(-2)]
+    [InlineData(1)]
+    [InlineData(5)]
+    public void Time_around_an_eclipse_peak_finds_the_right_one(int minutes)
+    {
+        var calendar = new SkyEventCalendar(Berlin);
+        SkyEvent eclipse = calendar.Upcoming(Parse("2026-08-01T00:00:00Z")).Single(e => e.Kind == SkyEventKind.LunarEclipse);
+        DateTimeOffset time = eclipse.Time.AddMinutes(minutes);
+
+        SkyEvent next = calendar.Upcoming(time).Single(e => e.Kind == SkyEventKind.LunarEclipse);
+
+        Assert.True(next.Time > time);
+        Assert.Equal(minutes < 0 ? eclipse.Time : Parse("2027-02-20T23:13:00Z").Date, minutes < 0 ? next.Time : next.Time.Date);
+    }
+
+    [Fact]
+    public void Passing_eclipses_never_gets_stuck()
+    {
+        IReadOnlyList<SkyEvent> events = new SkyEventCalendar(Berlin)
+            .Between(Parse("2025-01-01T00:00:00Z"), Parse("2029-01-01T00:00:00Z"));
+
+        List<SkyEvent> lunar = events.Where(e => e.Kind == SkyEventKind.LunarEclipse).ToList();
+        List<SkyEvent> solar = events.Where(e => e.Kind == SkyEventKind.SolarEclipse).ToList();
+
+        // NASA's catalogue lists these ten from 2025 to 2028.
+        Assert.Equal(
+            ["2025-03-14", "2025-09-07", "2026-03-03", "2026-08-28", "2027-02-20", "2027-07-18", "2027-08-17", "2028-01-12", "2028-07-06", "2028-12-31"],
+            lunar.Select(e => e.Time.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+
+        Assert.NotEmpty(solar);
+        Assert.Equal(solar.Count, solar.Select(e => e.Time.Date).Distinct().Count());
+    }
+
+    [Fact]
+    public void Scrubbing_backwards_step_by_step_stays_correct_and_does_not_search_again()
+    {
+        var calendar = new SkyEventCalendar(Berlin);
+        DateTimeOffset start = Parse("2026-11-20T00:00:00Z");
+        calendar.Upcoming(start);
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        for (int hour = 0; hour < 24 * 30; hour++)
+        {
+            DateTimeOffset time = start.AddHours(-hour);
+            SkyEvent fullMoon = calendar.Upcoming(time)[0];
+
+            Assert.True(fullMoon.Time > time);
+            Assert.True(fullMoon.Time < time.AddDays(30));
+        }
+
+        // A month of hourly frames. Searching anew each time would take a large multiple of this.
+        Assert.True(stopwatch.ElapsedMilliseconds < 500, $"took {stopwatch.ElapsedMilliseconds} ms");
+    }
+
     private static SkyEvent Next(SkyEventKind kind, string after) =>
         new SkyEventCalendar(Berlin).Upcoming(Parse(after)).Single(e => e.Kind == kind);
 

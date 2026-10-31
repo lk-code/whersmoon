@@ -27,7 +27,8 @@ internal sealed class SceneMotion
 	private readonly IDispatcherTimer _timer;
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
 
-	private double _declination;
+	private GeoLocation? _compassLocation;
+	private double? _declination;
 	private double _magnetic;
 	private double _restingMagnetic;
 	private volatile bool _hasReading;
@@ -51,8 +52,6 @@ internal sealed class SceneMotion
 	/// <summary>Raised on the main thread when <see cref="Heading"/> changed.</summary>
 	public event Action? Moved;
 
-	public bool HasCompass => _heading.IsSupported;
-
 	/// <summary>Direction the user faces in degrees from true north. Keeps counting past 360.</summary>
 	public double Heading => _filter.Value;
 
@@ -68,9 +67,18 @@ internal sealed class SceneMotion
 		}
 	}
 
-	/// <summary>Takes the declination for where the device is, as that decides what its sensor measures.</summary>
-	public void SetReferenceLocation(GeoLocation location) =>
-		_declination = WorldMagneticModel.Declination(location, DateTimeOffset.UtcNow);
+	/// <summary>Where the device is, as that decides what its sensor measures.</summary>
+	public GeoLocation? CompassLocation
+	{
+		set
+		{
+			if (value != _compassLocation)
+			{
+				_compassLocation = value;
+				_declination = null;
+			}
+		}
+	}
 
 	/// <summary>Sensors only run while the app is in the foreground.</summary>
 	public void Start()
@@ -125,7 +133,7 @@ internal sealed class SceneMotion
 
 		if (_turn.Length() > TurnWakeLevel)
 		{
-			_dispatcher.Dispatch(WakeUp);
+			RequestFrames();
 		}
 	}
 
@@ -134,6 +142,14 @@ internal sealed class SceneMotion
 		_acceleration = e.Reading.Acceleration;
 
 		if (Math.Abs(_acceleration.Length() - 1.0f) > AccelerationWakeLevel)
+		{
+			RequestFrames();
+		}
+	}
+
+	private void RequestFrames()
+	{
+		if (!_timer.IsRunning)
 		{
 			_dispatcher.Dispatch(WakeUp);
 		}
@@ -147,7 +163,7 @@ internal sealed class SceneMotion
 
 		if (Math.Abs(HeadingFilter.Difference(magnetic, _restingMagnetic)) >= HeadingFilter.Deadband)
 		{
-			_dispatcher.Dispatch(WakeUp);
+			RequestFrames();
 		}
 	}
 
@@ -167,7 +183,7 @@ internal sealed class SceneMotion
 		double seconds = (now - _lastFrame).TotalSeconds;
 		_lastFrame = now;
 
-		bool isFirstReading = _hasReading && _filter.SetTarget(DeviceHeading.ToTrueNorth(_magnetic, _declination));
+		bool isFirstReading = _hasReading && _filter.SetTarget(DeviceHeading.ToTrueNorth(_magnetic, Declination()));
 		bool hasTurned = _filter.Advance(seconds) || isFirstReading;
 
 		if (AdvanceRings(seconds) || hasTurned)
@@ -180,6 +196,18 @@ internal sealed class SceneMotion
 			_restingMagnetic = _magnetic;
 			_timer.Stop();
 		}
+	}
+
+	/// <summary>Only a compass reading gets the magnetic model loaded, which startup should not wait for.</summary>
+	private double Declination()
+	{
+		if (_compassLocation is not GeoLocation location)
+		{
+			return 0.0;
+		}
+
+		_declination ??= WorldMagneticModel.Declination(location, DateTimeOffset.UtcNow);
+		return _declination.Value;
 	}
 
 	private bool AdvanceRings(double seconds)
