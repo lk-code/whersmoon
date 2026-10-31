@@ -40,7 +40,7 @@ internal static class RiseSetResolver
 
         bool isUp = (nextRise, nextSet) switch
         {
-            (null, null) => geometricAltitude > -HorizonRefraction - RadiusOf(body),
+            (null, null) => IsUp(body, geometricAltitude),
             (null, _) => true,
             (_, null) => false,
             _ => nextSet.ut < nextRise.ut,
@@ -114,8 +114,12 @@ internal static class RiseSetResolver
 
     internal static AstroTime ToAstroTime(DateTimeOffset time) => new(time.UtcDateTime);
 
-    private static DateTimeOffset? ToOffset(AstroTime? time) =>
+    internal static DateTimeOffset? ToOffset(AstroTime? time) =>
         time is null ? null : new DateTimeOffset(DateTime.SpecifyKind(time.ToUtcDateTime(), DateTimeKind.Utc));
+
+    /// <summary>True when the upper limb is above the horizon, the same criterion the rise and set search uses.</summary>
+    internal static bool IsUp(Body body, double geometricAltitude) =>
+        geometricAltitude > -HorizonRefraction - RadiusOf(body);
 
     private static TimeEvent ToTimeEvent(DateTimeOffset time, DateTime today, TimeZoneInfo zone)
     {
@@ -123,7 +127,7 @@ internal static class RiseSetResolver
         return new TimeEvent(local, (local.Date - today).Days);
     }
 
-    private static DateTimeOffset LocalMidnight(DateTime date, TimeZoneInfo zone)
+    internal static DateTimeOffset LocalMidnight(DateTime date, TimeZoneInfo zone)
     {
         DateTime local = DateTime.SpecifyKind(date, DateTimeKind.Unspecified);
 

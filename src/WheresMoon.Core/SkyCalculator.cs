@@ -19,10 +19,7 @@ public static class SkyCalculator
     {
         ArgumentNullException.ThrowIfNull(zone);
 
-        var observer = new Observer(
-            location.Latitude,
-            location.Longitude,
-            Math.Clamp(location.Elevation, LowestElevation, HighestElevation));
+        Observer observer = ToObserver(location);
         AstroTime now = RiseSetResolver.ToAstroTime(time);
 
         Equatorial sunEquator = Astronomy.Equator(Body.Sun, now, observer, EquatorEpoch.OfDate, Aberration.Corrected);
@@ -39,6 +36,18 @@ public static class SkyCalculator
             Moon = moon,
             Twilight = ClassifyTwilight(sun.GeometricAltitude),
         };
+    }
+
+    internal static Observer ToObserver(GeoLocation location) => new(
+        location.Latitude,
+        location.Longitude,
+        Math.Clamp(location.Elevation, LowestElevation, HighestElevation));
+
+    /// <summary>Sun altitude without refraction, which is what twilight limits are defined on.</summary>
+    internal static double GeometricSunAltitude(Observer observer, AstroTime time)
+    {
+        Equatorial equator = Astronomy.Equator(Body.Sun, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
+        return Astronomy.Horizon(time, observer, equator.ra, equator.dec, Refraction.None).altitude;
     }
 
     internal static TwilightPhase ClassifyTwilight(double sunAltitude) => sunAltitude switch
