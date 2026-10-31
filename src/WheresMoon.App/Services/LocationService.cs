@@ -1,4 +1,5 @@
 using WheresMoon.Core;
+using WheresMoon.Core.Places;
 
 namespace WheresMoon.App.Services;
 
@@ -9,12 +10,30 @@ internal sealed class LocationService
 	private static readonly TimeSpan MinimumLookupInterval = TimeSpan.FromMinutes(15);
 
 	private DateTimeOffset _lastLookup = DateTimeOffset.MinValue;
+	private TimeZoneInfo? _placeZone;
+
+	public LocationService()
+	{
+		if (IsManual && LocationStore.ManualPlace is Place place)
+		{
+			Place = place;
+			_placeZone = PlaceZone.Resolve(place.Zone, place.Longitude);
+		}
+	}
 
 	public event Action? Changed;
 
 	public GeoLocation? Current { get; private set; } = LocationStore.Saved;
 
 	public bool IsManual => LocationStore.IsManual;
+
+	/// <summary>The chosen place, or null while following the device.</summary>
+	public Place? Place { get; private set; }
+
+	/// <summary>Time zone of the location in use. Read it afresh, the device's zone can change at any time.</summary>
+	public TimeZoneInfo Zone => _placeZone ?? TimeZoneInfo.Local;
+
+	public IReadOnlyList<Place> RecentPlaces => LocationStore.RecentPlaces;
 
 	/// <summary>Outcome of the last lookup, shown in the settings.</summary>
 	public LocationStatus Status { get; private set; } = LocationStatus.Found;
@@ -45,18 +64,33 @@ internal sealed class LocationService
 		}
 	}
 
-	public void SetManual(GeoLocation location)
+	public void SetManual(Place place)
 	{
 		LocationStore.IsManual = true;
+		LocationStore.ManualPlace = place;
+
+		// A place from coordinates has no name, so it would mean nothing in the list.
+		if (place.Name.Length > 0)
+		{
+			LocationStore.AddRecentPlace(place);
+		}
+
+		Place = place;
+		_placeZone = PlaceZone.Resolve(place.Zone, place.Longitude);
 		Status = LocationStatus.Found;
-		Use(location);
+		Use(place.Location);
 	}
 
-	public Task SetAutomaticAsync()
+	public async Task SetAutomaticAsync()
 	{
 		LocationStore.IsManual = false;
+		LocationStore.ManualPlace = null;
+		Place = null;
+		_placeZone = null;
 		_lastLookup = DateTimeOffset.MinValue;
-		return UpdateAsync();
+
+		await UpdateAsync();
+		Changed?.Invoke();
 	}
 
 	private void Use(GeoLocation location)

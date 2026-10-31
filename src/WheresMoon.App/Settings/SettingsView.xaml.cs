@@ -2,6 +2,7 @@ using System.Globalization;
 using WheresMoon.App.Resources.Strings;
 using WheresMoon.App.Services;
 using WheresMoon.Core;
+using WheresMoon.Core.Places;
 
 namespace WheresMoon.App.Settings;
 
@@ -10,8 +11,13 @@ public partial class SettingsView : ContentView
 {
 	private const string AstronomyLicenseFile = "licenses/astronomy-engine-mit.txt";
 	private const string ManropeLicenseFile = "licenses/manrope-ofl.txt";
+	private const string GeoNamesLicenseFile = "licenses/geonames-cc-by-4.0.txt";
+	private const string UnicodeLicenseFile = "licenses/unicode-cldr.txt";
+
+	private const int ResultLimit = 8;
 
 	private readonly LocationService _location;
+	private int _searchVersion;
 
 	public event EventHandler? CloseRequested;
 
@@ -36,6 +42,7 @@ public partial class SettingsView : ContentView
 		AutomaticOption.IsChecked = !location.IsManual;
 		ManualOption.IsChecked = location.IsManual;
 		ManualFields.IsVisible = location.IsManual;
+		ShowRecentPlaces();
 
 		if (location.IsManual && location.Current is GeoLocation current)
 		{
@@ -57,6 +64,9 @@ public partial class SettingsView : ContentView
 		LocationHeader.Text = Strings.Get("LocationHeader");
 		AutomaticOption.Content = Strings.Get("LocationAutomatic");
 		ManualOption.Content = Strings.Get("LocationManual");
+		SearchEntry.Placeholder = Strings.Get("SearchPlaceholder");
+		RecentHeader.Text = Strings.Get("RecentPlaces");
+		CoordinatesButton.Text = Strings.Get("EnterCoordinates");
 		LatitudeEntry.Placeholder = Strings.Get("Latitude");
 		LongitudeEntry.Placeholder = Strings.Get("Longitude");
 		ElevationEntry.Placeholder = Strings.Get("Elevation");
@@ -68,10 +78,15 @@ public partial class SettingsView : ContentView
 		LicensesHeader.Text = Strings.Get("LicensesHeader");
 		AstronomyLicenseName.Text = Strings.Get("LicenseAstronomy");
 		ManropeLicenseName.Text = Strings.Get("LicenseManrope");
+		GeoNamesLicenseName.Text = Strings.Get("LicenseGeoNames");
+		UnicodeLicenseName.Text = Strings.Get("LicenseUnicode");
 		AstronomyLicenseButton.Text = Strings.Get("ShowLicense");
 		ManropeLicenseButton.Text = Strings.Get("ShowLicense");
+		GeoNamesLicenseButton.Text = Strings.Get("ShowLicense");
+		UnicodeLicenseButton.Text = Strings.Get("ShowLicense");
 
 		// Entries have no visible label, so their meaning must reach screen readers another way.
+		SemanticProperties.SetDescription(SearchEntry, SearchEntry.Placeholder);
 		SemanticProperties.SetDescription(LatitudeEntry, LatitudeEntry.Placeholder);
 		SemanticProperties.SetDescription(LongitudeEntry, LongitudeEntry.Placeholder);
 		SemanticProperties.SetDescription(ElevationEntry, ElevationEntry.Placeholder);
@@ -81,12 +96,12 @@ public partial class SettingsView : ContentView
 	{
 		TitleLabel.FontSize = style.TitleSize;
 
-		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, AstronomyLicenseName, ManropeLicenseName })
+		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, AstronomyLicenseName, ManropeLicenseName, GeoNamesLicenseName, UnicodeLicenseName })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.Text.Light, style.Text.Dark);
 		}
 
-		foreach (Label label in new[] { StatusLabel, VersionLabel, AstronomyLicenseText, ManropeLicenseText })
+		foreach (Label label in new[] { StatusLabel, RecentHeader, VersionLabel, AstronomyLicenseText, ManropeLicenseText, GeoNamesLicenseText, UnicodeLicenseText })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
@@ -98,13 +113,13 @@ public partial class SettingsView : ContentView
 			option.SetAppThemeColor(RadioButton.TextColorProperty, style.Text.Light, style.Text.Dark);
 		}
 
-		foreach (Entry entry in new[] { LatitudeEntry, LongitudeEntry, ElevationEntry })
+		foreach (Entry entry in new[] { SearchEntry, LatitudeEntry, LongitudeEntry, ElevationEntry })
 		{
 			entry.SetAppThemeColor(Entry.TextColorProperty, style.Text.Light, style.Text.Dark);
 			entry.SetAppThemeColor(Entry.PlaceholderColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
 
-		foreach (Button button in new[] { CloseButton, AstronomyLicenseButton, ManropeLicenseButton })
+		foreach (Button button in new[] { CloseButton, CoordinatesButton, AstronomyLicenseButton, ManropeLicenseButton, GeoNamesLicenseButton, UnicodeLicenseButton })
 		{
 			button.SetAppThemeColor(Button.TextColorProperty, style.Accent.Light, style.Accent.Dark);
 		}
@@ -120,6 +135,10 @@ public partial class SettingsView : ContentView
 		if (_location.Status == LocationStatus.Denied && !_location.IsManual)
 		{
 			text = Strings.Get("LocationDenied");
+		}
+		else if (_location.Place is Place place)
+		{
+			text = SkyTexts.PlaceLabel(place);
 		}
 		else if (_location.Current is GeoLocation current)
 		{
@@ -154,7 +173,7 @@ public partial class SettingsView : ContentView
 		}
 	}
 
-	private void OnApplyClicked(object? sender, EventArgs e)
+	private async void OnApplyClicked(object? sender, EventArgs e)
 	{
 		bool isValid = CoordinateParser.TryParse(LatitudeEntry.Text, LongitudeEntry.Text, ElevationEntry.Text, out GeoLocation location);
 
@@ -162,9 +181,101 @@ public partial class SettingsView : ContentView
 
 		if (isValid)
 		{
-			_location.SetManual(location);
-			UpdateStatus();
+			// A spot without a name still has a local time, which the nearest city tells.
+			PlaceIndex? places = await PlaceCatalog.LoadAsync();
+			string zone = places?.Nearest(location.Latitude, location.Longitude)?.Zone ?? TimeZoneInfo.Local.Id;
+
+			Choose(new Place(string.Empty, string.Empty, string.Empty, location.Latitude, location.Longitude, location.Elevation, zone));
 		}
+	}
+
+	private async void OnSearchChanged(object? sender, TextChangedEventArgs e)
+	{
+		int version = ++_searchVersion;
+		string query = e.NewTextValue ?? string.Empty;
+
+		if (SearchText.Fold(query).Length == 0)
+		{
+			ShowResults(null);
+			return;
+		}
+
+		PlaceIndex? places = await PlaceCatalog.LoadAsync();
+
+		// The list can take a moment to load, and meanwhile there may be a newer query.
+		if (version == _searchVersion)
+		{
+			ShowResults(places?.Search(query, ResultLimit) ?? []);
+		}
+	}
+
+	private void ShowResults(IReadOnlyList<Place>? results)
+	{
+		ResultList.Clear();
+
+		bool isSearching = results is not null;
+		RecentHeader.IsVisible = !isSearching && _location.RecentPlaces.Count > 0;
+		RecentList.IsVisible = !isSearching;
+
+		if (results?.Count == 0)
+		{
+			var label = new Label { Text = Strings.Get("NoPlacesFound"), FontSize = 13 };
+			label.SetAppThemeColor(Label.TextColorProperty, SettingsStyle.Current.SecondaryText.Light, SettingsStyle.Current.SecondaryText.Dark);
+			ResultList.Add(label);
+		}
+
+		foreach (Place place in results ?? [])
+		{
+			ResultList.Add(PlaceButton(place));
+		}
+	}
+
+	private void ShowRecentPlaces()
+	{
+		RecentList.Clear();
+
+		foreach (Place place in _location.RecentPlaces)
+		{
+			RecentList.Add(PlaceButton(place));
+		}
+
+		RecentHeader.IsVisible = RecentList.Count > 0;
+	}
+
+	private Button PlaceButton(Place place)
+	{
+		SettingsStyle style = SettingsStyle.Current;
+		var button = new Button
+		{
+			Text = SkyTexts.PlaceLabel(place),
+			BackgroundColor = Colors.Transparent,
+			BorderWidth = 0,
+			Padding = new Thickness(0, 6),
+			HorizontalOptions = LayoutOptions.Start,
+			LineBreakMode = LineBreakMode.TailTruncation,
+		};
+
+		button.SetAppThemeColor(Button.TextColorProperty, style.Text.Light, style.Text.Dark);
+		button.Clicked += (_, _) => Choose(place);
+		return button;
+	}
+
+	private void Choose(Place place)
+	{
+		ErrorLabel.IsVisible = false;
+		_location.SetManual(place);
+
+		SearchEntry.Text = string.Empty;
+		SearchEntry.Unfocus();
+		ShowResults(null);
+		ShowRecentPlaces();
+		UpdateStatus();
+	}
+
+	private void OnCoordinatesClicked(object? sender, EventArgs e)
+	{
+		CoordinateFields.IsVisible = !CoordinateFields.IsVisible;
+		CoordinatesButton.Text = Strings.Get(CoordinateFields.IsVisible ? "HideCoordinates" : "EnterCoordinates");
 	}
 
 	private async void OnAstronomyLicenseClicked(object? sender, EventArgs e) =>
@@ -172,6 +283,12 @@ public partial class SettingsView : ContentView
 
 	private async void OnManropeLicenseClicked(object? sender, EventArgs e) =>
 		await ToggleLicenseAsync(ManropeLicenseText, ManropeLicenseButton, ManropeLicenseFile);
+
+	private async void OnGeoNamesLicenseClicked(object? sender, EventArgs e) =>
+		await ToggleLicenseAsync(GeoNamesLicenseText, GeoNamesLicenseButton, GeoNamesLicenseFile);
+
+	private async void OnUnicodeLicenseClicked(object? sender, EventArgs e) =>
+		await ToggleLicenseAsync(UnicodeLicenseText, UnicodeLicenseButton, UnicodeLicenseFile);
 
 	private static async Task ToggleLicenseAsync(Label text, Button button, string file)
 	{

@@ -25,7 +25,7 @@
   <data name="SettingsTitle" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="LocationHeader" xml:space="preserve"><value>Standort</value></data>
-  <data name="LocationAutomatic" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="LocationAutomatic" xml:space="preserve"><value>Automatisch (GPS)</value></data>
   <data name="LocationManual" xml:space="preserve"><value>Manuell</value></data>
   <data name="Latitude" xml:space="preserve"><value>Breite (-90 bis 90)</value></data>
   <data name="Longitude" xml:space="preserve"><value>Länge (-180 bis 180)</value></data>
@@ -104,4 +104,255 @@
   <data name="NowButtonHint" xml:space="preserve"><value>Springt zurück zur aktuellen Zeit</value></data>
   <data name="DateLong" xml:space="preserve"><value>ddd, d. MMM</value></data>
   <data name="DateLongYear" xml:space="preserve"><value>ddd, d. MMM yyyy</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Ort suchen</value></data>
+  <data name="RecentPlaces" xml:space="preserve"><value>Zuletzt gewählt</value></data>
+  <data name="EnterCoordinates" xml:space="preserve"><value>Koordinaten eingeben</value></data>
+  <data name="HideCoordinates" xml:space="preserve"><value>Koordinaten ausblenden</value></data>
+  <data name="NoPlacesFound" xml:space="preserve"><value>Kein Ort gefunden</value></data>
+  <data name="LicenseGeoNames" xml:space="preserve"><value>GeoNames, CC BY 4.0</value></data>
+  <data name="CountryAD" xml:space="preserve"><value>Andorra</value></data>
+  <data name="CountryAE" xml:space="preserve"><value>Vereinigte Arabische Emirate</value></data>
+  <data name="CountryAF" xml:space="preserve"><value>Afghanistan</value></data>
+  <data name="CountryAG" xml:space="preserve"><value>Antigua und Barbuda</value></data>
+  <data name="CountryAI" xml:space="preserve"><value>Anguilla</value></data>
+  <data name="CountryAL" xml:space="preserve"><value>Albanien</value></data>
+  <data name="CountryAM" xml:space="preserve"><value>Armenien</value></data>
+  <data name="CountryAO" xml:space="preserve"><value>Angola</value></data>
+  <data name="CountryAR" xml:space="preserve"><value>Argentinien</value></data>
+  <data name="CountryAS" xml:space="preserve"><value>Amerikanisch-Samoa</value></data>
+  <data name="CountryAT" xml:space="preserve"><value>Österreich</value></data>
+  <data name="CountryAU" xml:space="preserve"><value>Australien</value></data>
+  <data name="CountryAW" xml:space="preserve"><value>Aruba</value></data>
+  <data name="CountryAX" xml:space="preserve"><value>Ålandinseln</value></data>
+  <data name="CountryAZ" xml:space="preserve"><value>Aserbaidschan</value></data>
+  <data name="CountryBA" xml:space="preserve"><value>Bosnien und Herzegowina</value></data>
+  <data name="CountryBB" xml:space="preserve"><value>Barbados</value></data>
+  <data name="CountryBD" xml:space="preserve"><value>Bangladesch</value></data>
+  <data name="CountryBE" xml:space="preserve"><value>Belgien</value></data>
+  <data name="CountryBF" xml:space="preserve"><value>Burkina Faso</value></data>
+  <data name="CountryBG" xml:space="preserve"><value>Bulgarien</value></data>
+  <data name="CountryBH" xml:space="preserve"><value>Bahrain</value></data>
+  <data name="CountryBI" xml:space="preserve"><value>Burundi</value></data>
+  <data name="CountryBJ" xml:space="preserve"><value>Benin</value></data>
+  <data name="CountryBL" xml:space="preserve"><value>St. Barthélemy</value></data>
+  <data name="CountryBM" xml:space="preserve"><value>Bermuda</value></data>
+  <data name="CountryBN" xml:space="preserve"><value>Brunei Darussalam</value></data>
+  <data name="CountryBO" xml:space="preserve"><value>Bolivien</value></data>
+  <data name="CountryBQ" xml:space="preserve"><value>Karibische Niederlande</value></data>
+  <data name="CountryBR" xml:space="preserve"><value>Brasilien</value></data>
+  <data name="CountryBS" xml:space="preserve"><value>Bahamas</value></data>
+  <data name="CountryBT" xml:space="preserve"><value>Bhutan</value></data>
+  <data name="CountryBW" xml:space="preserve"><value>Botsuana</value></data>
+  <data name="CountryBY" xml:space="preserve"><value>Belarus</value></data>
+  <data name="CountryBZ" xml:space="preserve"><value>Belize</value></data>
+  <data name="CountryCA" xml:space="preserve"><value>Kanada</value></data>
+  <data name="CountryCC" xml:space="preserve"><value>Kokosinseln</value></data>
+  <data name="CountryCD" xml:space="preserve"><value>Kongo-Kinshasa</value></data>
+  <data name="CountryCF" xml:space="preserve"><value>Zentralafrikanische Republik</value></data>
+  <data name="CountryCG" xml:space="preserve"><value>Kongo-Brazzaville</value></data>
+  <data name="CountryCH" xml:space="preserve"><value>Schweiz</value></data>
+  <data name="CountryCI" xml:space="preserve"><value>Côte d’Ivoire</value></data>
+  <data name="CountryCK" xml:space="preserve"><value>Cookinseln</value></data>
+  <data name="CountryCL" xml:space="preserve"><value>Chile</value></data>
+  <data name="CountryCM" xml:space="preserve"><value>Kamerun</value></data>
+  <data name="CountryCN" xml:space="preserve"><value>China</value></data>
+  <data name="CountryCO" xml:space="preserve"><value>Kolumbien</value></data>
+  <data name="CountryCR" xml:space="preserve"><value>Costa Rica</value></data>
+  <data name="CountryCU" xml:space="preserve"><value>Kuba</value></data>
+  <data name="CountryCV" xml:space="preserve"><value>Cabo Verde</value></data>
+  <data name="CountryCW" xml:space="preserve"><value>Curaçao</value></data>
+  <data name="CountryCX" xml:space="preserve"><value>Weihnachtsinsel</value></data>
+  <data name="CountryCY" xml:space="preserve"><value>Zypern</value></data>
+  <data name="CountryCZ" xml:space="preserve"><value>Tschechien</value></data>
+  <data name="CountryDE" xml:space="preserve"><value>Deutschland</value></data>
+  <data name="CountryDJ" xml:space="preserve"><value>Dschibuti</value></data>
+  <data name="CountryDK" xml:space="preserve"><value>Dänemark</value></data>
+  <data name="CountryDM" xml:space="preserve"><value>Dominica</value></data>
+  <data name="CountryDO" xml:space="preserve"><value>Dominikanische Republik</value></data>
+  <data name="CountryDZ" xml:space="preserve"><value>Algerien</value></data>
+  <data name="CountryEC" xml:space="preserve"><value>Ecuador</value></data>
+  <data name="CountryEE" xml:space="preserve"><value>Estland</value></data>
+  <data name="CountryEG" xml:space="preserve"><value>Ägypten</value></data>
+  <data name="CountryEH" xml:space="preserve"><value>Westsahara</value></data>
+  <data name="CountryER" xml:space="preserve"><value>Eritrea</value></data>
+  <data name="CountryES" xml:space="preserve"><value>Spanien</value></data>
+  <data name="CountryET" xml:space="preserve"><value>Äthiopien</value></data>
+  <data name="CountryFI" xml:space="preserve"><value>Finnland</value></data>
+  <data name="CountryFJ" xml:space="preserve"><value>Fidschi</value></data>
+  <data name="CountryFK" xml:space="preserve"><value>Falklandinseln</value></data>
+  <data name="CountryFM" xml:space="preserve"><value>Mikronesien</value></data>
+  <data name="CountryFO" xml:space="preserve"><value>Färöer</value></data>
+  <data name="CountryFR" xml:space="preserve"><value>Frankreich</value></data>
+  <data name="CountryGA" xml:space="preserve"><value>Gabun</value></data>
+  <data name="CountryGB" xml:space="preserve"><value>UK</value></data>
+  <data name="CountryGD" xml:space="preserve"><value>Grenada</value></data>
+  <data name="CountryGE" xml:space="preserve"><value>Georgien</value></data>
+  <data name="CountryGF" xml:space="preserve"><value>Französisch-Guayana</value></data>
+  <data name="CountryGG" xml:space="preserve"><value>Guernsey</value></data>
+  <data name="CountryGH" xml:space="preserve"><value>Ghana</value></data>
+  <data name="CountryGI" xml:space="preserve"><value>Gibraltar</value></data>
+  <data name="CountryGL" xml:space="preserve"><value>Grönland</value></data>
+  <data name="CountryGM" xml:space="preserve"><value>Gambia</value></data>
+  <data name="CountryGN" xml:space="preserve"><value>Guinea</value></data>
+  <data name="CountryGP" xml:space="preserve"><value>Guadeloupe</value></data>
+  <data name="CountryGQ" xml:space="preserve"><value>Äquatorialguinea</value></data>
+  <data name="CountryGR" xml:space="preserve"><value>Griechenland</value></data>
+  <data name="CountryGS" xml:space="preserve"><value>Südgeorgien und die Südlichen Sandwichinseln</value></data>
+  <data name="CountryGT" xml:space="preserve"><value>Guatemala</value></data>
+  <data name="CountryGU" xml:space="preserve"><value>Guam</value></data>
+  <data name="CountryGW" xml:space="preserve"><value>Guinea-Bissau</value></data>
+  <data name="CountryGY" xml:space="preserve"><value>Guyana</value></data>
+  <data name="CountryHK" xml:space="preserve"><value>Hongkong</value></data>
+  <data name="CountryHN" xml:space="preserve"><value>Honduras</value></data>
+  <data name="CountryHR" xml:space="preserve"><value>Kroatien</value></data>
+  <data name="CountryHT" xml:space="preserve"><value>Haiti</value></data>
+  <data name="CountryHU" xml:space="preserve"><value>Ungarn</value></data>
+  <data name="CountryID" xml:space="preserve"><value>Indonesien</value></data>
+  <data name="CountryIE" xml:space="preserve"><value>Irland</value></data>
+  <data name="CountryIL" xml:space="preserve"><value>Israel</value></data>
+  <data name="CountryIM" xml:space="preserve"><value>Isle of Man</value></data>
+  <data name="CountryIN" xml:space="preserve"><value>Indien</value></data>
+  <data name="CountryIQ" xml:space="preserve"><value>Irak</value></data>
+  <data name="CountryIR" xml:space="preserve"><value>Iran</value></data>
+  <data name="CountryIS" xml:space="preserve"><value>Island</value></data>
+  <data name="CountryIT" xml:space="preserve"><value>Italien</value></data>
+  <data name="CountryJE" xml:space="preserve"><value>Jersey</value></data>
+  <data name="CountryJM" xml:space="preserve"><value>Jamaika</value></data>
+  <data name="CountryJO" xml:space="preserve"><value>Jordanien</value></data>
+  <data name="CountryJP" xml:space="preserve"><value>Japan</value></data>
+  <data name="CountryKE" xml:space="preserve"><value>Kenia</value></data>
+  <data name="CountryKG" xml:space="preserve"><value>Kirgisistan</value></data>
+  <data name="CountryKH" xml:space="preserve"><value>Kambodscha</value></data>
+  <data name="CountryKI" xml:space="preserve"><value>Kiribati</value></data>
+  <data name="CountryKM" xml:space="preserve"><value>Komoren</value></data>
+  <data name="CountryKN" xml:space="preserve"><value>St. Kitts und Nevis</value></data>
+  <data name="CountryKP" xml:space="preserve"><value>Nordkorea</value></data>
+  <data name="CountryKR" xml:space="preserve"><value>Südkorea</value></data>
+  <data name="CountryKW" xml:space="preserve"><value>Kuwait</value></data>
+  <data name="CountryKY" xml:space="preserve"><value>Kaimaninseln</value></data>
+  <data name="CountryKZ" xml:space="preserve"><value>Kasachstan</value></data>
+  <data name="CountryLA" xml:space="preserve"><value>Laos</value></data>
+  <data name="CountryLB" xml:space="preserve"><value>Libanon</value></data>
+  <data name="CountryLC" xml:space="preserve"><value>St. Lucia</value></data>
+  <data name="CountryLI" xml:space="preserve"><value>Liechtenstein</value></data>
+  <data name="CountryLK" xml:space="preserve"><value>Sri Lanka</value></data>
+  <data name="CountryLR" xml:space="preserve"><value>Liberia</value></data>
+  <data name="CountryLS" xml:space="preserve"><value>Lesotho</value></data>
+  <data name="CountryLT" xml:space="preserve"><value>Litauen</value></data>
+  <data name="CountryLU" xml:space="preserve"><value>Luxemburg</value></data>
+  <data name="CountryLV" xml:space="preserve"><value>Lettland</value></data>
+  <data name="CountryLY" xml:space="preserve"><value>Libyen</value></data>
+  <data name="CountryMA" xml:space="preserve"><value>Marokko</value></data>
+  <data name="CountryMC" xml:space="preserve"><value>Monaco</value></data>
+  <data name="CountryMD" xml:space="preserve"><value>Republik Moldau</value></data>
+  <data name="CountryME" xml:space="preserve"><value>Montenegro</value></data>
+  <data name="CountryMF" xml:space="preserve"><value>St. Martin</value></data>
+  <data name="CountryMG" xml:space="preserve"><value>Madagaskar</value></data>
+  <data name="CountryMH" xml:space="preserve"><value>Marshallinseln</value></data>
+  <data name="CountryMK" xml:space="preserve"><value>Nordmazedonien</value></data>
+  <data name="CountryML" xml:space="preserve"><value>Mali</value></data>
+  <data name="CountryMM" xml:space="preserve"><value>Myanmar</value></data>
+  <data name="CountryMN" xml:space="preserve"><value>Mongolei</value></data>
+  <data name="CountryMO" xml:space="preserve"><value>Macau</value></data>
+  <data name="CountryMP" xml:space="preserve"><value>Nördliche Marianen</value></data>
+  <data name="CountryMQ" xml:space="preserve"><value>Martinique</value></data>
+  <data name="CountryMR" xml:space="preserve"><value>Mauretanien</value></data>
+  <data name="CountryMS" xml:space="preserve"><value>Montserrat</value></data>
+  <data name="CountryMT" xml:space="preserve"><value>Malta</value></data>
+  <data name="CountryMU" xml:space="preserve"><value>Mauritius</value></data>
+  <data name="CountryMV" xml:space="preserve"><value>Malediven</value></data>
+  <data name="CountryMW" xml:space="preserve"><value>Malawi</value></data>
+  <data name="CountryMX" xml:space="preserve"><value>Mexiko</value></data>
+  <data name="CountryMY" xml:space="preserve"><value>Malaysia</value></data>
+  <data name="CountryMZ" xml:space="preserve"><value>Mosambik</value></data>
+  <data name="CountryNA" xml:space="preserve"><value>Namibia</value></data>
+  <data name="CountryNC" xml:space="preserve"><value>Neukaledonien</value></data>
+  <data name="CountryNE" xml:space="preserve"><value>Niger</value></data>
+  <data name="CountryNF" xml:space="preserve"><value>Norfolkinsel</value></data>
+  <data name="CountryNG" xml:space="preserve"><value>Nigeria</value></data>
+  <data name="CountryNI" xml:space="preserve"><value>Nicaragua</value></data>
+  <data name="CountryNL" xml:space="preserve"><value>Niederlande</value></data>
+  <data name="CountryNO" xml:space="preserve"><value>Norwegen</value></data>
+  <data name="CountryNP" xml:space="preserve"><value>Nepal</value></data>
+  <data name="CountryNR" xml:space="preserve"><value>Nauru</value></data>
+  <data name="CountryNU" xml:space="preserve"><value>Niue</value></data>
+  <data name="CountryNZ" xml:space="preserve"><value>Neuseeland</value></data>
+  <data name="CountryOM" xml:space="preserve"><value>Oman</value></data>
+  <data name="CountryPA" xml:space="preserve"><value>Panama</value></data>
+  <data name="CountryPE" xml:space="preserve"><value>Peru</value></data>
+  <data name="CountryPF" xml:space="preserve"><value>Französisch-Polynesien</value></data>
+  <data name="CountryPG" xml:space="preserve"><value>Papua-Neuguinea</value></data>
+  <data name="CountryPH" xml:space="preserve"><value>Philippinen</value></data>
+  <data name="CountryPK" xml:space="preserve"><value>Pakistan</value></data>
+  <data name="CountryPL" xml:space="preserve"><value>Polen</value></data>
+  <data name="CountryPM" xml:space="preserve"><value>St. Pierre und Miquelon</value></data>
+  <data name="CountryPN" xml:space="preserve"><value>Pitcairninseln</value></data>
+  <data name="CountryPR" xml:space="preserve"><value>Puerto Rico</value></data>
+  <data name="CountryPS" xml:space="preserve"><value>Palästina</value></data>
+  <data name="CountryPT" xml:space="preserve"><value>Portugal</value></data>
+  <data name="CountryPW" xml:space="preserve"><value>Palau</value></data>
+  <data name="CountryPY" xml:space="preserve"><value>Paraguay</value></data>
+  <data name="CountryQA" xml:space="preserve"><value>Katar</value></data>
+  <data name="CountryRE" xml:space="preserve"><value>Réunion</value></data>
+  <data name="CountryRO" xml:space="preserve"><value>Rumänien</value></data>
+  <data name="CountryRS" xml:space="preserve"><value>Serbien</value></data>
+  <data name="CountryRU" xml:space="preserve"><value>Russland</value></data>
+  <data name="CountryRW" xml:space="preserve"><value>Ruanda</value></data>
+  <data name="CountrySA" xml:space="preserve"><value>Saudi-Arabien</value></data>
+  <data name="CountrySB" xml:space="preserve"><value>Salomonen</value></data>
+  <data name="CountrySC" xml:space="preserve"><value>Seychellen</value></data>
+  <data name="CountrySD" xml:space="preserve"><value>Sudan</value></data>
+  <data name="CountrySE" xml:space="preserve"><value>Schweden</value></data>
+  <data name="CountrySG" xml:space="preserve"><value>Singapur</value></data>
+  <data name="CountrySH" xml:space="preserve"><value>St. Helena</value></data>
+  <data name="CountrySI" xml:space="preserve"><value>Slowenien</value></data>
+  <data name="CountrySJ" xml:space="preserve"><value>Spitzbergen und Jan Mayen</value></data>
+  <data name="CountrySK" xml:space="preserve"><value>Slowakei</value></data>
+  <data name="CountrySL" xml:space="preserve"><value>Sierra Leone</value></data>
+  <data name="CountrySM" xml:space="preserve"><value>San Marino</value></data>
+  <data name="CountrySN" xml:space="preserve"><value>Senegal</value></data>
+  <data name="CountrySO" xml:space="preserve"><value>Somalia</value></data>
+  <data name="CountrySR" xml:space="preserve"><value>Suriname</value></data>
+  <data name="CountrySS" xml:space="preserve"><value>Südsudan</value></data>
+  <data name="CountryST" xml:space="preserve"><value>São Tomé und Príncipe</value></data>
+  <data name="CountrySV" xml:space="preserve"><value>El Salvador</value></data>
+  <data name="CountrySX" xml:space="preserve"><value>Sint Maarten</value></data>
+  <data name="CountrySY" xml:space="preserve"><value>Syrien</value></data>
+  <data name="CountrySZ" xml:space="preserve"><value>Eswatini</value></data>
+  <data name="CountryTC" xml:space="preserve"><value>Turks- und Caicosinseln</value></data>
+  <data name="CountryTD" xml:space="preserve"><value>Tschad</value></data>
+  <data name="CountryTF" xml:space="preserve"><value>Französische Süd- und Antarktisgebiete</value></data>
+  <data name="CountryTG" xml:space="preserve"><value>Togo</value></data>
+  <data name="CountryTH" xml:space="preserve"><value>Thailand</value></data>
+  <data name="CountryTJ" xml:space="preserve"><value>Tadschikistan</value></data>
+  <data name="CountryTL" xml:space="preserve"><value>Timor-Leste</value></data>
+  <data name="CountryTM" xml:space="preserve"><value>Turkmenistan</value></data>
+  <data name="CountryTN" xml:space="preserve"><value>Tunesien</value></data>
+  <data name="CountryTO" xml:space="preserve"><value>Tonga</value></data>
+  <data name="CountryTR" xml:space="preserve"><value>Türkei</value></data>
+  <data name="CountryTT" xml:space="preserve"><value>Trinidad und Tobago</value></data>
+  <data name="CountryTV" xml:space="preserve"><value>Tuvalu</value></data>
+  <data name="CountryTW" xml:space="preserve"><value>Taiwan</value></data>
+  <data name="CountryTZ" xml:space="preserve"><value>Tansania</value></data>
+  <data name="CountryUA" xml:space="preserve"><value>Ukraine</value></data>
+  <data name="CountryUG" xml:space="preserve"><value>Uganda</value></data>
+  <data name="CountryUS" xml:space="preserve"><value>USA</value></data>
+  <data name="CountryUY" xml:space="preserve"><value>Uruguay</value></data>
+  <data name="CountryUZ" xml:space="preserve"><value>Usbekistan</value></data>
+  <data name="CountryVA" xml:space="preserve"><value>Vatikanstadt</value></data>
+  <data name="CountryVC" xml:space="preserve"><value>St. Vincent und die Grenadinen</value></data>
+  <data name="CountryVE" xml:space="preserve"><value>Venezuela</value></data>
+  <data name="CountryVG" xml:space="preserve"><value>Britische Jungferninseln</value></data>
+  <data name="CountryVI" xml:space="preserve"><value>Amerikanische Jungferninseln</value></data>
+  <data name="CountryVN" xml:space="preserve"><value>Vietnam</value></data>
+  <data name="CountryVU" xml:space="preserve"><value>Vanuatu</value></data>
+  <data name="CountryWF" xml:space="preserve"><value>Wallis und Futuna</value></data>
+  <data name="CountryWS" xml:space="preserve"><value>Samoa</value></data>
+  <data name="CountryXK" xml:space="preserve"><value>Kosovo</value></data>
+  <data name="CountryYE" xml:space="preserve"><value>Jemen</value></data>
+  <data name="CountryYT" xml:space="preserve"><value>Mayotte</value></data>
+  <data name="CountryZA" xml:space="preserve"><value>Südafrika</value></data>
+  <data name="CountryZM" xml:space="preserve"><value>Sambia</value></data>
+  <data name="CountryZW" xml:space="preserve"><value>Simbabwe</value></data>
+  <data name="LicenseUnicode" xml:space="preserve"><value>Unicode CLDR, Unicode-Lizenz</value></data>
 </root>

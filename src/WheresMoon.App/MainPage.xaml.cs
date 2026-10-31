@@ -59,6 +59,7 @@ public partial class MainPage : ContentPage
 	private SkyEventCalendar? _events;
 	private SnapPoints? _snapPoints;
 	private GeoLocation? _eventsLocation;
+	private string? _eventsZone;
 	private DateTimeOffset? _selectedTime;
 	private TimeSpan _lastWheel;
 	private bool _isSliding;
@@ -159,12 +160,12 @@ public partial class MainPage : ContentPage
 
 	private void Show(DateTimeOffset time, bool isFollowingFinger)
 	{
-		TimeZoneInfo zone = TimeZoneInfo.Local;
+		TimeZoneInfo zone = _location.Zone;
 		DateTimeOffset local = TimeZoneInfo.ConvertTime(time, zone);
 
 		ClockLabel.Text = SkyTexts.Clock(local);
 		ClockLabel.TextColor = _selectedTime is null ? Colors.White : ClockTint;
-		ContextLabel.Text = SkyTexts.Date(local, TimeZoneInfo.ConvertTime(AppClock.Now, zone));
+		ContextLabel.Text = SkyTexts.Context(_location.Place, local, TimeZoneInfo.ConvertTime(AppClock.Now, zone));
 
 		if (_location.Current is GeoLocation location)
 		{
@@ -248,11 +249,12 @@ public partial class MainPage : ContentPage
 
 	private void PrepareEvents(GeoLocation location, TimeZoneInfo zone)
 	{
-		if (_eventsLocation != location)
+		if (_eventsLocation != location || _eventsZone != zone.Id)
 		{
 			_events = new SkyEventCalendar(location);
 			_snapPoints = new SnapPoints(location, zone, _events);
 			_eventsLocation = location;
+			_eventsZone = zone.Id;
 		}
 	}
 
@@ -262,7 +264,7 @@ public partial class MainPage : ContentPage
 
 		if (_location.Current is GeoLocation location)
 		{
-			UpdateOtherPages(_selectedTime ?? AppClock.Now, location, TimeZoneInfo.Local);
+			UpdateOtherPages(_selectedTime ?? AppClock.Now, location, _location.Zone);
 		}
 	}
 
@@ -375,7 +377,7 @@ public partial class MainPage : ContentPage
 		}
 
 		InfoPage page = (InfoPage)_slider.Page;
-		PrepareEvents(location, TimeZoneInfo.Local);
+		PrepareEvents(location, _location.Zone);
 
 		IReadOnlyList<DateTimeOffset> near = _snapPoints!.Around(page, _scrubber.Time, TimeScrubber.ReachOf(page));
 		if (_scrubber.Move(distance, speed, layout.Width, TimeScrubber.ScaleOf(page), near))

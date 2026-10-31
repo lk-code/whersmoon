@@ -2,6 +2,7 @@ using System.Globalization;
 using WheresMoon.App.Controls;
 using WheresMoon.App.Resources.Strings;
 using WheresMoon.Core;
+using WheresMoon.Core.Places;
 
 namespace WheresMoon.App.Services;
 
@@ -13,15 +14,25 @@ internal static class SkyTexts
 
 	public static string Clock(DateTimeOffset time) => Format(time);
 
-	/// <summary>The date of a chosen time, or nothing if that is today.</summary>
-	public static string Date(DateTimeOffset time, DateTimeOffset now)
+	/// <summary>Line below the clock: a chosen place and the date of a day other than today.</summary>
+	public static string Context(Place? place, DateTimeOffset time, DateTimeOffset now)
 	{
-		if (time.Date == now.Date)
-		{
-			return string.Empty;
-		}
+		string[] parts =
+		[
+			place is null ? string.Empty : PlaceName(place),
+			time.Date == now.Date ? string.Empty : time.ToString(Strings.Get(time.Year == now.Year ? "DateLong" : "DateLongYear"), CultureInfo.CurrentCulture),
+		];
 
-		return time.ToString(Strings.Get(time.Year == now.Year ? "DateLong" : "DateLongYear"), CultureInfo.CurrentCulture);
+		return string.Join(" · ", parts.Where(part => part.Length > 0));
+	}
+
+	/// <summary>Full name for lists and the settings, such as "Frankfurt am Main · Hessen · Deutschland".</summary>
+	public static string PlaceLabel(Place place)
+	{
+		string[] parts = [PlaceName(place), place.Region, CountryName(place.Country)];
+
+		// In a city state the region repeats the name.
+		return string.Join(" · ", parts.Where(part => part.Length > 0).Distinct());
 	}
 
 	public static IReadOnlyList<InfoRow> SunAndMoonRows(SkySnapshot sky, DayLengthInfo day) =>
@@ -99,6 +110,20 @@ internal static class SkyTexts
 
 		string nextText = Strings.Format(moon.IsUp ? "SpeakMoonSets" : "SpeakMoonRises", Format(next.Value.Time));
 		return $"{sunText}. {moonText}, {nextText}.";
+	}
+
+	/// <summary>A place set by coordinates has no name, so those stand in for it.</summary>
+	private static string PlaceName(Place place) => place.Name.Length > 0
+		? place.Name
+		: string.Create(CultureInfo.CurrentCulture, $"{place.Latitude:0.00}, {place.Longitude:0.00}");
+
+	/// <summary>From the resources, because RegionInfo gives each country's own name on some systems: "Noreg" instead of "Norwegen".</summary>
+	private static string CountryName(string code)
+	{
+		string key = $"Country{code}";
+		string name = Strings.Get(key);
+
+		return name == key ? code : name;
 	}
 
 	private static string SunLine(SkySnapshot sky, DayLengthInfo day) => day.Kind switch
