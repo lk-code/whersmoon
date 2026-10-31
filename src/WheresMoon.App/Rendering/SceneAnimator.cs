@@ -12,6 +12,17 @@ internal sealed class SceneAnimator(GraphicsView view, SceneDrawable drawable)
 	/// <summary>The state being moved to. Stays valid while the animation runs.</summary>
 	public SceneState Target => _target;
 
+	/// <summary>Follows a time chosen by the user, which must not lag behind the finger.</summary>
+	public void Show(SceneState state)
+	{
+		view.AbortAnimation(AnimationName);
+
+		_target = state;
+		_hasState = true;
+		drawable.State = state;
+		view.Invalidate();
+	}
+
 	public void MoveTo(SceneState state)
 	{
 		_target = state;

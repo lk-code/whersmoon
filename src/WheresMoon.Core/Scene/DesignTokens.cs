@@ -123,6 +123,12 @@ public static class DesignTokens
         public const double BelowHalo = 0.12;
     }
 
+    public static class Scrub
+    {
+        /// <summary>Clock colour while it shows a chosen time instead of the current one.</summary>
+        public static readonly Rgba ClockTint = Rgba.FromHex("#FFDFA8");
+    }
+
     public static class Sun
     {
         public static readonly Rgba Disc = Rgba.FromHex("#FFFAF0");

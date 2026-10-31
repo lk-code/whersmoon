@@ -27,6 +27,20 @@ public partial class MainPage : ContentPage
 	private const double PagerButtonWidth = 96.0;
 	private const double PagerButtonHeight = 28.0;
 
+	/// <summary>How much of a screen width one press of an arrow key moves the time.</summary>
+	private const double KeyStepShare = 1.0 / 96.0;
+
+	/// <summary>A pause this long in seconds ends a run of wheel events.</summary>
+	private const double WheelPause = 0.4;
+
+	/// <summary>Shortest time between wheel events, so that a burst does not read as an endless speed.</summary>
+	private const double ShortestWheelInterval = 0.008;
+
+	private static readonly Color ClockTint = new(
+		(float)DesignTokens.Scrub.ClockTint.R,
+		(float)DesignTokens.Scrub.ClockTint.G,
+		(float)DesignTokens.Scrub.ClockTint.B);
+
 	/// <summary>Timer tick after the full minute, so that the clock never shows the old minute.</summary>
 	private static readonly TimeSpan TickMargin = TimeSpan.FromMilliseconds(50);
 
@@ -37,13 +51,18 @@ public partial class MainPage : ContentPage
 	private readonly InfoSlider _slider = new();
 	private readonly PointerGesture _gesture = new();
 	private readonly Stopwatch _gestureClock = Stopwatch.StartNew();
+	private readonly TimeScrubber _scrubber = new();
 
 	private SafeInsets _insets = SafeInsets.None;
 	private SceneLayout? _layout;
 	private SettingsView? _settings;
 	private SkyEventCalendar? _events;
+	private SnapPoints? _snapPoints;
 	private GeoLocation? _eventsLocation;
+	private DateTimeOffset? _selectedTime;
+	private TimeSpan _lastWheel;
 	private bool _isSliding;
+	private bool _isScrubbing;
 	private bool _hasAppeared;
 
 	public MainPage()
@@ -85,42 +104,90 @@ public partial class MainPage : ContentPage
 
 		SemanticProperties.SetDescription(SettingsButton, Strings.Get("SettingsButton"));
 		SemanticProperties.SetHint(PagerButton, Strings.Get("PagerHint"));
+		NowButton.Text = Strings.Get("NowButton");
+		SemanticProperties.SetHint(NowButton, Strings.Get("NowButtonHint"));
 		DescribePage();
 
 #if WINDOWS
-		Loaded += (_, _) => Platforms.Windows.WindowChrome.Apply(this, Scene, CloseSettings);
+		Loaded += (_, _) => Platforms.Windows.WindowChrome.Apply(this, Scene, HandleKey, OnWheel);
+#elif MACCATALYST
+		Loaded += (_, _) => Platforms.MacCatalyst.ScrollInput.Attach(Scene, OnWheel);
 #endif
 
 		// Everything needed for the first frame is at hand, so it already shows the real sky.
 		Refresh();
 	}
 
-	/// <summary>Recomputes everything for the current moment and schedules the next full minute.</summary>
+	/// <summary>Recomputes everything for the moment on display and schedules the next full minute.</summary>
 	public void Refresh()
 	{
 		// Reading the zone afresh on every tick also picks up time zone changes on all platforms.
 		TimeZoneInfo.ClearCachedData();
-		TimeZoneInfo zone = TimeZoneInfo.Local;
 
 		DateTimeOffset now = AppClock.Now;
-		ClockLabel.Text = SkyTexts.Clock(TimeZoneInfo.ConvertTime(now, zone));
+		Show(_selectedTime ?? now, isFollowingFinger: false);
+		ScheduleNextTick(now);
+	}
+
+	/// <summary>Reacts to a key that is not meant for a text field. Returns whether it was used.</summary>
+	public bool HandleKey(SceneKey key)
+	{
+		if (_settings is not null)
+		{
+			if (key == SceneKey.Escape)
+			{
+				CloseSettings();
+				return true;
+			}
+
+			return false;
+		}
+
+		switch (key)
+		{
+			case SceneKey.Left:
+				StepTime(-1.0);
+				return true;
+			case SceneKey.Right:
+				StepTime(1.0);
+				return true;
+			default:
+				ReturnToNow();
+				return true;
+		}
+	}
+
+	private void Show(DateTimeOffset time, bool isFollowingFinger)
+	{
+		TimeZoneInfo zone = TimeZoneInfo.Local;
+		DateTimeOffset local = TimeZoneInfo.ConvertTime(time, zone);
+
+		ClockLabel.Text = SkyTexts.Clock(local);
+		ClockLabel.TextColor = _selectedTime is null ? Colors.White : ClockTint;
+		ContextLabel.Text = SkyTexts.Date(local, TimeZoneInfo.ConvertTime(AppClock.Now, zone));
 
 		if (_location.Current is GeoLocation location)
 		{
-			SkySnapshot sky = SkyCalculator.Compute(now, location, zone);
+			SkySnapshot sky = SkyCalculator.Compute(time, location, zone);
+			SceneState state = SceneState.From(sky, _animator.Target);
 
-			_slider.SetRows(0, SkyTexts.SunAndMoonRows(sky, DayLengthCalculator.Compute(now, location, zone)));
-			UpdateOtherPages(now, location, zone);
-			SemanticProperties.SetDescription(Scene, SkyTexts.Description(sky));
+			_slider.SetRows(0, SkyTexts.SunAndMoonRows(sky, DayLengthCalculator.Compute(time, location, zone)));
+			UpdateOtherPages(time, location, zone);
 
-			_animator.MoveTo(SceneState.From(sky, _animator.Target));
+			if (isFollowingFinger)
+			{
+				_animator.Show(state);
+			}
+			else
+			{
+				SemanticProperties.SetDescription(Scene, SkyTexts.Description(sky));
+				_animator.MoveTo(state);
+			}
 		}
 		else
 		{
 			_slider.SetRows(0, [new InfoRow(Strings.Get("LocationMissing"), InfoRowStyle.Primary)]);
 		}
-
-		ScheduleNextTick(now);
 	}
 
 	protected override async void OnAppearing()
@@ -169,12 +236,7 @@ public partial class MainPage : ContentPage
 	{
 		if (_slider.IsShown(1))
 		{
-			if (_eventsLocation != location)
-			{
-				_events = new SkyEventCalendar(location);
-				_eventsLocation = location;
-			}
-
+			PrepareEvents(location, zone);
 			_slider.SetRows(1, SkyTexts.EventRows(_events!.Upcoming(time), time, zone));
 		}
 
@@ -184,13 +246,23 @@ public partial class MainPage : ContentPage
 		}
 	}
 
+	private void PrepareEvents(GeoLocation location, TimeZoneInfo zone)
+	{
+		if (_eventsLocation != location)
+		{
+			_events = new SkyEventCalendar(location);
+			_snapPoints = new SnapPoints(location, zone, _events);
+			_eventsLocation = location;
+		}
+	}
+
 	private void OnPageChanged()
 	{
 		DescribePage();
 
 		if (_location.Current is GeoLocation location)
 		{
-			UpdateOtherPages(AppClock.Now, location, TimeZoneInfo.Local);
+			UpdateOtherPages(_selectedTime ?? AppClock.Now, location, TimeZoneInfo.Local);
 		}
 	}
 
@@ -237,28 +309,115 @@ public partial class MainPage : ContentPage
 		if (_isSliding)
 		{
 			_slider.DragBy(distance);
+			return;
 		}
+
+		if (!_isScrubbing)
+		{
+			_isScrubbing = true;
+			_scrubber.Begin(_selectedTime ?? AppClock.Now);
+		}
+
+		ScrubBy(distance, _gesture.VelocityX);
 	}
 
 	private void OnPointerUp(object? sender, TouchEventArgs e)
 	{
-		if (_isSliding)
-		{
-			_isSliding = false;
-			_slider.EndDrag(_gesture.VelocityX);
-		}
+		FinishDrag(_gesture.VelocityX);
 
-		_gesture.End(_gestureClock.Elapsed);
+		if (_gesture.End(_gestureClock.Elapsed) == GestureEnd.DoubleTap)
+		{
+			ReturnToNow();
+		}
 	}
 
-	private void OnPointerCancelled()
+	private void OnPointerCancelled() => FinishDrag(0.0);
+
+	private void FinishDrag(double velocity)
 	{
 		if (_isSliding)
 		{
 			_isSliding = false;
-			_slider.EndDrag(0.0);
+			_slider.EndDrag(velocity);
+		}
+
+		if (_isScrubbing)
+		{
+			_isScrubbing = false;
+			Refresh();
 		}
 	}
+
+	private void OnWheel(double distance)
+	{
+		if (_settings is not null)
+		{
+			return;
+		}
+
+		TimeSpan now = _gestureClock.Elapsed;
+		double interval = (now - _lastWheel).TotalSeconds;
+		_lastWheel = now;
+
+		if (interval > WheelPause)
+		{
+			_scrubber.Begin(_selectedTime ?? AppClock.Now);
+		}
+
+		ScrubBy(distance, distance / Math.Max(interval, ShortestWheelInterval));
+	}
+
+	private void ScrubBy(double distance, double speed)
+	{
+		if (_location.Current is not GeoLocation location || _layout is not SceneLayout layout)
+		{
+			return;
+		}
+
+		InfoPage page = (InfoPage)_slider.Page;
+		PrepareEvents(location, TimeZoneInfo.Local);
+
+		IReadOnlyList<DateTimeOffset> near = _snapPoints!.Around(page, _scrubber.Time, TimeScrubber.ReachOf(page));
+		if (_scrubber.Move(distance, speed, layout.Width, TimeScrubber.ScaleOf(page), near))
+		{
+			Haptics.Tick(Scene);
+		}
+
+		SelectTime(_scrubber.Time);
+	}
+
+	private void StepTime(double direction)
+	{
+		if (_location.Current is null)
+		{
+			return;
+		}
+
+		_scrubber.Begin(_selectedTime ?? AppClock.Now);
+		_scrubber.Step(TimeScrubber.ScaleOf((InfoPage)_slider.Page) * (KeyStepShare * direction));
+		SelectTime(_scrubber.Time);
+	}
+
+	private void SelectTime(DateTimeOffset time)
+	{
+		_selectedTime = time;
+		NowButton.IsVisible = true;
+		Show(time, isFollowingFinger: true);
+	}
+
+	private void ReturnToNow()
+	{
+		if (_selectedTime is null)
+		{
+			return;
+		}
+
+		_selectedTime = null;
+		NowButton.IsVisible = false;
+		Refresh();
+	}
+
+	private void OnNowClicked(object? sender, EventArgs e) => ReturnToNow();
 
 	private void OnPagerClicked(object? sender, EventArgs e) => _slider.ShowNext();
 
@@ -424,7 +583,7 @@ public partial class MainPage : ContentPage
 	private void SetBackgroundAccessible(bool isAccessible)
 	{
 		// Set one by one, because excluding a whole layout has no effect on Windows.
-		foreach (VisualElement element in new VisualElement[] { Scene, ClockLabel, ContextLabel, PagerButton, SettingsButton })
+		foreach (VisualElement element in new VisualElement[] { Scene, ClockLabel, ContextLabel, PagerButton, NowButton, SettingsButton })
 		{
 			AutomationProperties.SetIsInAccessibleTree(element, isAccessible);
 		}

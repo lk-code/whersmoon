@@ -100,4 +100,8 @@
   <data name="PageLight" xml:space="preserve"><value>Golden and blue hour</value></data>
   <data name="PagerDescription" xml:space="preserve"><value>Page {0} of {1}: {2}</value></data>
   <data name="PagerHint" xml:space="preserve"><value>Shows the next page</value></data>
+  <data name="NowButton" xml:space="preserve"><value>Now</value></data>
+  <data name="NowButtonHint" xml:space="preserve"><value>Returns to the current time</value></data>
+  <data name="DateLong" xml:space="preserve"><value>ddd, MMM d</value></data>
+  <data name="DateLongYear" xml:space="preserve"><value>ddd, MMM d, yyyy</value></data>
 </root>

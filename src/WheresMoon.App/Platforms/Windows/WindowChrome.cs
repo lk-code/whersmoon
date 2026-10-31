@@ -16,7 +16,11 @@ internal static class WindowChrome
 			? window.AppWindow.TitleBar.Height / page.Window.DisplayDensity
 			: 0.0;
 
-	public static void Apply(VisualElement page, VisualElement initialFocus, Action onEscape)
+	/// <summary>Distance one notch of a mouse wheel stands for, which reports 120 per notch.</summary>
+	private const double WheelNotchDistance = 24.0;
+	private const double WheelUnitsPerNotch = 120.0;
+
+	public static void Apply(VisualElement page, VisualElement initialFocus, Func<SceneKey, bool> onKey, Action<double> onWheel)
 	{
 		if (page.Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window window ||
 			page.Handler?.PlatformView is not FrameworkElement content)
@@ -34,9 +38,18 @@ internal static class WindowChrome
 
 		content.PreviewKeyDown += (_, e) =>
 		{
-			if (e.Key == VirtualKey.Escape)
+			SceneKey? key = e.Key switch
 			{
-				onEscape();
+				VirtualKey.Left => SceneKey.Left,
+				VirtualKey.Right => SceneKey.Right,
+				VirtualKey.Home => SceneKey.Home,
+				VirtualKey.Escape => SceneKey.Escape,
+				_ => null,
+			};
+
+			if (key is SceneKey pressed && onKey(pressed))
+			{
+				e.Handled = true;
 			}
 		};
 
@@ -47,6 +60,16 @@ internal static class WindowChrome
 			scene.IsTabStop = true;
 			scene.UseSystemFocusVisuals = false;
 			scene.Focus(FocusState.Programmatic);
+
+			scene.PointerWheelChanged += (_, e) =>
+			{
+				var properties = e.GetCurrentPoint(scene).Properties;
+				double distance = properties.MouseWheelDelta / WheelUnitsPerNotch * WheelNotchDistance;
+
+				// Turning the wheel towards the user scrolls down, which counts as later.
+				onWheel(properties.IsHorizontalMouseWheel ? distance : -distance);
+				e.Handled = true;
+			};
 		}
 	}
 

@@ -13,6 +13,17 @@ internal static class SkyTexts
 
 	public static string Clock(DateTimeOffset time) => Format(time);
 
+	/// <summary>The date of a chosen time, or nothing if that is today.</summary>
+	public static string Date(DateTimeOffset time, DateTimeOffset now)
+	{
+		if (time.Date == now.Date)
+		{
+			return string.Empty;
+		}
+
+		return time.ToString(Strings.Get(time.Year == now.Year ? "DateLong" : "DateLongYear"), CultureInfo.CurrentCulture);
+	}
+
 	public static IReadOnlyList<InfoRow> SunAndMoonRows(SkySnapshot sky, DayLengthInfo day) =>
 	[
 		new(SunLine(sky, day), InfoRowStyle.Primary),
