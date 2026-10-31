@@ -16,8 +16,28 @@ using SKTypeface light = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Light.
 using SKTypeface regular = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Regular.ttf"));
 using SKTypeface medium = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Medium.ttf"));
 
-var dayTexts = new Texts("10:23", "Sonnenaufgang: 07:31 – Sonnenuntergang: 17:02", "Mondaufgang: 03:10 – Monduntergang: 12:50", "Abnehmende Sichel · 18 %");
-var nightTexts = new Texts("18:47", "Sonnenaufgang: 07:31 – Sonnenuntergang: 17:02", "Mondaufgang: 11:48 – Monduntergang: 20:15", "Zunehmende Sichel · 18 %");
+const string DayLength = "Tageslänge 9 h 31 min · 3 min kürzer als gestern";
+var dayTexts = new Texts("10:23", "Tromsø · Mo., 3. Nov.", ["Sonnenaufgang: 07:31 – Sonnenuntergang: 17:02", "Mondaufgang: 03:10 – Monduntergang: 12:50"], "Abnehmende Sichel · 18 %", DayLength);
+var nightTexts = new Texts("18:47", string.Empty, ["Sonnenaufgang: 07:31 – Sonnenuntergang: 17:02", "Mondaufgang: 11:48 – Monduntergang: 20:15"], "Zunehmende Sichel · 18 %", DayLength);
+var eventTexts = new Texts("18:47", string.Empty,
+    [
+        "Vollmond: 24.11., 15:54 · in 23 Tagen",
+        "Neumond: 09.11., 08:02 · in 8 Tagen",
+        "Supermond: 24.11., 15:54 · in 23 Tagen",
+        "Mondfinsternis (Halbschatten): 21.02.27, 00:12",
+        "Sonnenfinsternis (ringförmig): 02.08.27, 11:13",
+    ],
+    string.Empty,
+    string.Empty);
+var lightTexts = new Texts("18:47", string.Empty,
+    [
+        "Morgens: Blaue Stunde 06:52 – 07:08",
+        "Goldene Stunde 07:08 – 08:15",
+        "Abends: Goldene Stunde 15:58 – 17:06",
+        "Blaue Stunde 17:06 – 17:22",
+    ],
+    string.Empty,
+    string.Empty);
 
 var day = new SceneState
 {
@@ -59,6 +79,19 @@ Render("format-desktop.png", 1920, 1080, 1, SafeInsets.None, day, dayTexts);
 Render("format-square.png", 800, 800, 1, SafeInsets.None, moonBelow, dayTexts);
 Render("format-tablet-between.png", 800, 1040, 1, SafeInsets.None, night, nightTexts);
 Render("format-window-small.png", 360, 480, 2, SafeInsets.None, night, nightTexts);
+Render("page-events.png", 320, 568, 2, SafeInsets.None, night, eventTexts);
+Render("page-light.png", 390, 844, 2, SafeInsets.None, night, lightTexts);
+Render("page-events-en.png", 320, 568, 2, SafeInsets.None, night, eventTexts with
+{
+    Rows =
+    [
+        "Full moon: Nov 24, 3:54 PM · in 23 days",
+        "New moon: Nov 9, 8:02 AM · in 8 days",
+        "Supermoon: Nov 24, 3:54 PM · in 23 days",
+        "Lunar eclipse (penumbral): Feb 21, 2027, 12:12 AM",
+        "Solar eclipse (annular): Aug 2, 2027, 11:13 AM",
+    ],
+});
 
 RenderSkySheet("sheet-sky.png", dayTexts);
 RenderMoonSheet("sheet-moon.png");
@@ -86,9 +119,16 @@ void DrawTexts(SKCanvas target, SceneLayout layout, Texts texts)
 {
     float centerX = (float)layout.CenterX;
     Line(texts.Clock, light, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0, 1f, -0.02f);
-    Line(texts.Sun, medium, layout.RiseSetFontSize, layout.RowCenterY(0), 1f, 0f);
-    Line(texts.Moon, medium, layout.RiseSetFontSize, layout.RowCenterY(1), 1f, 0f);
-    Line(texts.Phase, regular, layout.PhaseFontSize, layout.RowCenterY(2), (float)DesignTokens.Opacity.PhaseText, 0f);
+    Line(texts.Context, regular, layout.CaptionFontSize, layout.ContextCenterY, (float)DesignTokens.Opacity.PhaseText, 0f);
+
+    bool isList = texts.Phase.Length == 0;
+    for (int row = 0; row < texts.Rows.Count; row++)
+    {
+        Line(texts.Rows[row], medium, isList ? layout.PhaseFontSize : layout.RiseSetFontSize, layout.RowCenterY(row), 1f, 0f);
+    }
+
+    Line(texts.Phase, regular, layout.PhaseFontSize, layout.RowCenterY(texts.Rows.Count), (float)DesignTokens.Opacity.PhaseText, 0f);
+    Line(texts.Caption, regular, layout.CaptionFontSize, layout.RowCenterY(texts.Rows.Count + 1), (float)DesignTokens.Opacity.CaptionText, 0f);
 
     void Line(string text, SKTypeface typeface, double size, double centerY, float opacity, float spacing)
     {
@@ -189,4 +229,4 @@ static string FindRepositoryRoot()
     return directory?.FullName ?? throw new InvalidOperationException("Run this tool from inside the repository.");
 }
 
-internal sealed record Texts(string Clock, string Sun, string Moon, string Phase);
+internal sealed record Texts(string Clock, string Context, IReadOnlyList<string> Rows, string Phase, string Caption);

@@ -14,19 +14,16 @@
             <Label x:Name="ClockLabel" FontFamily="ManropeLight" TextColor="White"
                    HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
                    LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
-            <Label x:Name="SunLabel" FontFamily="ManropeMedium" TextColor="White"
-                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
-                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
-            <Label x:Name="MoonLabel" FontFamily="ManropeMedium" TextColor="White"
-                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
-                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
-            <Label x:Name="PhaseLabel" FontFamily="ManropeRegular" TextColor="White" Opacity="0.8"
+            <Label x:Name="ContextLabel" FontFamily="ManropeRegular" TextColor="White" Opacity="0.8"
                    HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
                    LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
         </Grid>
 
+        <Button x:Name="PagerButton" BackgroundColor="Transparent" BorderWidth="0" Padding="0"
+                HorizontalOptions="Center" VerticalOptions="Start" Clicked="OnPagerClicked" />
+
         <!-- The probe is the only way to learn the insets: this grid keeps its full size and only shrinks its content. -->
-        <Grid x:Name="SafeArea" SafeAreaEdges="Container" CascadeInputTransparent="False">
+        <Grid x:Name="SafeArea" SafeAreaEdges="Container" InputTransparent="True" CascadeInputTransparent="False">
             <BoxView x:Name="SafeAreaProbe" Color="Transparent" InputTransparent="True" />
             <ImageButton x:Name="SettingsButton"
                          Source="settings_icon.png"

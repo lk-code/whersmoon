@@ -97,6 +97,10 @@ public static class DesignTokens
         /// <summary>Largest distance from the compass centre, so that it stays a small detail in big windows.</summary>
         public const double CompassLargestReach = 0.26;
 
+        /// <summary>Page dots: radius of one and distance between two.</summary>
+        public const double DotRadius = 0.0075;
+        public const double DotSpacing = 0.028;
+
         public const double ArcStrokeWidth = 1.2;
         public const double MoonArcDash = 2.0;
         public const double MoonArcGap = 5.0;
@@ -111,6 +115,8 @@ public static class DesignTokens
         public const double Earthshine = 0.11;
         public const double PhaseText = 0.80;
         public const double CaptionText = 0.65;
+        public const double DotActive = 0.85;
+        public const double DotIdle = 0.3;
 
         /// <summary>Disc and halo of a body below the horizon.</summary>
         public const double BelowDisc = 0.55;

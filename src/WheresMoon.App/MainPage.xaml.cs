@@ -1,9 +1,12 @@
-﻿using Microsoft.Maui.Controls.Shapes;
+﻿using System.Diagnostics;
+using Microsoft.Maui.Controls.Shapes;
+using WheresMoon.App.Controls;
 using WheresMoon.App.Rendering;
 using WheresMoon.App.Resources.Strings;
 using WheresMoon.App.Services;
 using WheresMoon.App.Settings;
 using WheresMoon.Core;
+using WheresMoon.Core.Interaction;
 using WheresMoon.Core.Scene;
 
 namespace WheresMoon.App;
@@ -20,6 +23,10 @@ public partial class MainPage : ContentPage
 	private const double DialogMaximumHeightFraction = 0.85;
 	private const double DialogMargin = 16.0;
 
+	/// <summary>Touch target around the page dots.</summary>
+	private const double PagerButtonWidth = 96.0;
+	private const double PagerButtonHeight = 28.0;
+
 	/// <summary>Timer tick after the full minute, so that the clock never shows the old minute.</summary>
 	private static readonly TimeSpan TickMargin = TimeSpan.FromMilliseconds(50);
 
@@ -27,9 +34,16 @@ public partial class MainPage : ContentPage
 	private readonly SceneAnimator _animator;
 	private readonly IDispatcherTimer _timer;
 	private readonly LocationService _location = new();
+	private readonly InfoSlider _slider = new();
+	private readonly PointerGesture _gesture = new();
+	private readonly Stopwatch _gestureClock = Stopwatch.StartNew();
 
 	private SafeInsets _insets = SafeInsets.None;
+	private SceneLayout? _layout;
 	private SettingsView? _settings;
+	private SkyEventCalendar? _events;
+	private GeoLocation? _eventsLocation;
+	private bool _isSliding;
 	private bool _hasAppeared;
 
 	public MainPage()
@@ -38,6 +52,7 @@ public partial class MainPage : ContentPage
 
 		Scene.Drawable = _drawable;
 		_animator = new SceneAnimator(Scene, _drawable);
+		TextLayer.Add(_slider);
 
 		_timer = Dispatcher.CreateTimer();
 		_timer.IsRepeating = false;
@@ -56,7 +71,21 @@ public partial class MainPage : ContentPage
 
 		_location.Changed += Refresh;
 
+		Scene.StartInteraction += OnPointerDown;
+		Scene.DragInteraction += OnPointerMove;
+		Scene.EndInteraction += OnPointerUp;
+		Scene.CancelInteraction += (_, _) => OnPointerCancelled();
+
+		_slider.PageChanged += OnPageChanged;
+		_slider.PositionChanged += () =>
+		{
+			_drawable.PagePosition = _slider.Position;
+			Scene.Invalidate();
+		};
+
 		SemanticProperties.SetDescription(SettingsButton, Strings.Get("SettingsButton"));
+		SemanticProperties.SetHint(PagerButton, Strings.Get("PagerHint"));
+		DescribePage();
 
 #if WINDOWS
 		Loaded += (_, _) => Platforms.Windows.WindowChrome.Apply(this, Scene, CloseSettings);
@@ -80,18 +109,15 @@ public partial class MainPage : ContentPage
 		{
 			SkySnapshot sky = SkyCalculator.Compute(now, location, zone);
 
-			SunLabel.Text = SkyTexts.SunLine(sky);
-			MoonLabel.Text = SkyTexts.MoonLine(sky);
-			PhaseLabel.Text = SkyTexts.PhaseLine(sky);
+			_slider.SetRows(0, SkyTexts.SunAndMoonRows(sky, DayLengthCalculator.Compute(now, location, zone)));
+			UpdateOtherPages(now, location, zone);
 			SemanticProperties.SetDescription(Scene, SkyTexts.Description(sky));
 
 			_animator.MoveTo(SceneState.From(sky, _animator.Target));
 		}
 		else
 		{
-			SunLabel.Text = Strings.Get("LocationMissing");
-			MoonLabel.Text = string.Empty;
-			PhaseLabel.Text = string.Empty;
+			_slider.SetRows(0, [new InfoRow(Strings.Get("LocationMissing"), InfoRowStyle.Primary)]);
 		}
 
 		ScheduleNextTick(now);
@@ -138,6 +164,104 @@ public partial class MainPage : ContentPage
 		return base.OnBackButtonPressed();
 	}
 
+	/// <summary>The other pages wait until they come into view, so that they cost nothing at startup.</summary>
+	private void UpdateOtherPages(DateTimeOffset time, GeoLocation location, TimeZoneInfo zone)
+	{
+		if (_slider.IsShown(1))
+		{
+			if (_eventsLocation != location)
+			{
+				_events = new SkyEventCalendar(location);
+				_eventsLocation = location;
+			}
+
+			_slider.SetRows(1, SkyTexts.EventRows(_events!.Upcoming(time), time, zone));
+		}
+
+		if (_slider.IsShown(2))
+		{
+			_slider.SetRows(2, SkyTexts.LightRows(LightHoursCalculator.Compute(time, location, zone)));
+		}
+	}
+
+	private void OnPageChanged()
+	{
+		DescribePage();
+
+		if (_location.Current is GeoLocation location)
+		{
+			UpdateOtherPages(AppClock.Now, location, TimeZoneInfo.Local);
+		}
+	}
+
+	private void DescribePage()
+	{
+		string name = Strings.Get(_slider.Page switch
+		{
+			0 => "PageSunMoon",
+			1 => "PageEvents",
+			_ => "PageLight",
+		});
+
+		SemanticProperties.SetDescription(PagerButton, Strings.Format("PagerDescription", _slider.Page + 1, InfoSlider.PageCount, name));
+	}
+
+	private void OnPointerDown(object? sender, TouchEventArgs e)
+	{
+		if (e.Touches.Length > 0)
+		{
+			_gesture.Begin(new PointD(e.Touches[0].X, e.Touches[0].Y), _gestureClock.Elapsed);
+		}
+	}
+
+	private void OnPointerMove(object? sender, TouchEventArgs e)
+	{
+		if (e.Touches.Length == 0)
+		{
+			return;
+		}
+
+		double distance = _gesture.Move(new PointD(e.Touches[0].X, e.Touches[0].Y), _gestureClock.Elapsed);
+		if (_gesture.Axis != DragAxis.Horizontal)
+		{
+			return;
+		}
+
+		if (!_isSliding && _layout?.IsInSlider(_gesture.Start.Y) == true)
+		{
+			_isSliding = true;
+			_slider.BeginDrag();
+			OnPageChanged();
+		}
+
+		if (_isSliding)
+		{
+			_slider.DragBy(distance);
+		}
+	}
+
+	private void OnPointerUp(object? sender, TouchEventArgs e)
+	{
+		if (_isSliding)
+		{
+			_isSliding = false;
+			_slider.EndDrag(_gesture.VelocityX);
+		}
+
+		_gesture.End(_gestureClock.Elapsed);
+	}
+
+	private void OnPointerCancelled()
+	{
+		if (_isSliding)
+		{
+			_isSliding = false;
+			_slider.EndDrag(0.0);
+		}
+	}
+
+	private void OnPagerClicked(object? sender, EventArgs e) => _slider.ShowNext();
+
 	private void ScheduleNextTick(DateTimeOffset now)
 	{
 		TimeSpan untilNextMinute = TimeSpan.FromMinutes(1) - TimeSpan.FromTicks(now.Ticks % TimeSpan.TicksPerMinute);
@@ -181,13 +305,17 @@ public partial class MainPage : ContentPage
 		}
 
 		SceneLayout layout = SceneLayout.Compute(Width, Height, _insets);
+		_layout = layout;
 		_drawable.Layout = layout;
 
 		ClockLabel.CharacterSpacing = ClockTracking * layout.ClockFontSize;
 		Place(ClockLabel, layout.ClockFontSize, layout.TextTop + layout.ClockFontSize / 2.0);
-		Place(SunLabel, layout.RiseSetFontSize, layout.RowCenterY(0));
-		Place(MoonLabel, layout.RiseSetFontSize, layout.RowCenterY(1));
-		Place(PhaseLabel, layout.PhaseFontSize, layout.RowCenterY(2));
+		Place(ContextLabel, layout.CaptionFontSize, layout.ContextCenterY);
+		_slider.ApplyLayout(layout);
+
+		PagerButton.WidthRequest = PagerButtonWidth;
+		PagerButton.HeightRequest = PagerButtonHeight;
+		PagerButton.Margin = new Thickness(0, layout.DotsCenterY - PagerButtonHeight / 2.0, 0, 0);
 
 		SizeSettingsCard();
 		Scene.Invalidate();
@@ -296,9 +424,11 @@ public partial class MainPage : ContentPage
 	private void SetBackgroundAccessible(bool isAccessible)
 	{
 		// Set one by one, because excluding a whole layout has no effect on Windows.
-		foreach (VisualElement element in new VisualElement[] { Scene, ClockLabel, SunLabel, MoonLabel, PhaseLabel, SettingsButton })
+		foreach (VisualElement element in new VisualElement[] { Scene, ClockLabel, ContextLabel, PagerButton, SettingsButton })
 		{
 			AutomationProperties.SetIsInAccessibleTree(element, isAccessible);
 		}
+
+		_slider.SetIsInAccessibleTree(isAccessible);
 	}
 }

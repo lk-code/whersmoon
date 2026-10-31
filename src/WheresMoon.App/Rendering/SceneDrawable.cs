@@ -13,6 +13,11 @@ public sealed class SceneDrawable : IDrawable
 
 	public SceneLayout? Layout { get; set; }
 
+	/// <summary>Position of the info pages, also between them.</summary>
+	public double PagePosition { get; set; }
+
+	public int PageCount { get; set; } = 3;
+
 	public void Draw(ICanvas canvas, RectF dirtyRect)
 	{
 		SceneLayout layout = Layout ?? SceneLayout.Compute(dirtyRect.Width, dirtyRect.Height, SafeInsets.None);
@@ -28,6 +33,7 @@ public sealed class SceneDrawable : IDrawable
 		DrawHill(canvas, layout, HillShapes.Front(layout.Width, layout.Unit, layout.HorizonY), colors.FrontHill);
 		DrawSunBelow(canvas, layout, state);
 		DrawMoonBelow(canvas, layout, state);
+		DrawPageDots(canvas, layout);
 	}
 
 	private static void DrawSky(ICanvas canvas, SceneLayout layout, SkyColors colors)
@@ -189,6 +195,21 @@ public sealed class SceneDrawable : IDrawable
 		var paint = new RadialGradientPaint { GradientStops = stops, Center = new Point(0.5, 0.5), Radius = 0.5 };
 
 		FillWithPaint(canvas, paint, bounds, () => canvas.FillCircle((float)center.X, (float)center.Y, (float)radius));
+	}
+
+	private void DrawPageDots(ICanvas canvas, SceneLayout layout)
+	{
+		double spacing = DesignTokens.Size.DotSpacing * layout.Unit;
+		double radius = Math.Max(1.0, DesignTokens.Size.DotRadius * layout.Unit);
+		double firstX = layout.CenterX - spacing * (PageCount - 1) / 2.0;
+
+		for (int page = 0; page < PageCount; page++)
+		{
+			double closeness = Math.Max(0.0, 1.0 - Math.Abs(page - PagePosition));
+
+			canvas.FillColor = Colors.White.WithAlpha((float)Blend(DesignTokens.Opacity.DotIdle, DesignTokens.Opacity.DotActive, closeness));
+			canvas.FillCircle((float)(firstX + page * spacing), (float)layout.DotsCenterY, (float)radius);
+		}
 	}
 
 	private static void DrawHill(ICanvas canvas, SceneLayout layout, CubicPath outline, HillColors colors)

@@ -60,4 +60,44 @@
   <data name="SpeakMoonDown" xml:space="preserve"><value>{0}, {1} lit, below the horizon</value></data>
   <data name="SpeakMoonSets" xml:space="preserve"><value>sets at {0}</value></data>
   <data name="SpeakMoonRises" xml:space="preserve"><value>rises at {0}</value></data>
+  <data name="MidnightSun" xml:space="preserve"><value>Midnight sun – the sun does not set</value></data>
+  <data name="PolarNight" xml:space="preserve"><value>Polar night – the sun does not rise</value></data>
+  <data name="DayLength" xml:space="preserve"><value>Day length {0} h {1} min</value></data>
+  <data name="DayLengthHours" xml:space="preserve"><value>Day length {0} h</value></data>
+  <data name="DayLonger" xml:space="preserve"><value>{0} min longer than yesterday</value></data>
+  <data name="DayShorter" xml:space="preserve"><value>{0} min shorter than yesterday</value></data>
+  <data name="DaySame" xml:space="preserve"><value>as long as yesterday</value></data>
+  <data name="EventFullMoon" xml:space="preserve"><value>Full moon</value></data>
+  <data name="EventNewMoon" xml:space="preserve"><value>New moon</value></data>
+  <data name="EventSupermoon" xml:space="preserve"><value>Supermoon</value></data>
+  <data name="EventLunarEclipse" xml:space="preserve"><value>Lunar eclipse</value></data>
+  <data name="EventSolarEclipse" xml:space="preserve"><value>Solar eclipse</value></data>
+  <data name="EclipseTotal" xml:space="preserve"><value>total</value></data>
+  <data name="EclipsePartial" xml:space="preserve"><value>partial</value></data>
+  <data name="EclipseAnnular" xml:space="preserve"><value>annular</value></data>
+  <data name="EclipsePenumbral" xml:space="preserve"><value>penumbral</value></data>
+  <data name="EventToday" xml:space="preserve"><value>today</value></data>
+  <data name="EventTomorrow" xml:space="preserve"><value>tomorrow</value></data>
+  <data name="EventInDays" xml:space="preserve"><value>in {0} days</value></data>
+  <data name="DateShort" xml:space="preserve"><value>MMM d</value></data>
+  <data name="DateWithYear" xml:space="preserve"><value>MMM d, yyyy</value></data>
+  <data name="GoldenHour" xml:space="preserve"><value>Golden hour</value></data>
+  <data name="BlueHour" xml:space="preserve"><value>Blue hour</value></data>
+  <data name="PartMorning" xml:space="preserve"><value>Morning</value></data>
+  <data name="PartMidday" xml:space="preserve"><value>Midday</value></data>
+  <data name="PartEvening" xml:space="preserve"><value>Evening</value></data>
+  <data name="LightRange" xml:space="preserve"><value>{0} {1} – {2}</value></data>
+  <data name="LightUntil" xml:space="preserve"><value>{0} until {1}</value></data>
+  <data name="LightFrom" xml:space="preserve"><value>{0} from {1}</value></data>
+  <data name="LightAllDay" xml:space="preserve"><value>{0} all day</value></data>
+  <data name="NoLightHours" xml:space="preserve"><value>No golden or blue hour today</value></data>
+  <data name="SunStaysHigh" xml:space="preserve"><value>The sun stays too high</value></data>
+  <data name="SunStaysLow" xml:space="preserve"><value>The sun stays too low</value></data>
+  <data name="NoBlueHour" xml:space="preserve"><value>No blue hour today</value></data>
+  <data name="NoGoldenHour" xml:space="preserve"><value>No golden hour today</value></data>
+  <data name="PageSunMoon" xml:space="preserve"><value>Sun and moon</value></data>
+  <data name="PageEvents" xml:space="preserve"><value>Upcoming events</value></data>
+  <data name="PageLight" xml:space="preserve"><value>Golden and blue hour</value></data>
+  <data name="PagerDescription" xml:space="preserve"><value>Page {0} of {1}: {2}</value></data>
+  <data name="PagerHint" xml:space="preserve"><value>Shows the next page</value></data>
 </root>

@@ -68,6 +68,9 @@ public sealed record SceneLayout
     public bool IsInTextBlock(double x, double y) =>
         y >= TextTop && y <= TextBottom && Math.Abs(x - CenterX) <= TextHalfWidth;
 
+    /// <summary>True for a height where a swipe turns the page instead of moving the time.</summary>
+    public bool IsInSlider(double y) => y >= FirstRowCenterY - RowPitch / 2.0 && y <= TextBottom;
+
     /// <summary>Horizon position relative to the height, without steps as the window changes.</summary>
     public static double HorizonFraction(double width, double height)
     {
