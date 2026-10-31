@@ -21,6 +21,9 @@ public sealed class SceneDrawable : IDrawable
 	/// <summary>Direction the user faces in degrees from true north. Stays 0 without a compass, which shows north up.</summary>
 	public double Heading { get; set; }
 
+	/// <summary>Shift of the compass by device movement, from -1 to 1 of the largest shift, y pointing down.</summary>
+	public PointD RingShift { get; set; }
+
 	/// <summary>Letter for east on the compass, which is "O" in German.</summary>
 	public char EastLetter { get; set; } = 'E';
 
@@ -53,7 +56,7 @@ public sealed class SceneDrawable : IDrawable
 		FillWithPaint(canvas, new LinearGradientPaint(stops, new Point(0, 0), new Point(0, 1)), bounds, () => canvas.FillRectangle(bounds));
 	}
 
-	private static void DrawStars(ICanvas canvas, SceneLayout layout, SceneState state)
+	private void DrawStars(ICanvas canvas, SceneLayout layout, SceneState state)
 	{
 		double visibility = StarField.Visibility(state.SunAltitude);
 		if (visibility <= 0.0)
@@ -63,17 +66,16 @@ public sealed class SceneDrawable : IDrawable
 
 		foreach (StarField.Star star in StarField.Stars)
 		{
-			double x = star.X * layout.Width;
+			double x = StarField.ScreenX(star.Azimuth, Heading, layout.Width);
 			double y = star.Y * layout.HorizonY;
+			double share = layout.StarShare(x, y);
 
-			// A faint star next to a text line reads like a stray punctuation mark.
-			if (layout.IsInTextBlock(x, y))
+			// Stars move behind the text, so they fade out there instead of vanishing at its edge.
+			if (share > 0.0 && x >= 0.0 && x <= layout.Width)
 			{
-				continue;
+				canvas.FillColor = Colors.White.WithAlpha((float)(star.Opacity * visibility * share));
+				canvas.FillCircle((float)x, (float)y, (float)(star.Radius * layout.DetailScale));
 			}
-
-			canvas.FillColor = Colors.White.WithAlpha((float)(star.Opacity * visibility));
-			canvas.FillCircle((float)x, (float)y, (float)(star.Radius * layout.DetailScale));
 		}
 	}
 
@@ -207,7 +209,8 @@ public sealed class SceneDrawable : IDrawable
 	private void DrawCompass(ICanvas canvas, SceneLayout layout, SceneState state)
 	{
 		double radius = layout.CompassRadius;
-		var center = new PointD(layout.CenterX, layout.CompassCenterY);
+		double largestShift = 2.0 * radius * DesignTokens.Compass.LargestShift;
+		var center = new PointD(layout.CenterX + RingShift.X * largestShift, layout.CompassCenterY + RingShift.Y * largestShift);
 
 		canvas.SaveState();
 		canvas.StrokeSize = (float)(DesignTokens.Size.ArcStrokeWidth * layout.DetailScale);

@@ -159,7 +159,13 @@ public static class DesignTokens
 
     public static class Stars
     {
-        public const int Count = 15;
+        /// <summary>Stars per screen width, and so per field of view.</summary>
+        public const int CountPerView = 15;
+
+        /// <summary>Degrees of the 360 degree star band that one screen width shows.</summary>
+        public const double FieldOfView = 60.0;
+
+        public const int Count = (int)(CountPerView * 360.0 / FieldOfView);
         public const uint Seed = 0x4D4F4F4E;
         public const double MinRadius = 0.7;
         public const double MaxRadius = 1.1;
@@ -173,6 +179,9 @@ public static class DesignTokens
         /// <summary>Vertical range relative to the distance from the top to the horizon.</summary>
         public const double TopLimit = 0.02;
         public const double BottomLimit = 0.92;
+
+        /// <summary>Width of the fade towards the text, relative to half the text width.</summary>
+        public const double TextFade = 0.1;
     }
 
     public static class Compass

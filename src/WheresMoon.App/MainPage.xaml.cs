@@ -149,6 +149,7 @@ public partial class MainPage : ContentPage
 	private void OnMotion()
 	{
 		_drawable.Heading = _motion.Heading;
+		_drawable.RingShift = new PointD(_motion.RingShift.X, _motion.RingShift.Y);
 		Scene.Invalidate();
 	}
 

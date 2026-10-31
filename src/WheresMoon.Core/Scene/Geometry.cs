@@ -128,11 +128,11 @@ public static class MoonShape
     }
 }
 
-/// <summary>Few faint stars with fixed, pseudo-random positions.</summary>
+/// <summary>Few faint stars with fixed, pseudo-random positions on a band around the viewer.</summary>
 public static class StarField
 {
-    /// <summary>Position relative to width and to the distance from top to horizon.</summary>
-    public readonly record struct Star(double X, double Y, double Radius, double Opacity);
+    /// <summary>Azimuth in degrees and height relative to the distance from top to horizon.</summary>
+    public readonly record struct Star(double Azimuth, double Y, double Radius, double Opacity);
 
     /// <summary>Own generator, because the result must never change between runtimes or platforms.</summary>
     public static IReadOnlyList<Star> Stars { get; } = Create(DesignTokens.Stars.Count, DesignTokens.Stars.Seed);
@@ -141,16 +141,29 @@ public static class StarField
     public static double Visibility(double sunAltitude) =>
         SkyPalette.Ramp(sunAltitude, DesignTokens.Stars.StartAltitude, DesignTokens.Stars.FullAltitude);
 
+    /// <summary>
+    /// Screen position of a star for a viewer facing <paramref name="heading"/>. The star moves against
+    /// a turn by the same angle, and the width stands for the field of view.
+    /// </summary>
+    public static double ScreenX(double azimuth, double heading, double width)
+    {
+        double offset = ((azimuth - heading + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
+        return width / 2.0 + offset / DesignTokens.Stars.FieldOfView * width;
+    }
+
     private static List<Star> Create(int count, uint seed)
     {
         uint state = seed;
         var stars = new List<Star>(count);
+        double sector = 360.0 / count;
 
         for (int i = 0; i < count; i++)
         {
             double y = Next(ref state);
+
+            // One star per sector keeps the density even around the band, which pure chance would not.
             stars.Add(new Star(
-                0.03 + 0.94 * Next(ref state),
+                (i + Next(ref state)) * sector,
                 DesignTokens.Stars.TopLimit + (DesignTokens.Stars.BottomLimit - DesignTokens.Stars.TopLimit) * y,
                 DesignTokens.Stars.MinRadius + (DesignTokens.Stars.MaxRadius - DesignTokens.Stars.MinRadius) * Next(ref state),
                 DesignTokens.Stars.MinOpacity + (DesignTokens.Stars.MaxOpacity - DesignTokens.Stars.MinOpacity) * Next(ref state)));

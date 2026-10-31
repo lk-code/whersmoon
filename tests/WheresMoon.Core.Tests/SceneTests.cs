@@ -186,17 +186,64 @@ public class SceneTests
     {
         IReadOnlyList<StarField.Star> stars = StarField.Stars;
 
-        Assert.InRange(stars.Count, 10, 20);
+        Assert.Equal(90, stars.Count);
         Assert.All(stars, star =>
         {
-            Assert.InRange(star.X, 0.0, 1.0);
+            Assert.InRange(star.Azimuth, 0.0, 360.0);
             Assert.InRange(star.Y, DesignTokens.Stars.TopLimit, DesignTokens.Stars.BottomLimit);
             Assert.InRange(star.Radius, 0.7, 1.1);
             Assert.InRange(star.Opacity, 0.35, 0.80);
         });
 
         // Pinned, because a moving star field would be visible to anyone comparing screenshots.
-        Assert.Equal(0.42279, stars[0].X, 4);
+        Assert.Equal(1.67143, stars[0].Azimuth, 4);
+    }
+
+    [Fact]
+    public void Star_density_is_even_around_the_whole_band()
+    {
+        for (double start = 0.0; start < 360.0; start += 5.0)
+        {
+            int count = StarField.Stars.Count(star => Math.Abs(((star.Azimuth - start + 540.0) % 360.0) - 180.0) <= 30.0);
+
+            Assert.InRange(count, 13, 17);
+        }
+    }
+
+    [Theory]
+    [InlineData(0.0, 0.0, 200.0)]
+    [InlineData(30.0, 0.0, 400.0)]
+    [InlineData(-30.0, 0.0, 0.0)]
+    [InlineData(90.0, 90.0, 200.0)]
+    [InlineData(0.0, 90.0, -400.0)]
+    public void Screen_width_shows_sixty_degrees(double azimuth, double heading, double expected)
+    {
+        Assert.Equal(expected, StarField.ScreenX(azimuth, heading, 400.0), 6);
+    }
+
+    [Fact]
+    public void Turning_right_by_ninety_degrees_moves_stars_one_and_a_half_widths_left()
+    {
+        double before = StarField.ScreenX(10.0, 0.0, 400.0);
+        double after = StarField.ScreenX(10.0, 90.0, 400.0);
+
+        Assert.Equal(-1.5 * 400.0, after - before, 6);
+    }
+
+    [Fact]
+    public void A_full_turn_brings_back_the_same_stars()
+    {
+        foreach (StarField.Star star in StarField.Stars)
+        {
+            Assert.Equal(StarField.ScreenX(star.Azimuth, 37.0, 400.0), StarField.ScreenX(star.Azimuth, 37.0 + 360.0, 400.0), 6);
+        }
+    }
+
+    [Fact]
+    public void Heading_keeps_counting_past_a_full_turn_without_harm()
+    {
+        Assert.Equal(StarField.ScreenX(100.0, 20.0, 400.0), StarField.ScreenX(100.0, 740.0, 400.0), 6);
+        Assert.Equal(StarField.ScreenX(100.0, 20.0, 400.0), StarField.ScreenX(100.0, -340.0, 400.0), 6);
     }
 
     [Theory]
@@ -365,6 +412,20 @@ public class SceneTests
         Assert.True(layout.ClockFontSize > 0 && layout.RiseSetFontSize > 0, "no text left");
     }
 
+    [Theory]
+    [MemberData(nameof(Formats))]
+    public void Shifted_rings_stay_inside_the_ground(double width, double height, SafeInsets insets)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
+        double radius = layout.CompassRadius;
+        double shift = 2.0 * radius * DesignTokens.Compass.LargestShift;
+        double reach = radius * (1.0 + DesignTokens.Compass.SunMarker) + shift;
+
+        Assert.True(layout.CompassCenterY + reach <= height - insets.Bottom + 0.001, "below the ground");
+        Assert.True(layout.CompassCenterY - reach >= layout.HorizonY, "above the ground");
+        Assert.True(layout.CenterX + reach <= width, "off the side");
+    }
+
     [Fact]
     public void Text_keeps_its_minimum_size_in_windows_that_have_room()
     {
@@ -400,13 +461,23 @@ public class SceneTests
     }
 
     [Fact]
-    public void Text_block_area_covers_the_text_and_nothing_beside_it()
+    public void Stars_vanish_behind_the_text_and_nowhere_else()
     {
         SceneLayout layout = SceneLayout.Compute(900, 900, SafeInsets.None);
 
-        Assert.True(layout.IsInTextBlock(layout.CenterX, layout.RowCenterY(2)));
-        Assert.False(layout.IsInTextBlock(layout.CenterX, layout.TextBottom + 1));
-        Assert.False(layout.IsInTextBlock(10, layout.RowCenterY(2)));
+        Assert.Equal(0.0, layout.StarShare(layout.CenterX, layout.RowCenterY(2)));
+        Assert.Equal(1.0, layout.StarShare(layout.CenterX, layout.TextBottom + 1));
+        Assert.Equal(1.0, layout.StarShare(10, layout.RowCenterY(2)));
+    }
+
+    [Fact]
+    public void Stars_fade_gently_at_the_edge_of_the_text()
+    {
+        SceneLayout layout = SceneLayout.Compute(900, 900, SafeInsets.None);
+        double edge = layout.CenterX + layout.TextHalfWidth;
+        double fade = DesignTokens.Stars.TextFade * layout.TextHalfWidth;
+
+        Assert.Equal(0.5, layout.StarShare(edge + fade / 2.0, layout.RowCenterY(2)), 6);
     }
 
     [Theory]

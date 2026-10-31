@@ -66,9 +66,17 @@ public sealed record SceneLayout
 
     public double RowCenterY(int row) => FirstRowCenterY + row * RowPitch;
 
-    /// <summary>True for a point inside the area the text lines can occupy.</summary>
-    public bool IsInTextBlock(double x, double y) =>
-        y >= TextTop && y <= TextBottom && Math.Abs(x - CenterX) <= TextHalfWidth;
+    /// <summary>How much of a star shows at a point: nothing behind the text, where it would read like a stray dot.</summary>
+    public double StarShare(double x, double y)
+    {
+        if (y < TextTop || y > TextBottom)
+        {
+            return 1.0;
+        }
+
+        double beside = Math.Abs(x - CenterX) - TextHalfWidth;
+        return Math.Clamp(beside / (DesignTokens.Stars.TextFade * TextHalfWidth), 0.0, 1.0);
+    }
 
     /// <summary>True for a height where a swipe turns the page instead of moving the time.</summary>
     public bool IsInSlider(double y) => y >= FirstRowCenterY - RowPitch / 2.0 && y <= TextBottom;

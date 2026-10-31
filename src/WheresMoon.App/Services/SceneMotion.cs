@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Numerics;
 using WheresMoon.Core;
 using WheresMoon.Core.Compass;
 
@@ -15,8 +16,13 @@ internal sealed class SceneMotion
 	/// <summary>Frames without any change before the timer stops.</summary>
 	private const int QuietFrames = 30;
 
+	/// <summary>Readings beyond these levels mean the device moves: radians per second, and g away from gravity.</summary>
+	private const double TurnWakeLevel = 0.08;
+	private const double AccelerationWakeLevel = 0.04;
+
 	private readonly HeadingSource _heading = new();
 	private readonly HeadingFilter _filter = new();
+	private readonly RingInertia _inertia = new();
 	private readonly IDispatcher _dispatcher;
 	private readonly IDispatcherTimer _timer;
 	private readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -25,6 +31,10 @@ internal sealed class SceneMotion
 	private double _magnetic;
 	private double _restingMagnetic;
 	private volatile bool _hasReading;
+	private Vector3 _acceleration;
+	private Vector3 _turn;
+	private int _screenRotation;
+	private bool _isMovingDevice;
 	private TimeSpan _lastFrame;
 	private int _quiet;
 	private bool _isRunning;
@@ -46,9 +56,16 @@ internal sealed class SceneMotion
 	/// <summary>Direction the user faces in degrees from true north. Keeps counting past 360.</summary>
 	public double Heading => _filter.Value;
 
+	/// <summary>Shift of the compass rings, from -1 to 1 of the largest one.</summary>
+	public (double X, double Y) RingShift => (_inertia.OffsetX, _inertia.OffsetY);
+
 	public int ScreenRotation
 	{
-		set => _heading.ScreenRotation = value;
+		set
+		{
+			_screenRotation = value;
+			_heading.ScreenRotation = value;
+		}
 	}
 
 	/// <summary>Takes the declination for where the device is, as that decides what its sensor measures.</summary>
@@ -62,6 +79,7 @@ internal sealed class SceneMotion
 		{
 			_isRunning = true;
 			_heading.Start();
+			StartMovementSensors();
 		}
 	}
 
@@ -71,7 +89,53 @@ internal sealed class SceneMotion
 		{
 			_isRunning = false;
 			_heading.Stop();
+			StopMovementSensors();
 			_timer.Stop();
+		}
+	}
+
+	/// <summary>Without a gyroscope the rings stay put, as an accelerometer alone cannot tell turning from moving.</summary>
+	private void StartMovementSensors()
+	{
+		if (Gyroscope.Default.IsSupported && Accelerometer.Default.IsSupported && !Gyroscope.Default.IsMonitoring)
+		{
+			Gyroscope.Default.ReadingChanged += OnTurn;
+			Accelerometer.Default.ReadingChanged += OnAcceleration;
+			Gyroscope.Default.Start(SensorSpeed.Game);
+			Accelerometer.Default.Start(SensorSpeed.Game);
+			_isMovingDevice = true;
+		}
+	}
+
+	private void StopMovementSensors()
+	{
+		if (_isMovingDevice)
+		{
+			_isMovingDevice = false;
+			Gyroscope.Default.Stop();
+			Accelerometer.Default.Stop();
+			Gyroscope.Default.ReadingChanged -= OnTurn;
+			Accelerometer.Default.ReadingChanged -= OnAcceleration;
+		}
+	}
+
+	private void OnTurn(object? sender, GyroscopeChangedEventArgs e)
+	{
+		_turn = e.Reading.AngularVelocity;
+
+		if (_turn.Length() > TurnWakeLevel)
+		{
+			_dispatcher.Dispatch(WakeUp);
+		}
+	}
+
+	private void OnAcceleration(object? sender, AccelerometerChangedEventArgs e)
+	{
+		_acceleration = e.Reading.Acceleration;
+
+		if (Math.Abs(_acceleration.Length() - 1.0f) > AccelerationWakeLevel)
+		{
+			_dispatcher.Dispatch(WakeUp);
 		}
 	}
 
@@ -104,8 +168,9 @@ internal sealed class SceneMotion
 		_lastFrame = now;
 
 		bool isFirstReading = _hasReading && _filter.SetTarget(DeviceHeading.ToTrueNorth(_magnetic, _declination));
+		bool hasTurned = _filter.Advance(seconds) || isFirstReading;
 
-		if (_filter.Advance(seconds) || isFirstReading)
+		if (AdvanceRings(seconds) || hasTurned)
 		{
 			_quiet = 0;
 			Moved?.Invoke();
@@ -115,5 +180,23 @@ internal sealed class SceneMotion
 			_restingMagnetic = _magnetic;
 			_timer.Stop();
 		}
+	}
+
+	private bool AdvanceRings(double seconds)
+	{
+		if (!_isMovingDevice)
+		{
+			return false;
+		}
+
+		(double accelerationX, double accelerationY) = RingInertia.ToScreen(_acceleration.X, _acceleration.Y, _screenRotation);
+		(double turnX, double turnY) = RingInertia.ToScreen(_turn.X, _turn.Y, _screenRotation);
+
+		_inertia.AccelerationX = accelerationX;
+		_inertia.AccelerationY = accelerationY;
+		_inertia.TurnX = turnX;
+		_inertia.TurnY = turnY;
+
+		return _inertia.Advance(seconds);
 	}
 }
