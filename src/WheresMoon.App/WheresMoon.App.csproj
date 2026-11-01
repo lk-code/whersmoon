@@ -42,6 +42,10 @@
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
+		<!-- Size of the moon on the app icon. The disc takes up 5/6 of its file, and Android's adaptive icons only show the middle 61 percent for sure. -->
+		<AppIconScale Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">0.7</AppIconScale>
+		<AppIconScale Condition="$(AppIconScale) == ''">0.9</AppIconScale>
+
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">17.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -70,10 +74,10 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0B1436" />
+		<MauiIcon Include="..\..\assets\icons8-waxing-crescent.svg" Link="appicon.svg" Color="#070D24" ForegroundScale="$(AppIconScale)" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#070D24" BaseSize="128,128" />
+		<MauiSplashScreen Include="..\..\assets\icons8-waxing-crescent.svg" Link="splash.svg" Color="#070D24" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />

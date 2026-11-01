@@ -33,6 +33,12 @@ Package lines give the name and version, the license, the copyright holder and a
 - Authors: NOAA and the British Geological Survey. This is U.S. Government material.
 - Location in this repository: `src/WheresMoon.Core/Compass/WmmCoefficients.cs`
 
+## App icon
+
+- Source: Icons8, https://icons8.com, "Waxing Crescent"
+- License: Icons8 subscription license, used without attribution. This file is licensed to the author of this app and is not covered by the MIT License of this repository.
+- Location in this repository: `assets/icons8-waxing-crescent.svg`, unchanged. The build turns it into the app icon and the splash screen.
+
 ## NuGet packages on every system
 
 - Microsoft.Extensions.Configuration.Abstractions 10.0.0 | MIT | Microsoft Corporation | https://dot.net/
