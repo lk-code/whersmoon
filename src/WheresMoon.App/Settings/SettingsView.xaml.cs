@@ -9,14 +9,29 @@ namespace WheresMoon.App.Settings;
 /// <summary>Content of the settings dialog. How it is presented differs per system, see MainPage.</summary>
 public partial class SettingsView : ContentView
 {
-	private const string AstronomyLicenseFile = "licenses/astronomy-engine-mit.txt";
-	private const string GeoNamesLicenseFile = "licenses/geonames-cc-by-4.0.txt";
-	private const string UnicodeLicenseFile = "licenses/unicode-cldr.txt";
-
 	private const int ResultLimit = 8;
+
+	/// <summary>Lines per label, because the notices as one text could be taller than a single view can draw.</summary>
+	private const int LinesPerLabel = 30;
+
+	private const double LicenseFontSize = 12.0;
+
+	/// <summary>The notices, followed by the license texts they refer to. An app package cannot list its files.</summary>
+	private static readonly string[] LicenseFiles =
+	[
+		"THIRD-PARTY-NOTICES.md",
+		"licenses/astronomy-engine-mit.txt",
+		"licenses/geonames-cc-by-4.0.txt",
+		"licenses/unicode-cldr.txt",
+		"licenses/mit.txt",
+		"licenses/apache-2.0.txt",
+		"licenses/bsd-2-clause.txt",
+		"licenses/bsd-3-clause.txt",
+	];
 
 	private readonly LocationService _location;
 	private int _searchVersion;
+	private bool _licensesLoaded;
 
 	public event EventHandler? CloseRequested;
 
@@ -75,12 +90,8 @@ public partial class SettingsView : ContentView
 		AboutLabel.Text = Strings.Get("AboutText");
 		VersionLabel.Text = Strings.Format("Version", AppInfo.Current.VersionString);
 		LicensesHeader.Text = Strings.Get("LicensesHeader");
-		AstronomyLicenseName.Text = Strings.Get("LicenseAstronomy");
-		GeoNamesLicenseName.Text = Strings.Get("LicenseGeoNames");
-		UnicodeLicenseName.Text = Strings.Get("LicenseUnicode");
-		AstronomyLicenseButton.Text = Strings.Get("ShowLicense");
-		GeoNamesLicenseButton.Text = Strings.Get("ShowLicense");
-		UnicodeLicenseButton.Text = Strings.Get("ShowLicense");
+		LicensesLabel.Text = Strings.Get("LicensesText");
+		LicensesButton.Text = Strings.Get("ShowLicense");
 
 		// Entries have no visible label, so their meaning must reach screen readers another way.
 		SemanticProperties.SetDescription(SearchEntry, SearchEntry.Placeholder);
@@ -93,12 +104,12 @@ public partial class SettingsView : ContentView
 	{
 		TitleLabel.FontSize = style.TitleSize;
 
-		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, AstronomyLicenseName, GeoNamesLicenseName, UnicodeLicenseName })
+		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, LicensesLabel })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.Text.Light, style.Text.Dark);
 		}
 
-		foreach (Label label in new[] { StatusLabel, RecentHeader, VersionLabel, AstronomyLicenseText, GeoNamesLicenseText, UnicodeLicenseText })
+		foreach (Label label in new[] { StatusLabel, RecentHeader, VersionLabel })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
@@ -116,7 +127,7 @@ public partial class SettingsView : ContentView
 			entry.SetAppThemeColor(Entry.PlaceholderColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
 
-		foreach (Button button in new[] { CloseButton, CoordinatesButton, AstronomyLicenseButton, GeoNamesLicenseButton, UnicodeLicenseButton })
+		foreach (Button button in new[] { CloseButton, CoordinatesButton, LicensesButton })
 		{
 			button.SetAppThemeColor(Button.TextColorProperty, style.Accent.Light, style.Accent.Dark);
 		}
@@ -275,25 +286,36 @@ public partial class SettingsView : ContentView
 		CoordinatesButton.Text = Strings.Get(CoordinateFields.IsVisible ? "HideCoordinates" : "EnterCoordinates");
 	}
 
-	private async void OnAstronomyLicenseClicked(object? sender, EventArgs e) =>
-		await ToggleLicenseAsync(AstronomyLicenseText, AstronomyLicenseButton, AstronomyLicenseFile);
-
-	private async void OnGeoNamesLicenseClicked(object? sender, EventArgs e) =>
-		await ToggleLicenseAsync(GeoNamesLicenseText, GeoNamesLicenseButton, GeoNamesLicenseFile);
-
-	private async void OnUnicodeLicenseClicked(object? sender, EventArgs e) =>
-		await ToggleLicenseAsync(UnicodeLicenseText, UnicodeLicenseButton, UnicodeLicenseFile);
-
-	private static async Task ToggleLicenseAsync(Label text, Button button, string file)
+	private async void OnLicensesClicked(object? sender, EventArgs e)
 	{
-		if (string.IsNullOrEmpty(text.Text))
+		if (!_licensesLoaded)
 		{
-			await using Stream stream = await FileSystem.OpenAppPackageFileAsync(file);
-			using var reader = new StreamReader(stream);
-			text.Text = await reader.ReadToEndAsync();
+			_licensesLoaded = true;
+
+			foreach (string file in LicenseFiles)
+			{
+				await using Stream stream = await FileSystem.OpenAppPackageFileAsync(file);
+				using var reader = new StreamReader(stream);
+				AddLicenseText(await reader.ReadToEndAsync());
+			}
 		}
 
-		text.IsVisible = !text.IsVisible;
-		button.Text = Strings.Get(text.IsVisible ? "HideLicense" : "ShowLicense");
+		LicenseTexts.IsVisible = !LicenseTexts.IsVisible;
+		LicensesButton.Text = Strings.Get(LicenseTexts.IsVisible ? "HideLicense" : "ShowLicense");
 	}
+
+	private void AddLicenseText(string text)
+	{
+		SettingsStyle style = SettingsStyle.Current;
+
+		foreach (string[] lines in text.Split('\n').Select(WithoutMarkdown).Chunk(LinesPerLabel))
+		{
+			var label = new Label { Text = string.Join('\n', lines), FontSize = LicenseFontSize };
+			label.SetAppThemeColor(Label.TextColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
+			LicenseTexts.Add(label);
+		}
+	}
+
+	private static string WithoutMarkdown(string line) =>
+		(line.StartsWith('#') ? line.TrimStart('#', ' ') : line).Replace("`", string.Empty);
 }

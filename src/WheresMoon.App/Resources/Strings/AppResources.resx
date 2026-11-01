@@ -39,9 +39,9 @@
   <data name="AboutText" xml:space="preserve"><value>Where's Moon? shows where the sun and moon are right now. All calculations run on this device. The app uses no network, no tracking and no analytics.</value></data>
   <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="LicensesHeader" xml:space="preserve"><value>Licenses</value></data>
-  <data name="LicenseAstronomy" xml:space="preserve"><value>Astronomy Engine, MIT License</value></data>
-  <data name="ShowLicense" xml:space="preserve"><value>Show license text</value></data>
-  <data name="HideLicense" xml:space="preserve"><value>Hide license text</value></data>
+  <data name="LicensesText" xml:space="preserve"><value>Software and data from third parties, among them Astronomy Engine, GeoNames, Unicode CLDR and the World Magnetic Model.</value></data>
+  <data name="ShowLicense" xml:space="preserve"><value>Show licenses</value></data>
+  <data name="HideLicense" xml:space="preserve"><value>Hide licenses</value></data>
   <data name="AltitudeLow" xml:space="preserve"><value>low</value></data>
   <data name="AltitudeMedium" xml:space="preserve"><value>halfway up</value></data>
   <data name="AltitudeHigh" xml:space="preserve"><value>high</value></data>
@@ -108,7 +108,6 @@
   <data name="EnterCoordinates" xml:space="preserve"><value>Enter coordinates</value></data>
   <data name="HideCoordinates" xml:space="preserve"><value>Hide coordinates</value></data>
   <data name="NoPlacesFound" xml:space="preserve"><value>No place found</value></data>
-  <data name="LicenseGeoNames" xml:space="preserve"><value>GeoNames, CC BY 4.0</value></data>
   <data name="CountryAD" xml:space="preserve"><value>Andorra</value></data>
   <data name="CountryAE" xml:space="preserve"><value>United Arab Emirates</value></data>
   <data name="CountryAF" xml:space="preserve"><value>Afghanistan</value></data>
@@ -353,6 +352,5 @@
   <data name="CountryZA" xml:space="preserve"><value>South Africa</value></data>
   <data name="CountryZM" xml:space="preserve"><value>Zambia</value></data>
   <data name="CountryZW" xml:space="preserve"><value>Zimbabwe</value></data>
-  <data name="LicenseUnicode" xml:space="preserve"><value>Unicode CLDR, Unicode License</value></data>
   <data name="CompassLetterEast" xml:space="preserve"><value>E</value></data>
 </root>

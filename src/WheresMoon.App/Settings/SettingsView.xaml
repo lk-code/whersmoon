@@ -43,20 +43,10 @@
 
                 <Label x:Name="LicensesHeader" FontAttributes="Bold" Margin="0,16,0,0" SemanticProperties.HeadingLevel="Level2" />
 
-                <Label x:Name="AstronomyLicenseName" />
-                <Button x:Name="AstronomyLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
-                        BorderWidth="0" Clicked="OnAstronomyLicenseClicked" />
-                <Label x:Name="AstronomyLicenseText" FontSize="12" IsVisible="False" />
-
-                <Label x:Name="GeoNamesLicenseName" Margin="0,8,0,0" />
-                <Button x:Name="GeoNamesLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
-                        BorderWidth="0" Clicked="OnGeoNamesLicenseClicked" />
-                <Label x:Name="GeoNamesLicenseText" FontSize="12" IsVisible="False" />
-
-                <Label x:Name="UnicodeLicenseName" Margin="0,8,0,0" />
-                <Button x:Name="UnicodeLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
-                        BorderWidth="0" Clicked="OnUnicodeLicenseClicked" />
-                <Label x:Name="UnicodeLicenseText" FontSize="12" IsVisible="False" />
+                <Label x:Name="LicensesLabel" />
+                <Button x:Name="LicensesButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
+                        BorderWidth="0" Clicked="OnLicensesClicked" />
+                <VerticalStackLayout x:Name="LicenseTexts" IsVisible="False" />
 
             </VerticalStackLayout>
         </ScrollView>
