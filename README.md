@@ -87,6 +87,12 @@ To update the city list, get `cities15000.txt`, `admin1CodesASCII.txt` and `alte
 dotnet run tools/BuildPlaceData.cs -- cities15000.txt admin1CodesASCII.txt alternateNamesV2.txt src/WheresMoon.App/Resources/Raw/places.tsv.gz
 ```
 
+To check the licenses of the NuGet packages after a build, run this from the repository root. It fails for a license that is not on its list and for a package missing from `THIRD-PARTY-NOTICES.md`, so a new package needs a line there:
+
+```sh
+dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
+```
+
 ## License
 
 MIT, see [LICENSE](LICENSE). Third-party components are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

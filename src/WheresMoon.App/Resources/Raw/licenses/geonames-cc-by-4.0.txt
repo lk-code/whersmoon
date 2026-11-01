@@ -1,6 +1,6 @@
-City data: GeoNames (https://www.geonames.org), file cities15000, retrieved 2026-10-31.
+City data: GeoNames (https://www.geonames.org), files cities15000 and admin1CodesASCII, retrieved 2026-10-31, and alternateNamesV2, retrieved 2026-11-01.
 Licensed under Creative Commons Attribution 4.0 International.
-Changes: reduced to name, country, region, coordinates, elevation, time zone and Latin alternative names.
+Changes: reduced to cities without their districts, with name, German name, country, region with its German name, coordinates, elevation, time zone and Latin alternative names.
 
 Attribution 4.0 International
 

@@ -18,6 +18,7 @@ jobs:
           global-json-file: global.json
       - run: dotnet test tests/WheresMoon.Core.Tests/WheresMoon.Core.Tests.csproj
       - run: dotnet build tools/WheresMoon.SceneRenderer/WheresMoon.SceneRenderer.csproj
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.Core/obj/project.assets.json tests/WheresMoon.Core.Tests/obj/project.assets.json tools/WheresMoon.SceneRenderer/obj/project.assets.json
 
   windows:
     runs-on: windows-latest
@@ -28,6 +29,7 @@ jobs:
           global-json-file: global.json
       - run: dotnet workload install maui-windows
       - run: dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-windows10.0.19041.0 -c Release
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
 
   android:
     runs-on: ubuntu-latest
@@ -42,6 +44,7 @@ jobs:
           global-json-file: global.json
       - run: dotnet workload install maui-android
       - run: dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-android -c Release
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
 
   # Builds only prove that the code compiles and links: signing needs certificates that do not
   # belong in this repository, and a runner cannot show how the app looks on a device.
@@ -86,6 +89,8 @@ jobs:
             echo "$others" | cut -c1-300 | head -9 | sed 's/^/::error::/'
             exit 1
           fi
+      - name: Check licenses
+        run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
       # Job logs need a login to read, annotations do not.
       - name: Report build errors
         if: failure()
