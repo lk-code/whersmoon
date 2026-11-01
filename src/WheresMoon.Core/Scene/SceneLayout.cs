@@ -21,10 +21,8 @@ public sealed record SceneLayout
     public required double CenterX { get; init; }
     public required double HorizonY { get; init; }
 
-    public required double SunArcRadiusX { get; init; }
-    public required double SunArcRadiusY { get; init; }
-    public required double MoonArcRadiusX { get; init; }
-    public required double MoonArcRadiusY { get; init; }
+    public required double SunArcRadius { get; init; }
+    public required double MoonArcRadius { get; init; }
 
     /// <summary>Depth of the paths below the horizon, whose lines are not drawn.</summary>
     public required double SunLowerRadiusY { get; init; }
@@ -114,15 +112,14 @@ public sealed record SceneLayout
         TextMetrics text = TextMetrics.For(unit, smallestFont);
 
         double sunRadius = DesignTokens.Size.SunRadius * unit;
-        double sunArcX = safeWidth / 2.0 - (DesignTokens.Size.SunRadius + DesignTokens.Size.ArcSideMargin) * unit;
-        double sunArcY = Math.Min(
-            sky - text.Height - DesignTokens.Size.TextToArcGap * unit - sunRadius,
-            sunArcX * DesignTokens.Size.MaximumArcTallness);
+        double sunArc = DesignTokens.Size.SunArcRadius * unit;
+        double moonArc = DesignTokens.Size.MoonArcRadius * unit;
+        double sunLower = DesignTokens.Size.LowerArcShare * sunArc;
 
+        // A body at the lowest point of its path keeps its halo clear of the compass.
         double ground = Math.Max(0.0, height - insets.Bottom - horizonY);
-        double lane = Math.Min(DesignTokens.Size.GroundLaneShare * ground, sunRadius + DesignTokens.Size.MaximumLowerArc * unit);
-        double sunLower = Math.Max(0.0, lane - sunRadius);
-        double compassArea = ground - lane;
+        double lane = sunLower + DesignTokens.Size.BelowHalo * sunRadius;
+        double compassArea = Math.Max(0.0, ground - lane);
 
         return new SceneLayout
         {
@@ -132,12 +129,10 @@ public sealed record SceneLayout
             CenterX = width / 2.0,
             HorizonY = horizonY,
 
-            SunArcRadiusX = sunArcX,
-            SunArcRadiusY = sunArcY,
-            MoonArcRadiusX = sunArcX * DesignTokens.Size.MoonArcWidthShare,
-            MoonArcRadiusY = sunArcY * DesignTokens.Size.MoonArcHeightShare,
+            SunArcRadius = sunArc,
+            MoonArcRadius = moonArc,
             SunLowerRadiusY = sunLower,
-            MoonLowerRadiusY = sunLower * DesignTokens.Size.MoonLowerShare,
+            MoonLowerRadiusY = DesignTokens.Size.LowerArcShare * moonArc,
 
             SunRadius = sunRadius,
             SunGlowRadius = DesignTokens.Size.SunGlowRadius * unit,
@@ -164,7 +159,10 @@ public sealed record SceneLayout
         };
     }
 
-    /// <summary>Largest unit that fits text and the smallest arc into the sky. Minimum fonts make this non-linear.</summary>
+    /// <summary>
+    /// Largest unit that fits the text and the sun's semicircle into the sky, which also keeps the arcs inside the
+    /// width, as the unit never exceeds it. Minimum fonts make this non-linear.
+    /// </summary>
     private static double LargestUnit(double safeWidth, double sky, double smallestFont)
     {
         const int Steps = 24;
@@ -194,7 +192,7 @@ public sealed record SceneLayout
 
         double TotalHeight(double unit) =>
             TextMetrics.For(unit, smallestFont).Height
-            + (DesignTokens.Size.TextToArcGap + DesignTokens.Size.MinimumArcHeight) * unit;
+            + (DesignTokens.Size.TextToArcGap + DesignTokens.Size.SunArcRadius + DesignTokens.Size.SunRadius) * unit;
     }
 
     /// <summary>Text block geometry relative to its top. Fonts stop shrinking at the minimum, so the gaps must not.</summary>

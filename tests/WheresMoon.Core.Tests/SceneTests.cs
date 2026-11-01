@@ -9,25 +9,49 @@ public class SceneTests
     private const double ReferenceHorizon = 0.62 * ReferenceHeight;
 
     [Test]
-    public void Sun_lands_where_the_day_reference_image_shows_it()
+    public void Sun_passes_the_day_reference_time_on_its_semicircle()
     {
         double t = (10 * 60 + 23 - (7 * 60 + 31)) / (double)(17 * 60 + 2 - (7 * 60 + 31));
 
-        PointD point = ArcGeometry.PointAt(t, ReferenceWidth / 2, ReferenceHorizon, 0.423 * ReferenceWidth, 0.538 * ReferenceWidth);
+        PointD point = ArcGeometry.PointAt(t, ReferenceWidth / 2, ReferenceHorizon, 0.423 * ReferenceWidth, 0.423 * ReferenceWidth);
 
         point.X.Should().BeInRange(191, 203);
-        point.Y.Should().BeInRange(700, 714);
+        point.Y.Should().BeInRange(772, 786);
     }
 
     [Test]
-    public void Moon_lands_where_the_night_reference_image_shows_it()
+    public void Moon_passes_the_night_reference_time_on_its_semicircle()
     {
         double t = (18 * 60 + 47 - (11 * 60 + 48)) / (double)(20 * 60 + 15 - (11 * 60 + 48));
 
-        PointD point = ArcGeometry.PointAt(t, ReferenceWidth / 2, ReferenceHorizon, 0.346 * ReferenceWidth, 0.423 * ReferenceWidth);
+        PointD point = ArcGeometry.PointAt(t, ReferenceWidth / 2, ReferenceHorizon, 0.346 * ReferenceWidth, 0.346 * ReferenceWidth);
 
         point.X.Should().BeInRange(615, 628);
-        point.Y.Should().BeInRange(869, 885);
+        point.Y.Should().BeInRange(899, 914);
+    }
+
+    [TestCase(0.0)]
+    [TestCase(0.2)]
+    [TestCase(0.5)]
+    [TestCase(0.75)]
+    [TestCase(1.0)]
+    public void Every_point_of_an_arc_lies_one_radius_from_its_centre(double t)
+    {
+        const double Radius = 165.0;
+
+        PointD point = ArcGeometry.PointAt(t, 0.0, 0.0, Radius, Radius);
+
+        Math.Sqrt(point.X * point.X + point.Y * point.Y).Should().BeApproximately(Radius, 0.5e-9);
+    }
+
+    [Test]
+    public void Drawn_arc_stays_on_the_circle()
+    {
+        const double LargestRadius = 346.0;
+
+        List<PointD> points = Flatten(ArcGeometry.Outline(0.0, 0.0, LargestRadius, LargestRadius));
+
+        points.Should().AllSatisfy(point => Math.Sqrt(point.X * point.X + point.Y * point.Y).Should().BeApproximately(LargestRadius, 0.1));
     }
 
     [TestCase(0.0, -1.0, 0.0)]
@@ -299,7 +323,8 @@ public class SceneTests
 
         layout.Unit.Should().BeApproximately(390.0, 0.5e-6);
         layout.HorizonY.Should().BeApproximately(2.0 / 3.0 * 844, 0.5e-6);
-        layout.SunArcRadiusX.Should().BeApproximately(0.423 * 390, 0.5e-6);
+        layout.SunArcRadius.Should().BeApproximately(0.423 * 390, 0.5e-6);
+        layout.MoonArcRadius.Should().BeApproximately(0.346 * 390, 0.5e-6);
         layout.ClockFontSize.Should().BeApproximately(0.164 * 390, 0.5e-6);
         layout.TextTop.Should().BeApproximately(0.09 * 844, 0.5e-6);
     }
@@ -338,35 +363,89 @@ public class SceneTests
         static TestCaseData Format(double width, double height, SafeInsets insets) => new(width, height, insets);
     }
 
-    [TestCaseSource(nameof(Formats))]
+    public static IEnumerable<TestCaseData> FormatsAndTinyWindows() =>
+    [
+        .. Formats(),
+        new TestCaseData(200.0, 150.0, SafeInsets.None),
+        new TestCaseData(160.0, 90.0, SafeInsets.None),
+        new TestCaseData(120.0, 300.0, SafeInsets.None),
+        new TestCaseData(80.0, 80.0, SafeInsets.None),
+    ];
+
+    [TestCaseSource(nameof(FormatsAndTinyWindows))]
+    public void Arcs_are_exact_semicircles_of_the_design_radii(double width, double height, SafeInsets insets)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
+
+        PointD sunApex = ArcGeometry.PointAt(0.5, layout.CenterX, layout.HorizonY, layout.SunArcRadius, layout.SunArcRadius);
+        PointD moonApex = ArcGeometry.PointAt(0.5, layout.CenterX, layout.HorizonY, layout.MoonArcRadius, layout.MoonArcRadius);
+
+        layout.SunArcRadius.Should().BeApproximately(0.423 * layout.Unit, 0.5e-9);
+        layout.MoonArcRadius.Should().BeApproximately(0.346 * layout.Unit, 0.5e-9);
+        (layout.HorizonY - sunApex.Y).Should().BeApproximately(layout.SunArcRadius, 0.5e-9);
+        (layout.HorizonY - moonApex.Y).Should().BeApproximately(layout.MoonArcRadius, 0.5e-9);
+    }
+
+    [TestCaseSource(nameof(FormatsAndTinyWindows))]
+    public void Lower_paths_reach_three_tenths_of_the_radius(double width, double height, SafeInsets insets)
+    {
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
+
+        PointD sunLowest = ArcGeometry.LowerPointAt(0.5, layout.CenterX, layout.HorizonY, layout.SunArcRadius, layout.SunLowerRadiusY);
+        PointD moonLowest = ArcGeometry.LowerPointAt(0.5, layout.CenterX, layout.HorizonY, layout.MoonArcRadius, layout.MoonLowerRadiusY);
+
+        (sunLowest.Y - layout.HorizonY).Should().BeApproximately(0.3 * layout.SunArcRadius, 0.5e-9);
+        (moonLowest.Y - layout.HorizonY).Should().BeApproximately(0.3 * layout.MoonArcRadius, 0.5e-9);
+    }
+
+    [TestCaseSource(nameof(FormatsAndTinyWindows))]
+    public void Arcs_grow_until_the_width_or_the_sky_ends(double width, double height, SafeInsets insets)
+    {
+        const double Rounding = 0.01;
+
+        SceneLayout layout = SceneLayout.Compute(width, height, insets);
+
+        double arcHeight = layout.SunArcRadius + layout.SunRadius;
+        double sideLeft = width / 2.0 - Math.Max(insets.Left, insets.Right) - arcHeight;
+        double skyLeft = layout.HorizonY - layout.TextBottom - arcHeight;
+
+        bool fillsWidth = Math.Abs(sideLeft - 0.039 * layout.Unit) < Rounding;
+        bool fillsSky = Math.Abs(skyLeft - DesignTokens.Size.TextToArcGap * layout.Unit) < Rounding;
+
+        (fillsWidth || fillsSky).Should().BeTrue($"{sideLeft:F2} left at the sides and {skyLeft:F2} left in the sky");
+    }
+
+    [TestCaseSource(nameof(FormatsAndTinyWindows))]
     public void Layout_keeps_everything_on_screen(double width, double height, SafeInsets insets)
     {
         SceneLayout layout = SceneLayout.Compute(width, height, insets);
 
-        double reach = layout.SunArcRadiusX + layout.SunRadius;
+        double reach = layout.SunArcRadius + layout.SunRadius;
         (layout.CenterX - reach).Should().BeGreaterThanOrEqualTo(insets.Left, "sun leaves on the left");
         (layout.CenterX + reach).Should().BeLessThanOrEqualTo(width - insets.Right, "sun leaves on the right");
 
-        double sunTop = layout.HorizonY - layout.SunArcRadiusY - layout.SunRadius;
+        double sunTop = layout.HorizonY - layout.SunArcRadius - layout.SunRadius;
         sunTop.Should().BeGreaterThanOrEqualTo(layout.TextBottom, $"sun at {sunTop:F1} reaches the text ending at {layout.TextBottom:F1}");
+        (layout.MoonArcRadius + layout.MoonRadius).Should().BeLessThan(layout.SunArcRadius - layout.SunRadius, "moon on the sun's path");
         layout.TextTop.Should().BeGreaterThanOrEqualTo(insets.Top, "text enters the top safe area");
         (layout.TextHalfWidth * 2.0).Should().BeLessThanOrEqualTo(width - insets.Left - insets.Right + 0.001, "text wider than the safe area");
     }
 
-    [TestCaseSource(nameof(Formats))]
+    [TestCaseSource(nameof(FormatsAndTinyWindows))]
     public void Ground_holds_the_lower_paths_and_below_them_the_compass(double width, double height, SafeInsets insets)
     {
         SceneLayout layout = SceneLayout.Compute(width, height, insets);
 
-        double pathBottom = layout.HorizonY + layout.SunLowerRadiusY + layout.SunRadius;
+        double sunBottom = layout.HorizonY + layout.SunLowerRadiusY + DesignTokens.Size.BelowHalo * layout.SunRadius;
+        double moonBottom = layout.HorizonY + layout.MoonLowerRadiusY + DesignTokens.Size.BelowHalo * layout.MoonRadius;
         double compassTop = layout.CompassCenterY - layout.CompassReach;
         double compassBottom = layout.CompassCenterY + layout.CompassReach;
 
         layout.SunLowerRadiusY.Should().BeGreaterThan(0, "no room for the lower path");
         layout.CompassReach.Should().BeGreaterThan(0, "no room for the compass");
-        pathBottom.Should().BeLessThanOrEqualTo(compassTop + 0.001, $"lower path ending at {pathBottom:F1} reaches the compass at {compassTop:F1}");
+        sunBottom.Should().BeLessThanOrEqualTo(compassTop + 0.001, $"sun's halo ending at {sunBottom:F1} reaches the compass at {compassTop:F1}");
+        moonBottom.Should().BeLessThanOrEqualTo(compassTop + 0.001, $"moon's halo ending at {moonBottom:F1} reaches the compass at {compassTop:F1}");
         compassBottom.Should().BeLessThanOrEqualTo(height - insets.Bottom + 0.001, "compass leaves the ground");
-        (layout.MoonLowerRadiusY + layout.MoonRadius).Should().BeLessThanOrEqualTo(layout.SunLowerRadiusY + layout.SunRadius, "moon below the sun's path");
     }
 
     [TestCaseSource(nameof(Formats))]
@@ -394,7 +473,7 @@ public class SceneTests
         layout.HorizonY.Should().BeApproximately(SceneLayout.HorizonFraction(width, height) * height, 0.5e-6);
         layout.TextBottom.Should().BeLessThanOrEqualTo(layout.HorizonY, "text runs into the ground");
         (layout.TextHalfWidth * 2.0).Should().BeLessThanOrEqualTo(width + 0.001, "text wider than the window");
-        (layout.SunArcRadiusY > 0 && layout.SunArcRadiusX > 0).Should().BeTrue("no arcs left");
+        layout.SunArcRadius.Should().BeGreaterThan(0, "no arcs left");
         (layout.CompassCenterY + layout.CompassReach).Should().BeLessThanOrEqualTo(height + 0.001, "compass leaves the window");
         (layout.ClockFontSize > 0 && layout.RiseSetFontSize > 0).Should().BeTrue("no text left");
     }
@@ -425,24 +504,6 @@ public class SceneTests
         SceneLayout.Compute(390, 844, SafeInsets.None).DetailScale.Should().BeApproximately(1.0, 0.5e-6);
         SceneLayout.Compute(844, 390, SafeInsets.None).DetailScale.Should().BeApproximately(1.0, 0.5e-6);
         SceneLayout.Compute(780, 1688, SafeInsets.None).DetailScale.Should().BeApproximately(2.0, 0.5e-6);
-    }
-
-    [TestCaseSource(nameof(Formats))]
-    public void Arcs_use_the_width_unless_the_sky_is_too_narrow_for_it(double width, double height, SafeInsets insets)
-    {
-        SceneLayout layout = SceneLayout.Compute(width, height, insets);
-        double side = Math.Max(insets.Left, insets.Right);
-        double margin = DesignTokens.Size.ArcSideMargin * layout.Unit + layout.SunRadius;
-
-        layout.SunArcRadiusX.Should().BeApproximately(width / 2.0 - side - margin, 0.5e-6);
-    }
-
-    [Test]
-    public void Narrow_windows_do_not_turn_the_arcs_into_a_spike()
-    {
-        SceneLayout layout = SceneLayout.Compute(500, 2000, SafeInsets.None);
-
-        layout.SunArcRadiusY.Should().BeLessThanOrEqualTo(1.5 * layout.SunArcRadiusX + 0.001);
     }
 
     [Test]

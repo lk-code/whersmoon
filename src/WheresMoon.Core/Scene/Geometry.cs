@@ -8,7 +8,7 @@ public readonly record struct CubicSegment(PointD Control1, PointD Control2, Poi
 /// <summary>A path of cubic Bézier curves.</summary>
 public sealed record CubicPath(PointD Start, IReadOnlyList<CubicSegment> Segments);
 
-/// <summary>Half-elliptic arcs above the horizon line.</summary>
+/// <summary>Paths of sun and moon: semicircles above the horizon line, flatter half ellipses below it.</summary>
 public static class ArcGeometry
 {
     /// <summary>Point at progress <paramref name="t"/>: 0 is the left end, 0.5 the apex, 1 the right end.</summary>

@@ -88,7 +88,7 @@ public sealed class SceneDrawable : IDrawable
 		canvas.StrokeLineCap = LineCap.Round;
 
 		canvas.StrokeColor = Colors.White.WithAlpha((float)Blend(DesignTokens.Opacity.SunArcNight, DesignTokens.Opacity.SunArcDay, day));
-		canvas.DrawPath(ToPath(ArcGeometry.Outline(layout.CenterX, layout.HorizonY, layout.SunArcRadiusX, layout.SunArcRadiusY)));
+		canvas.DrawPath(ToPath(ArcGeometry.Outline(layout.CenterX, layout.HorizonY, layout.SunArcRadius, layout.SunArcRadius)));
 
 		// All platforms multiply dash lengths by the stroke width, so the pattern is given in stroke widths.
 		canvas.StrokeDashPattern =
@@ -97,7 +97,7 @@ public sealed class SceneDrawable : IDrawable
 			(float)(DesignTokens.Size.MoonArcGap / DesignTokens.Size.ArcStrokeWidth),
 		];
 		canvas.StrokeColor = Colors.White.WithAlpha((float)Blend(DesignTokens.Opacity.MoonArcNight, DesignTokens.Opacity.MoonArcDay, day));
-		canvas.DrawPath(ToPath(ArcGeometry.Outline(layout.CenterX, layout.HorizonY, layout.MoonArcRadiusX, layout.MoonArcRadiusY)));
+		canvas.DrawPath(ToPath(ArcGeometry.Outline(layout.CenterX, layout.HorizonY, layout.MoonArcRadius, layout.MoonArcRadius)));
 
 		canvas.RestoreState();
 	}
@@ -109,7 +109,7 @@ public sealed class SceneDrawable : IDrawable
 			return;
 		}
 
-		PointD center = ArcGeometry.PointAt(state.SunProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadiusX, layout.SunArcRadiusY);
+		PointD center = ArcGeometry.PointAt(state.SunProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadius, layout.SunArcRadius);
 
 		double warmth = DesignTokens.Sun.GlowWarmAmount
 			* (1.0 - SkyPalette.Ramp(state.SunAltitude, 0.0, DesignTokens.Sun.GlowWarmAltitude));
@@ -134,7 +134,7 @@ public sealed class SceneDrawable : IDrawable
 			return;
 		}
 
-		PointD center = ArcGeometry.PointAt(state.MoonProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadiusX, layout.MoonArcRadiusY);
+		PointD center = ArcGeometry.PointAt(state.MoonProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadius, layout.MoonArcRadius);
 
 		double glow = SkyPalette.Ramp(state.SunAltitude, DesignTokens.Moon.GlowStartAltitude, DesignTokens.Moon.GlowFullAltitude);
 		if (glow > 0.0)
@@ -166,7 +166,7 @@ public sealed class SceneDrawable : IDrawable
 			return;
 		}
 
-		PointD center = ArcGeometry.LowerPointAt(state.SunBelowProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadiusX, layout.SunLowerRadiusY);
+		PointD center = ArcGeometry.LowerPointAt(state.SunBelowProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadius, layout.SunLowerRadiusY);
 
 		DrawHalo(canvas, center, DesignTokens.Size.BelowHalo * layout.SunRadius, state.SunBelowOpacity);
 		canvas.FillColor = ToColor(DesignTokens.Sun.Disc, DesignTokens.Opacity.BelowDisc * state.SunBelowOpacity);
@@ -180,7 +180,7 @@ public sealed class SceneDrawable : IDrawable
 			return;
 		}
 
-		PointD center = ArcGeometry.LowerPointAt(state.MoonBelowProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadiusX, layout.MoonLowerRadiusY);
+		PointD center = ArcGeometry.LowerPointAt(state.MoonBelowProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadius, layout.MoonLowerRadiusY);
 
 		DrawHalo(canvas, center, DesignTokens.Size.BelowHalo * layout.MoonRadius, state.MoonBelowOpacity);
 		DrawMoonDisc(canvas, center, layout.MoonRadius, state, DesignTokens.Opacity.BelowDisc * state.MoonBelowOpacity);

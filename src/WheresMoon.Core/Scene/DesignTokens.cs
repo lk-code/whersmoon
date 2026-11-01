@@ -16,18 +16,12 @@ public static class DesignTokens
 
     public static class Size
     {
-        /// <summary>Free space between the sun disc at the arc's end and the safe area.</summary>
-        public const double ArcSideMargin = 0.039;
+        /// <summary>Radii of the paths above the horizon, which are exact semicircles.</summary>
+        public const double SunArcRadius = 0.423;
+        public const double MoonArcRadius = 0.346;
 
-        /// <summary>Lowest height of the sun arc above the horizon, disc included, that the text may leave.</summary>
-        public const double MinimumArcHeight = 0.45;
-
-        /// <summary>Tallest sun arc relative to half its width, so that narrow windows do not get a spike.</summary>
-        public const double MaximumArcTallness = 1.5;
-
-        /// <summary>Size of the moon arc relative to the sun arc.</summary>
-        public const double MoonArcWidthShare = 0.818;
-        public const double MoonArcHeightShare = 0.786;
+        /// <summary>Depth of the paths below the horizon relative to their radius.</summary>
+        public const double LowerArcShare = 0.3;
 
         public const double SunRadius = 0.038;
         public const double SunGlowRadius = 0.123;
@@ -64,15 +58,6 @@ public static class DesignTokens
 
         /// <summary>Smallest gap between text block and the sun disc at the arc's apex.</summary>
         public const double TextToArcGap = 0.02;
-
-        /// <summary>Share of the ground kept for the lower paths of sun and moon.</summary>
-        public const double GroundLaneShare = 0.38;
-
-        /// <summary>Deepest lower sun path, so that the lane does not dominate large windows.</summary>
-        public const double MaximumLowerArc = 0.25;
-
-        /// <summary>Depth of the lower moon path relative to the sun's.</summary>
-        public const double MoonLowerShare = 0.8;
 
         /// <summary>Text block offset below the top safe area, relative to the height.</summary>
         public const double TextTopFraction = 0.09;
