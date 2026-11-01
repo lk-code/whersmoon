@@ -27,8 +27,8 @@ internal static class ScrollInput
 			double dy = (double)(total.Y - last.Y);
 			last = total;
 
-			// Scrolling down counts as later, the same as moving right.
-			onScroll(Math.Abs(dx) >= Math.Abs(dy) ? dx : -dy);
+			// Scrolling down or to the right counts as later. Two fingers moving left do that, the same as one on a touch screen.
+			onScroll(Math.Abs(dx) >= Math.Abs(dy) ? -dx : -dy);
 		})
 		{
 			AllowedScrollTypesMask = UIScrollTypeMask.All,

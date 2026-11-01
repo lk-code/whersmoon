@@ -168,7 +168,7 @@ public sealed class SceneDrawable : IDrawable
 
 		PointD center = ArcGeometry.LowerPointAt(state.SunBelowProgress, layout.CenterX, layout.HorizonY, layout.SunArcRadiusX, layout.SunLowerRadiusY);
 
-		DrawHalo(canvas, center, 2.0 * layout.SunRadius, state.SunBelowOpacity);
+		DrawHalo(canvas, center, DesignTokens.Size.BelowHalo * layout.SunRadius, state.SunBelowOpacity);
 		canvas.FillColor = ToColor(DesignTokens.Sun.Disc, DesignTokens.Opacity.BelowDisc * state.SunBelowOpacity);
 		canvas.FillCircle((float)center.X, (float)center.Y, (float)layout.SunRadius);
 	}
@@ -182,7 +182,7 @@ public sealed class SceneDrawable : IDrawable
 
 		PointD center = ArcGeometry.LowerPointAt(state.MoonBelowProgress, layout.CenterX, layout.HorizonY, layout.MoonArcRadiusX, layout.MoonLowerRadiusY);
 
-		DrawHalo(canvas, center, 2.0 * layout.MoonRadius, state.MoonBelowOpacity);
+		DrawHalo(canvas, center, DesignTokens.Size.BelowHalo * layout.MoonRadius, state.MoonBelowOpacity);
 		DrawMoonDisc(canvas, center, layout.MoonRadius, state, DesignTokens.Opacity.BelowDisc * state.MoonBelowOpacity);
 	}
 
@@ -214,9 +214,12 @@ public sealed class SceneDrawable : IDrawable
 
 		canvas.SaveState();
 		canvas.StrokeSize = (float)(DesignTokens.Size.ArcStrokeWidth * layout.DetailScale);
+		canvas.StrokeLineCap = LineCap.Round;
 		canvas.StrokeColor = Colors.White.WithAlpha((float)DesignTokens.Compass.RingOpacity);
 		canvas.DrawCircle((float)center.X, (float)center.Y, (float)radius);
 		canvas.DrawCircle((float)center.X, (float)center.Y, (float)(radius * DesignTokens.Compass.InnerRing));
+		DrawTicks(canvas, center, radius);
+		DrawCross(canvas, center, radius);
 		canvas.RestoreState();
 
 		double letterRing = radius * DesignTokens.Compass.LetterRing;
@@ -225,15 +228,100 @@ public sealed class SceneDrawable : IDrawable
 		DrawLetter(canvas, 'S', CompassGeometry.PointAt(center, letterRing, 180.0, Heading), radius * DesignTokens.Compass.LetterHeight, DesignTokens.Compass.LetterOpacity);
 		DrawLetter(canvas, 'W', CompassGeometry.PointAt(center, letterRing, 270.0, Heading), radius * DesignTokens.Compass.LetterHeight, DesignTokens.Compass.LetterOpacity);
 
-		PointD sun = CompassGeometry.PointAt(center, radius, state.SunAzimuth, Heading);
-		canvas.FillColor = ToColor(DesignTokens.Sun.Disc, MarkerOpacity(state.SunOpacity));
-		canvas.FillCircle((float)sun.X, (float)sun.Y, (float)(radius * DesignTokens.Compass.SunMarker));
+		double sunMarker = radius * DesignTokens.Compass.SunMarker;
+		double moonRing = radius * DesignTokens.Compass.InnerRing;
+		double moonMarker = radius * DesignTokens.Compass.MoonMarker;
 
-		PointD moon = CompassGeometry.PointAt(center, radius * DesignTokens.Compass.InnerRing, state.MoonAzimuth, Heading);
-		DrawMoonDisc(canvas, moon, radius * DesignTokens.Compass.MoonMarker, state, MarkerOpacity(state.MoonOpacity));
+		DrawArrow(canvas, layout, center, radius, sunMarker, state.SunAzimuth, ToColor(DesignTokens.Sun.Disc, DesignTokens.Compass.ArrowOpacity));
+		PointD sun = CompassGeometry.PointAt(center, radius, state.SunAzimuth, Heading);
+		canvas.FillColor = ToColor(DesignTokens.Sun.Disc);
+		canvas.FillCircle((float)sun.X, (float)sun.Y, (float)sunMarker);
+
+		DrawArrow(canvas, layout, center, moonRing, moonMarker, state.MoonAzimuth, ToColor(DesignTokens.Moon.Lit, DesignTokens.Compass.ArrowOpacity));
+		DrawMoonMarker(canvas, CompassGeometry.PointAt(center, moonRing, state.MoonAzimuth, Heading), moonMarker, state);
 	}
 
-	private static double MarkerOpacity(double aboveHorizon) => Blend(DesignTokens.Compass.BelowHorizonOpacity, 1.0, aboveHorizon);
+	/// <summary>The moon in its phase, but solid, so that neither rings nor cross show through its dark side.</summary>
+	private static void DrawMoonMarker(ICanvas canvas, PointD center, double radius, SceneState state)
+	{
+		canvas.FillColor = ToColor(DesignTokens.Compass.MoonDarkSide);
+		canvas.FillCircle((float)center.X, (float)center.Y, (float)radius);
+
+		canvas.FillColor = ToColor(DesignTokens.Moon.Lit);
+		canvas.FillPath(ToPath(MoonShape.Lit(center, radius, state.MoonFraction, state.MoonZenithAngle)));
+	}
+
+	private void DrawTicks(ICanvas canvas, PointD center, double radius)
+	{
+		int count = (int)(360.0 / DesignTokens.Compass.TickSpacing);
+
+		canvas.StrokeColor = Colors.White.WithAlpha((float)DesignTokens.Compass.TickOpacity);
+
+		for (int tick = 0; tick < count; tick++)
+		{
+			double length = tick % DesignTokens.Compass.LongTickEvery == 0 ? DesignTokens.Compass.LongTickLength : DesignTokens.Compass.TickLength;
+			DrawSpoke(canvas, center, radius * (1.0 - length), radius, tick * DesignTokens.Compass.TickSpacing);
+		}
+	}
+
+	/// <summary>The cross runs from the middle through each letter to the outer ring, and leaves out the letter itself.</summary>
+	private void DrawCross(ICanvas canvas, PointD center, double radius)
+	{
+		double hub = radius * DesignTokens.Compass.CrossHub;
+		double beforeLetter = radius * (DesignTokens.Compass.LetterRing - DesignTokens.Compass.CrossGap);
+		double behindLetter = radius * (DesignTokens.Compass.LetterRing + DesignTokens.Compass.CrossGap);
+
+		for (double azimuth = 0.0; azimuth < 360.0; azimuth += 90.0)
+		{
+			double opacity = azimuth == 0.0 ? DesignTokens.Compass.NorthCrossOpacity : DesignTokens.Compass.CrossOpacity;
+
+			canvas.StrokeColor = Colors.White.WithAlpha((float)opacity);
+			DrawSpoke(canvas, center, hub, beforeLetter, azimuth);
+			DrawSpoke(canvas, center, behindLetter, radius, azimuth);
+		}
+
+		canvas.FillColor = Colors.White.WithAlpha((float)DesignTokens.Compass.NorthCrossOpacity);
+		canvas.FillCircle((float)center.X, (float)center.Y, (float)hub);
+	}
+
+	private void DrawSpoke(ICanvas canvas, PointD center, double from, double to, double azimuth)
+	{
+		PointD start = CompassGeometry.PointAt(center, from, azimuth, Heading);
+		PointD end = CompassGeometry.PointAt(center, to, azimuth, Heading);
+
+		canvas.DrawLine((float)start.X, (float)start.Y, (float)end.X, (float)end.Y);
+	}
+
+	/// <summary>A small arrow from the middle of a marker outwards. The solid disc on top leaves only the part beyond it.</summary>
+	private void DrawArrow(ICanvas canvas, SceneLayout layout, PointD center, double ring, double marker, double azimuth, Color color)
+	{
+		double reference = layout.CompassRadius;
+		double tip = ring + marker + reference * DesignTokens.Compass.ArrowLength;
+
+		PointD start = CompassGeometry.PointAt(center, ring, azimuth, Heading);
+		ArrowHead head = CompassGeometry.HeadAt(
+			center,
+			tip - reference * DesignTokens.Compass.ArrowHeadLength,
+			reference * DesignTokens.Compass.ArrowHeadLength,
+			reference * DesignTokens.Compass.ArrowHeadHalfWidth,
+			azimuth,
+			Heading);
+
+		// One path, because lines drawn one by one would add up to a brighter spot where they meet.
+		var path = new PathF((float)start.X, (float)start.Y);
+		path.LineTo((float)head.Tip.X, (float)head.Tip.Y);
+		path.MoveTo((float)head.Left.X, (float)head.Left.Y);
+		path.LineTo((float)head.Tip.X, (float)head.Tip.Y);
+		path.LineTo((float)head.Right.X, (float)head.Right.Y);
+
+		canvas.SaveState();
+		canvas.StrokeSize = (float)(DesignTokens.Compass.ArrowStroke * DesignTokens.Size.ArcStrokeWidth * layout.DetailScale);
+		canvas.StrokeLineCap = LineCap.Round;
+		canvas.StrokeLineJoin = LineJoin.Round;
+		canvas.StrokeColor = color;
+		canvas.DrawPath(path);
+		canvas.RestoreState();
+	}
 
 	private static void DrawLetter(ICanvas canvas, char letter, PointD center, double height, double opacity)
 	{

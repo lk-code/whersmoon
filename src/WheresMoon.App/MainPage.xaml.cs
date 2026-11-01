@@ -44,14 +44,18 @@ public partial class MainPage : ContentPage
 	/// <summary>Timer tick after the full minute, so that the clock never shows the old minute.</summary>
 	private static readonly TimeSpan TickMargin = TimeSpan.FromMilliseconds(50);
 
+	private static readonly TimeSpan GlideFrameInterval = TimeSpan.FromMilliseconds(16);
+
 	private readonly SceneDrawable _drawable = new();
 	private readonly SceneAnimator _animator;
 	private readonly IDispatcherTimer _timer;
+	private readonly IDispatcherTimer _glideTimer;
 	private readonly LocationService _location = new();
 	private readonly InfoSlider _slider = new();
 	private readonly PointerGesture _gesture = new();
 	private readonly Stopwatch _gestureClock = Stopwatch.StartNew();
 	private readonly TimeScrubber _scrubber = new();
+	private readonly TimeGlide _glide = new();
 	private readonly SceneMotion _motion;
 
 	private SafeInsets _insets = SafeInsets.None;
@@ -63,6 +67,7 @@ public partial class MainPage : ContentPage
 	private string? _eventsZone;
 	private DateTimeOffset? _selectedTime;
 	private TimeSpan _lastWheel;
+	private TimeSpan _lastGlideFrame;
 	private bool _isSliding;
 	private bool _isScrubbing;
 	private bool _hasAppeared;
@@ -80,7 +85,13 @@ public partial class MainPage : ContentPage
 
 		_timer = Dispatcher.CreateTimer();
 		_timer.IsRepeating = false;
-		_timer.Tick += (_, _) => Refresh();
+
+		// A timer that does not repeat stops itself right after this event, which would undo a restart from inside it.
+		_timer.Tick += (_, _) => Dispatcher.Dispatch(Refresh);
+
+		_glideTimer = Dispatcher.CreateTimer();
+		_glideTimer.Interval = GlideFrameInterval;
+		_glideTimer.Tick += (_, _) => OnGlideFrame();
 
 		SizeChanged += (_, _) => ApplyLayout();
 		SafeAreaProbe.SizeChanged += (_, _) => UpdateInsets();
@@ -225,6 +236,7 @@ public partial class MainPage : ContentPage
 			window.Activated += (_, _) => Refresh();
 			window.Stopped += (_, _) =>
 			{
+				StopGlide();
 				_timer.Stop();
 				_motion.Stop();
 			};
@@ -278,6 +290,8 @@ public partial class MainPage : ContentPage
 
 	private void OnPageChanged()
 	{
+		// Every page has its own time scale, which would change the speed in mid flight.
+		StopGlide();
 		DescribePage();
 
 		if (_location.Current is GeoLocation location)
@@ -300,6 +314,8 @@ public partial class MainPage : ContentPage
 
 	private void OnPointerDown(object? sender, TouchEventArgs e)
 	{
+		StopGlide();
+
 		if (e.Touches.Length > 0)
 		{
 			_gesture.Begin(new PointD(e.Touches[0].X, e.Touches[0].Y), _gestureClock.Elapsed);
@@ -338,14 +354,15 @@ public partial class MainPage : ContentPage
 			_scrubber.Begin(_selectedTime ?? AppClock.Now);
 		}
 
-		ScrubBy(distance, _gesture.VelocityX);
+		ScrubBy(TimeScrubber.TowardsLater(distance), TimeScrubber.TowardsLater(_gesture.VelocityX));
 	}
 
 	private void OnPointerUp(object? sender, TouchEventArgs e)
 	{
-		FinishDrag(_gesture.VelocityX);
+		TimeSpan now = _gestureClock.Elapsed;
+		FinishDrag(_gesture.VelocityAt(now));
 
-		if (_gesture.End(_gestureClock.Elapsed) == GestureEnd.DoubleTap)
+		if (_gesture.End(now) == GestureEnd.DoubleTap)
 		{
 			ReturnToNow();
 		}
@@ -364,6 +381,53 @@ public partial class MainPage : ContentPage
 		if (_isScrubbing)
 		{
 			_isScrubbing = false;
+			StartGlide(TimeScrubber.TowardsLater(velocity));
+		}
+	}
+
+	/// <summary>A swipe that is still moving as it lets go carries the time on. Any other ends here.</summary>
+	private void StartGlide(double velocity)
+	{
+		if (_layout is SceneLayout layout)
+		{
+			_glide.Push(velocity, layout.Width);
+		}
+
+		if (_glide.IsRunning)
+		{
+			_lastGlideFrame = _gestureClock.Elapsed;
+			_glideTimer.Start();
+		}
+		else
+		{
+			Refresh();
+		}
+	}
+
+	private void OnGlideFrame()
+	{
+		TimeSpan now = _gestureClock.Elapsed;
+		double distance = _glide.Advance((now - _lastGlideFrame).TotalSeconds);
+		_lastGlideFrame = now;
+
+		bool hasEnded = !_glide.IsRunning;
+		ScrubBy(distance, _glide.Speed);
+
+		// An event catches a glide that has become slow, and there is no finger left to pull it loose.
+		if (hasEnded || _scrubber.Caught is not null)
+		{
+			_glide.Stop();
+			_glideTimer.Stop();
+			Refresh();
+		}
+	}
+
+	private void StopGlide()
+	{
+		if (_glide.IsRunning)
+		{
+			_glide.Stop();
+			_glideTimer.Stop();
 			Refresh();
 		}
 	}
@@ -374,6 +438,8 @@ public partial class MainPage : ContentPage
 		{
 			return;
 		}
+
+		StopGlide();
 
 		TimeSpan now = _gestureClock.Elapsed;
 		double interval = (now - _lastWheel).TotalSeconds;
@@ -413,6 +479,7 @@ public partial class MainPage : ContentPage
 			return;
 		}
 
+		StopGlide();
 		_scrubber.Begin(_selectedTime ?? AppClock.Now);
 		_scrubber.Step(TimeScrubber.ScaleOf((InfoPage)_slider.Page) * (KeyStepShare * direction));
 		SelectTime(_scrubber.Time);
@@ -427,6 +494,8 @@ public partial class MainPage : ContentPage
 
 	private void ReturnToNow()
 	{
+		StopGlide();
+
 		if (_selectedTime is null)
 		{
 			return;
@@ -540,6 +609,7 @@ public partial class MainPage : ContentPage
 			return;
 		}
 
+		StopGlide();
 		_settings = new SettingsView(_location);
 		_settings.CloseRequested += (_, _) => CloseSettings();
 		UpdateMotion();

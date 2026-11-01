@@ -100,7 +100,7 @@
   <data name="PageLight" xml:space="preserve"><value>Goldene und Blaue Stunde</value></data>
   <data name="PagerDescription" xml:space="preserve"><value>Seite {0} von {1}: {2}</value></data>
   <data name="PagerHint" xml:space="preserve"><value>Zeigt die nächste Seite</value></data>
-  <data name="NowButton" xml:space="preserve"><value>Jetzt</value></data>
+  <data name="NowButton" xml:space="preserve"><value>Heute</value></data>
   <data name="NowButtonHint" xml:space="preserve"><value>Springt zurück zur aktuellen Zeit</value></data>
   <data name="DateLong" xml:space="preserve"><value>ddd, d. MMM</value></data>
   <data name="DateLongYear" xml:space="preserve"><value>ddd, d. MMM yyyy</value></data>

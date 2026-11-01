@@ -26,14 +26,7 @@ internal static class SkyTexts
 		return string.Join(" · ", parts.Where(part => part.Length > 0));
 	}
 
-	/// <summary>Full name for lists and the settings, such as "Frankfurt am Main · Hessen · Deutschland".</summary>
-	public static string PlaceLabel(Place place)
-	{
-		string[] parts = [PlaceName(place), place.Region, CountryName(place.Country)];
-
-		// In a city state the region repeats the name.
-		return string.Join(" · ", parts.Where(part => part.Length > 0).Distinct());
-	}
+	public static string PlaceLabel(Place place) => place.FullName(PlaceName(place), CountryName(place.Country));
 
 	public static IReadOnlyList<InfoRow> SunAndMoonRows(SkySnapshot sky, DayLengthInfo day) =>
 	[

@@ -49,7 +49,23 @@ public static class CompassGeometry
         double bearing = (azimuth - heading) * Math.PI / 180.0;
         return new PointD(center.X + radius * Math.Sin(bearing), center.Y - radius * Math.Cos(bearing));
     }
+
+    /// <summary>Head of an arrow that points away from the centre, with its base at <paramref name="radius"/>.</summary>
+    public static ArrowHead HeadAt(PointD center, double radius, double length, double halfWidth, double azimuth, double heading)
+    {
+        double bearing = (azimuth - heading) * Math.PI / 180.0;
+        PointD middle = PointAt(center, radius, azimuth, heading);
+        var side = new PointD(halfWidth * Math.Cos(bearing), halfWidth * Math.Sin(bearing));
+
+        return new ArrowHead(
+            PointAt(center, radius + length, azimuth, heading),
+            new PointD(middle.X - side.X, middle.Y - side.Y),
+            new PointD(middle.X + side.X, middle.Y + side.Y));
+    }
 }
+
+/// <summary>A filled arrow head.</summary>
+public readonly record struct ArrowHead(PointD Tip, PointD Left, PointD Right);
 
 /// <summary>The two hill outlines from the design reference.</summary>
 public static class HillShapes

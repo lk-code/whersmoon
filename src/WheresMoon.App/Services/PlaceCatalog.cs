@@ -1,3 +1,4 @@
+using System.Globalization;
 using WheresMoon.Core.Places;
 
 namespace WheresMoon.App.Services;
@@ -17,7 +18,7 @@ internal static class PlaceCatalog
 		try
 		{
 			await using Stream stream = await FileSystem.OpenAppPackageFileAsync(File);
-			return PlaceIndex.Load(stream);
+			return PlaceIndex.Load(stream, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 		}
 		catch (Exception exception) when (exception is IOException or InvalidDataException or FormatException or IndexOutOfRangeException)
 		{

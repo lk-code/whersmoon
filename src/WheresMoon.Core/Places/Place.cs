@@ -17,6 +17,19 @@ public sealed record Place(
 
     public GeoLocation Location => new(Latitude, Longitude, Elevation);
 
+    /// <summary>
+    /// Full name for lists and the settings, such as "Frankfurt am Main - Hessen - Deutschland".
+    /// A city state leaves out the region, which would only repeat the name.
+    /// </summary>
+    /// <param name="shownName">Name of the place to show.</param>
+    /// <param name="countryName">Name of the country in the language of the user.</param>
+    public string FullName(string shownName, string countryName)
+    {
+        string[] parts = [shownName, Region, countryName];
+
+        return string.Join(" - ", parts.Where(part => part.Length > 0).Distinct());
+    }
+
     /// <summary>One line of text for storing the place in the settings.</summary>
     public string ToStoredText() => string.Join(
         Separator,

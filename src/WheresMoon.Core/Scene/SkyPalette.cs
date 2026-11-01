@@ -22,6 +22,13 @@ public static class SkyPalette
         return ComputeGround(stops, sunAltitude);
     }
 
+    /// <summary>Sun altitude to colour the sky with next, which may only follow the real one so fast.</summary>
+    public static double LimitChange(double shown, double target, double seconds)
+    {
+        double step = DesignTokens.Scrub.FastestSkyChange * seconds;
+        return Math.Clamp(target, shown - step, shown + step);
+    }
+
     /// <summary>0 with the sun at <paramref name="zero"/>, 1 at <paramref name="one"/>, smooth in between.</summary>
     public static double Ramp(double value, double zero, double one)
     {

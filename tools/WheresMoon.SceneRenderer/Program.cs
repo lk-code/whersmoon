@@ -75,6 +75,8 @@ var night = new SceneState
 
 Render("day.png", 390, 844, 2, SafeInsets.None, day, dayTexts);
 Render("night.png", 390, 844, 2, SafeInsets.None, night, nightTexts);
+Render("detail-day.png", 390, 844, 5, SafeInsets.None, day, dayTexts);
+Render("detail-night.png", 390, 844, 5, SafeInsets.None, night, nightTexts);
 
 var notch = new SafeInsets(59, 0, 59, 21);
 Render("format-phone-landscape.png", 844, 390, 2, notch, day, dayTexts);

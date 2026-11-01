@@ -39,6 +39,12 @@ public sealed class TimeScrubber
     /// <summary>How far from the current time events can matter to the next step.</summary>
     public static TimeSpan ReachOf(InfoPage page) => ScaleOf(page) * CaptureShare * 2.0;
 
+    /// <summary>
+    /// Turns a pointer's movement or speed into one where positive means later. The time is pulled along
+    /// like a strip that holds the future on its right, so moving the pointer to the left brings it in.
+    /// </summary>
+    public static double TowardsLater(double pointer) => -pointer;
+
     public void Begin(DateTimeOffset time)
     {
         Time = time;

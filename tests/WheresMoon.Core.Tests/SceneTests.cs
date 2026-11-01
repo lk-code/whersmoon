@@ -186,7 +186,7 @@ public class SceneTests
     {
         IReadOnlyList<StarField.Star> stars = StarField.Stars;
 
-        Assert.Equal(90, stars.Count);
+        Assert.Equal(108, stars.Count);
         Assert.All(stars, star =>
         {
             Assert.InRange(star.Azimuth, 0.0, 360.0);
@@ -196,7 +196,7 @@ public class SceneTests
         });
 
         // Pinned, because a moving star field would be visible to anyone comparing screenshots.
-        Assert.Equal(1.67143, stars[0].Azimuth, 4);
+        Assert.Equal(1.39286, stars[0].Azimuth, 4);
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public class SceneTests
         {
             int count = StarField.Stars.Count(star => Math.Abs(((star.Azimuth - start + 540.0) % 360.0) - 180.0) <= 30.0);
 
-            Assert.InRange(count, 13, 17);
+            Assert.InRange(count, 16, 20);
         }
     }
 
@@ -421,7 +421,7 @@ public class SceneTests
         SceneLayout layout = SceneLayout.Compute(width, height, insets);
         double radius = layout.CompassRadius;
         double shift = 2.0 * radius * DesignTokens.Compass.LargestShift;
-        double reach = radius * (1.0 + DesignTokens.Compass.SunMarker) + shift;
+        double reach = radius * (1.0 + DesignTokens.Compass.SunMarker + DesignTokens.Compass.ArrowLength) + shift;
 
         Assert.True(layout.CompassCenterY + reach <= height - insets.Bottom + 0.001, "below the ground");
         Assert.True(layout.CompassCenterY - reach >= layout.HorizonY, "above the ground");
@@ -508,6 +508,104 @@ public class SceneTests
 
         Assert.Equal(expectedX, point.X, 9);
         Assert.Equal(expectedY, point.Y, 9);
+    }
+
+    [Theory]
+    [InlineData(0.0, 0.0)]
+    [InlineData(90.0, 0.0)]
+    [InlineData(200.0, 35.0)]
+    [InlineData(350.0, 280.0)]
+    public void An_arrow_head_points_away_from_the_centre_along_its_direction(double azimuth, double heading)
+    {
+        var center = new PointD(10.0, 20.0);
+        const double Radius = 1.0;
+        const double Length = 0.2;
+        const double HalfWidth = 0.1;
+
+        ArrowHead head = CompassGeometry.HeadAt(center, Radius, Length, HalfWidth, azimuth, heading);
+        PointD middle = CompassGeometry.PointAt(center, Radius, azimuth, heading);
+
+        Assert.Equal(CompassGeometry.PointAt(center, Radius + Length, azimuth, heading), head.Tip);
+        Assert.Equal(middle.X, (head.Left.X + head.Right.X) / 2.0, 9);
+        Assert.Equal(middle.Y, (head.Left.Y + head.Right.Y) / 2.0, 9);
+        Assert.Equal(2.0 * HalfWidth, Distance(head.Left, head.Right), 9);
+        Assert.Equal(Distance(head.Tip, head.Left), Distance(head.Tip, head.Right), 9);
+
+        static double Distance(PointD a, PointD b) => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+    }
+
+    [Fact]
+    public void The_moon_arrow_keeps_clear_of_the_sun_marker()
+    {
+        double moonTip = DesignTokens.Compass.InnerRing + DesignTokens.Compass.MoonMarker + DesignTokens.Compass.ArrowLength;
+
+        Assert.True(moonTip < 1.0 - DesignTokens.Compass.SunMarker, "the moon's arrow runs into the sun's disc");
+    }
+
+    [Fact]
+    public void Arrows_lie_exactly_midway_between_markers_and_rings()
+    {
+        Assert.Equal(0.62, DesignTokens.Compass.ArrowOpacity, 9);
+    }
+
+    [Fact]
+    public void Compass_cross_breaks_off_before_it_reaches_the_letters()
+    {
+        double nearestArm = DesignTokens.Compass.CrossGap;
+        double letterCorner = DesignTokens.Compass.NorthLetterHeight / Math.Sqrt(2.0);
+
+        Assert.True(nearestArm > letterCorner, "the cross turns with the device while letters stay upright, so it can meet any corner");
+        Assert.True(DesignTokens.Compass.LetterRing - nearestArm > DesignTokens.Compass.CrossHub, "no arm left between hub and letter");
+    }
+
+    [Fact]
+    public void The_sky_follows_ordinary_scrubbing_exactly()
+    {
+        const double Frame = 1.0 / 60.0;
+        double shown = 0.0;
+
+        for (int frame = 1; frame <= 120; frame++)
+        {
+            double target = frame * 1.0;
+            shown = SkyPalette.LimitChange(shown, target, Frame);
+            Assert.Equal(target, shown);
+        }
+    }
+
+    [Theory]
+    [InlineData(5.0, 30.0)]
+    [InlineData(30.0, 10.0)]
+    public void Days_racing_past_do_not_flash_the_sky(double daysPerSecond, double largestSwing)
+    {
+        const double Frame = 1.0 / 60.0;
+        const double DailyAltitudeRange = 50.0;
+
+        double shown = 0.0;
+        double lowest = double.MaxValue;
+        double highest = double.MinValue;
+
+        for (int frame = 1; frame <= 240; frame++)
+        {
+            double target = DailyAltitudeRange * Math.Sin(2.0 * Math.PI * daysPerSecond * frame * Frame + 0.3);
+            shown = SkyPalette.LimitChange(shown, target, Frame);
+
+            if (frame > 60)
+            {
+                lowest = Math.Min(lowest, shown);
+                highest = Math.Max(highest, shown);
+            }
+        }
+
+        Assert.InRange(highest - lowest, 0.0, largestSwing);
+    }
+
+    [Fact]
+    public void Fastest_sky_change_stays_below_three_flashes_a_second()
+    {
+        double fullColourSwing = DesignTokens.Sky.Anchors[^1].SunAltitude - DesignTokens.Sky.Anchors[0].SunAltitude;
+        double flashesPerSecond = DesignTokens.Scrub.FastestSkyChange / (2.0 * fullColourSwing);
+
+        Assert.True(flashesPerSecond < 3.0, $"{flashesPerSecond:F1} flashes per second");
     }
 
     [Theory]

@@ -34,6 +34,9 @@ public static class DesignTokens
         public const double MoonRadius = 0.032;
         public const double MoonGlowRadius = 0.113;
 
+        /// <summary>Halo of a body below the horizon, relative to its disc.</summary>
+        public const double BelowHalo = 1.45;
+
         public const double ClockFont = 0.164;
         public const double RiseSetFont = 0.036;
         public const double PhaseFont = 0.033;
@@ -127,6 +130,12 @@ public static class DesignTokens
     {
         /// <summary>Clock colour while it shows a chosen time instead of the current one.</summary>
         public static readonly Rgba ClockTint = Rgba.FromHex("#FFDFA8");
+
+        /// <summary>
+        /// Fastest change of the sun altitude that colours the sky, in degrees per second. A glide runs through
+        /// several days a second, and following them would flash the whole screen between night and day.
+        /// </summary>
+        public const double FastestSkyChange = 120.0;
     }
 
     public static class Sun
@@ -160,7 +169,7 @@ public static class DesignTokens
     public static class Stars
     {
         /// <summary>Stars per screen width, and so per field of view.</summary>
-        public const int CountPerView = 15;
+        public const int CountPerView = 18;
 
         /// <summary>Degrees of the 360 degree star band that one screen width shows.</summary>
         public const double FieldOfView = 60.0;
@@ -191,21 +200,47 @@ public static class DesignTokens
         public const double LetterRing = 0.38;
         public const double LetterHeight = 0.15;
         public const double NorthLetterHeight = 0.18;
-        public const double SunMarker = 0.11;
-        public const double MoonMarker = 0.1;
+        public const double SunMarker = 0.1;
+        public const double MoonMarker = 0.09;
+
+        /// <summary>Distance from a letter's centre at which the cross breaks off, so that the letter stays readable.</summary>
+        public const double CrossGap = 0.15;
+
+        /// <summary>Dot where the arms of the cross meet.</summary>
+        public const double CrossHub = 0.035;
+
+        /// <summary>Marks along the outer ring, in degrees between two, with every third one longer.</summary>
+        public const double TickSpacing = 10.0;
+        public const int LongTickEvery = 3;
+        public const double TickLength = 0.035;
+        public const double LongTickLength = 0.07;
+
+        /// <summary>The arrow behind a marker: how far its tip lies beyond the disc.</summary>
+        public const double ArrowLength = 0.13;
+        public const double ArrowHeadLength = 0.075;
+        public const double ArrowHeadHalfWidth = 0.065;
+
+        /// <summary>Line width of an arrow relative to the rings, which it has to stand out from.</summary>
+        public const double ArrowStroke = 1.25;
 
         /// <summary>Largest shift of the rings by device movement, relative to their diameter.</summary>
         public const double LargestShift = 0.04;
 
         /// <summary>Everything the compass can reach from its centre, relative to the outer ring.</summary>
-        public const double Reach = 1.0 + SunMarker + 2.0 * LargestShift;
+        public const double Reach = 1.0 + SunMarker + ArrowLength + 2.0 * LargestShift;
 
         public const double RingOpacity = 0.24;
+        public const double TickOpacity = 0.2;
+        public const double CrossOpacity = 0.26;
+        public const double NorthCrossOpacity = 0.7;
         public const double LetterOpacity = 0.5;
         public const double NorthOpacity = 0.9;
 
-        /// <summary>Marker of a body below the horizon.</summary>
-        public const double BelowHorizonOpacity = 0.32;
+        /// <summary>Arrows lie midway between the solid markers and the rings.</summary>
+        public const double ArrowOpacity = (1.0 + RingOpacity) / 2.0;
+
+        /// <summary>Dark side of the moon marker, solid and light enough to stand out from the ground at night.</summary>
+        public static readonly Rgba MoonDarkSide = Rgba.FromHex("#5C6580");
     }
 
     public static class Sky

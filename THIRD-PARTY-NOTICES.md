@@ -19,10 +19,10 @@ Where's Moon? includes the following third-party software. The full license text
 
 ## GeoNames
 
-- Source: https://download.geonames.org/export/dump/, files `cities15000.zip` and `admin1CodesASCII.txt`, retrieved 2026-10-31
+- Source: https://download.geonames.org/export/dump/, files `cities15000.zip` and `admin1CodesASCII.txt`, retrieved 2026-10-31, and `alternateNamesV2.zip`, retrieved 2026-11-01
 - License: Creative Commons Attribution 4.0 International
 - Location in this repository: `src/WheresMoon.App/Resources/Raw/places.tsv.gz`
-- Local changes: reduced by `tools/BuildPlaceData.cs` to name, country, region, coordinates rounded to three decimals, elevation, time zone and Latin alternative names, sorted by population.
+- Local changes: reduced by `tools/BuildPlaceData.cs` to cities without their districts, with name, German name, country, region with its German name, coordinates rounded to three decimals, elevation, time zone and Latin alternative names, sorted by population.
 
 ## Unicode CLDR
 

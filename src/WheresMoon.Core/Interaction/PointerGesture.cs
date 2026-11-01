@@ -45,6 +45,10 @@ public sealed class PointerGesture
 
     public PointD Start => _start;
 
+    /// <summary>Speed at a later moment. A pointer resting on the screen reports nothing, but it has stopped all the same.</summary>
+    public double VelocityAt(TimeSpan time) =>
+        VelocityX * Math.Exp(-(time - _lastTime).TotalSeconds / VelocitySmoothingSeconds);
+
     public void Begin(PointD point, TimeSpan time)
     {
         _start = point;

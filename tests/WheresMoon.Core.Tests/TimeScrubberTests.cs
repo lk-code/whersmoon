@@ -27,7 +27,7 @@ public class TimeScrubberTests
     }
 
     [Fact]
-    public void Moving_left_goes_back_in_time()
+    public void A_negative_distance_goes_back_in_time()
     {
         var scrubber = new TimeScrubber();
         scrubber.Begin(Start);
@@ -35,6 +35,29 @@ public class TimeScrubberTests
         scrubber.Move(-Width / 4.0, SlowSpeed, Width, Day, []);
 
         Assert.Equal(Start.AddHours(-6), scrubber.Time);
+    }
+
+    [Theory]
+    [InlineData(-100.0, 6.0)]
+    [InlineData(100.0, -6.0)]
+    public void Pulling_to_the_left_goes_to_the_future_and_to_the_right_to_the_past(double pointer, double hours)
+    {
+        var scrubber = new TimeScrubber();
+        scrubber.Begin(Start);
+
+        scrubber.Move(TimeScrubber.TowardsLater(pointer), SlowSpeed, Width, Day, []);
+
+        Assert.Equal(Start.AddHours(hours), scrubber.Time);
+    }
+
+    [Fact]
+    public void A_throw_to_the_left_flies_into_the_future()
+    {
+        var glide = new TimeGlide();
+
+        glide.Push(TimeScrubber.TowardsLater(-1000.0), Width);
+
+        Assert.True(glide.Speed > 0.0);
     }
 
     [Fact]

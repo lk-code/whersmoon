@@ -11,8 +11,8 @@ Instead of complex 3D sky maps, the app shows two simple arcs above a horizon li
 This makes it easy to see how the sun and moon relate to each other, without any knowledge of astronomy. All calculations run locally on the device, so the app also works offline.
 
 - **Info pages:** Swipe the text below the clock to move between sun and moon with the day length, the next moon phases and eclipses, and the golden and blue hours.
-- **Time travel:** Swipe across the scene to move the time, a day per screen width, or a month on the events page. Slow movement catches on the events of the current page. Double tap, the Now button, Home or Escape return to the present. On a computer, drag with the mouse or use the wheel, the trackpad or the left and right arrow keys.
-- **Any place:** Follow the device, search 34,000 cities offline, or enter coordinates. Times then appear in the local time of that place.
+- **Time travel:** Swipe across the scene to move the time, from right to left into the future, a day per screen width, or a month on the events page. A fast swipe flies on and slows down by itself, a slow one stops with the finger. Slow movement catches on the events of the current page. Double tap, the Today button, Home or Escape return to the present. On a computer, drag with the mouse or use the wheel, the trackpad or the left and right arrow keys.
+- **Any place:** Follow the device, search 30,000 cities offline, or enter coordinates. Times then appear in the local time of that place.
 - **Compass:** Two rings in the ground show the directions to the sun and the moon and turn with the device, corrected to true north with the World Magnetic Model. They shift slightly as the device moves.
 - **Stars:** They lie on a band around you and move against every turn of the device. Computers without a compass show north up and still stars.
 
@@ -81,10 +81,10 @@ dotnet run --project tools/WheresMoon.SceneRenderer -- scene-output
 
 Debug builds accept two environment variables to look at any moment and place: `WHERESMOON_SIM_TIME` (for example `2026-10-30T17:47:00Z`) and `WHERESMOON_SIM_LOCATION` (for example `52.52,13.405`, or `none` for the state without a location).
 
-To update the city list, get `cities15000.txt` and `admin1CodesASCII.txt` from https://download.geonames.org/export/dump/ and run:
+To update the city list, get `cities15000.txt`, `admin1CodesASCII.txt` and `alternateNamesV2.txt` from https://download.geonames.org/export/dump/ and run:
 
 ```sh
-dotnet run tools/BuildPlaceData.cs -- cities15000.txt admin1CodesASCII.txt src/WheresMoon.App/Resources/Raw/places.tsv.gz
+dotnet run tools/BuildPlaceData.cs -- cities15000.txt admin1CodesASCII.txt alternateNamesV2.txt src/WheresMoon.App/Resources/Raw/places.tsv.gz
 ```
 
 ## License

@@ -50,6 +50,31 @@ public class PointerGestureTests
         Assert.InRange(gesture.VelocityX, 950.0, 1050.0);
     }
 
+    private static PointerGesture SwipeAtThousandUnitsPerSecond()
+    {
+        var gesture = new PointerGesture();
+        gesture.Begin(new PointD(0, 0), Ms(0));
+
+        for (int i = 1; i <= 30; i++)
+        {
+            gesture.Move(new PointD(i * 10.0, 0), Ms(i * 10));
+        }
+
+        return gesture;
+    }
+
+    [Fact]
+    public void Letting_go_in_motion_keeps_the_speed()
+    {
+        Assert.InRange(SwipeAtThousandUnitsPerSecond().VelocityAt(Ms(308)), 700.0, 1050.0);
+    }
+
+    [Fact]
+    public void A_pointer_that_rests_before_letting_go_has_stopped()
+    {
+        Assert.InRange(SwipeAtThousandUnitsPerSecond().VelocityAt(Ms(500)), 0.0, 40.0);
+    }
+
     [Fact]
     public void Two_quick_taps_make_a_double_tap()
     {

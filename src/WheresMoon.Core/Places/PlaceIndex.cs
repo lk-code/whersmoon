@@ -8,7 +8,9 @@ namespace WheresMoon.Core.Places;
 /// The list of cities and the search over it. The file is a gzip compressed text with places
 /// sorted by population, written by tools/BuildPlaceData.cs. Two table lines come first, one for
 /// time zones and one for regions, which the place lines refer to by position:
-/// name, country, region, latitude, longitude, elevation, zone, alternative names joined by "|".
+/// name, country, region, latitude, longitude, elevation, zone, alternative names joined by "|", German name.
+/// A region holds its English name, followed by "|" and its German name if that differs, and the
+/// German name of a place stays empty if it is the same.
 /// </summary>
 public sealed class PlaceIndex
 {
@@ -16,6 +18,8 @@ public sealed class PlaceIndex
     private const char KeySeparator = '\n';
 
     private const char AlternativeSeparator = '|';
+
+    private const string GermanLanguage = "de";
 
     private const int NoMatch = int.MaxValue;
 
@@ -39,13 +43,19 @@ public sealed class PlaceIndex
 
     public int Count => _places.Length;
 
-    public static PlaceIndex Load(Stream compressed)
+    /// <param name="compressed">The file.</param>
+    /// <param name="language">Two letter language of the names to show. Every name can be searched for in any language.</param>
+    public static PlaceIndex Load(Stream compressed, string language = "en")
     {
+        bool isGerman = language == GermanLanguage;
+
         using var gzip = new GZipStream(compressed, CompressionMode.Decompress);
         using var reader = new StreamReader(gzip, Encoding.UTF8);
 
         string[] zones = (reader.ReadLine() ?? string.Empty).Split('\t');
-        string[] regions = (reader.ReadLine() ?? string.Empty).Split('\t');
+        string[] regions = (reader.ReadLine() ?? string.Empty).Split('\t')
+            .Select(region => region.Split(AlternativeSeparator)[isGerman ? ^1 : 0])
+            .ToArray();
 
         var places = new List<Place>();
         var keys = new List<string>();
@@ -54,9 +64,10 @@ public sealed class PlaceIndex
         while (reader.ReadLine() is string line)
         {
             string[] fields = line.Split('\t');
+            string shown = isGerman && fields[8].Length > 0 ? fields[8] : fields[0];
 
             places.Add(new Place(
-                fields[0],
+                shown,
                 regions[int.Parse(fields[2], CultureInfo.InvariantCulture)],
                 fields[1],
                 double.Parse(fields[3], CultureInfo.InvariantCulture),
@@ -64,9 +75,9 @@ public sealed class PlaceIndex
                 double.Parse(fields[5], CultureInfo.InvariantCulture),
                 zones[int.Parse(fields[6], CultureInfo.InvariantCulture)]));
 
-            string name = SearchText.Fold(fields[0]);
+            string name = SearchText.Fold(shown);
             nameLengths.Add(name.Length);
-            keys.Add(BuildKey(name, fields[0], fields[7]));
+            keys.Add(BuildKey(name, shown, string.Join(AlternativeSeparator, fields[0], fields[8], fields[7])));
         }
 
         return new PlaceIndex(places.ToArray(), keys.ToArray(), nameLengths.ToArray());
