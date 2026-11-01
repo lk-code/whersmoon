@@ -9,73 +9,60 @@ public class DayLengthTests
 
     private static readonly TimeSpan Tolerance = TimeSpan.FromMinutes(2);
 
-    public static TheoryData<UsnoFixtures.Day> NormalDays()
-    {
-        var data = new TheoryData<UsnoFixtures.Day>();
+    // New York's June sunset and Sydney's whole day cross midnight UT, so their UT days have no matching pair.
+    public static IEnumerable<UsnoFixtures.Day> NormalDays() =>
+        UsnoFixtures.Days.Where(d => d.Place is "Berlin" or "Quito" or "Longyearbyen" && d.SunRise is not null && d.SunSet is not null);
 
-        // New York's June sunset and Sydney's whole day cross midnight UT, so their UT days have no matching pair.
-        foreach (UsnoFixtures.Day day in UsnoFixtures.Days.Where(d => d.Place is "Berlin" or "Quito" or "Longyearbyen"))
-        {
-            if (day.SunRise is not null && day.SunSet is not null)
-            {
-                data.Add(day);
-            }
-        }
-
-        return data;
-    }
-
-    [Theory]
-    [MemberData(nameof(NormalDays))]
+    [TestCaseSource(nameof(NormalDays))]
     public void Length_matches_usno(UsnoFixtures.Day day)
     {
         TimeSpan expected = TimeSpan.Parse(day.SunSet!, CultureInfo.InvariantCulture) - TimeSpan.Parse(day.SunRise!, CultureInfo.InvariantCulture);
 
         DayLengthInfo info = DayLengthCalculator.Compute(Noon(day.Date), new GeoLocation(day.Latitude, day.Longitude), TimeZoneInfo.Utc);
 
-        Assert.Equal(DaylightKind.Normal, info.Kind);
-        Assert.InRange(info.Length, expected - Tolerance, expected + Tolerance);
+        info.Kind.Should().Be(DaylightKind.Normal);
+        info.Length.Should().BeCloseTo(expected, Tolerance);
     }
 
-    [Fact]
+    [Test]
     public void Days_get_shorter_in_autumn_and_longer_in_spring()
     {
         DayLengthInfo autumn = DayLengthCalculator.Compute(Noon("2026-10-15"), Berlin, TimeZoneInfo.Utc);
         DayLengthInfo spring = DayLengthCalculator.Compute(Noon("2026-03-15"), Berlin, TimeZoneInfo.Utc);
 
-        Assert.InRange(autumn.ChangeFromYesterday!.Value, TimeSpan.FromMinutes(-5), TimeSpan.FromMinutes(-2));
-        Assert.InRange(spring.ChangeFromYesterday!.Value, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5));
+        autumn.ChangeFromYesterday!.Value.Should().BeGreaterThanOrEqualTo(TimeSpan.FromMinutes(-5)).And.BeLessThanOrEqualTo(TimeSpan.FromMinutes(-2));
+        spring.ChangeFromYesterday!.Value.Should().BeGreaterThanOrEqualTo(TimeSpan.FromMinutes(2)).And.BeLessThanOrEqualTo(TimeSpan.FromMinutes(5));
     }
 
-    [Fact]
+    [Test]
     public void Summer_solstice_barely_changes()
     {
         DayLengthInfo info = DayLengthCalculator.Compute(Noon("2026-06-21"), Berlin, TimeZoneInfo.Utc);
 
-        Assert.InRange(info.ChangeFromYesterday!.Value, TimeSpan.FromMinutes(-1), TimeSpan.FromMinutes(1));
+        info.ChangeFromYesterday!.Value.Should().BeGreaterThanOrEqualTo(TimeSpan.FromMinutes(-1)).And.BeLessThanOrEqualTo(TimeSpan.FromMinutes(1));
     }
 
-    [Fact]
+    [Test]
     public void Midnight_sun_lasts_all_day()
     {
         DayLengthInfo info = DayLengthCalculator.Compute(Noon("2026-06-21"), Tromso, TimeZoneInfo.Utc);
 
-        Assert.Equal(DaylightKind.MidnightSun, info.Kind);
-        Assert.Equal(TimeSpan.FromDays(1), info.Length);
-        Assert.Null(info.ChangeFromYesterday);
+        info.Kind.Should().Be(DaylightKind.MidnightSun);
+        info.Length.Should().Be(TimeSpan.FromDays(1));
+        info.ChangeFromYesterday.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void Polar_night_has_no_daylight()
     {
         DayLengthInfo info = DayLengthCalculator.Compute(Noon("2026-12-21"), Tromso, TimeZoneInfo.Utc);
 
-        Assert.Equal(DaylightKind.PolarNight, info.Kind);
-        Assert.Equal(TimeSpan.Zero, info.Length);
-        Assert.Null(info.ChangeFromYesterday);
+        info.Kind.Should().Be(DaylightKind.PolarNight);
+        info.Length.Should().Be(TimeSpan.Zero);
+        info.ChangeFromYesterday.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void First_sunrise_after_the_polar_night_has_nothing_to_compare_with()
     {
         // Tromsø's polar night ends in the middle of January.
@@ -91,12 +78,12 @@ public class DayLengthTests
             }
         }
 
-        Assert.NotNull(firstDay);
-        Assert.Null(firstDay.ChangeFromYesterday);
-        Assert.True(firstDay.Length < TimeSpan.FromHours(2));
+        firstDay.Should().NotBeNull();
+        firstDay.ChangeFromYesterday.Should().BeNull();
+        firstDay.Length.Should().BeLessThan(TimeSpan.FromHours(2));
     }
 
-    [Fact]
+    [Test]
     public void The_local_calendar_day_decides_which_day_is_measured()
     {
         TimeZoneInfo auckland = TimeZoneInfo.FindSystemTimeZoneById("Pacific/Auckland");
@@ -106,7 +93,7 @@ public class DayLengthTests
         DayLengthInfo local = DayLengthCalculator.Compute(time, city, auckland);
         DayLengthInfo nextUtcDay = DayLengthCalculator.Compute(time.AddDays(1), city, auckland);
 
-        Assert.NotEqual(local.Length, nextUtcDay.Length);
+        nextUtcDay.Length.Should().NotBe(local.Length);
     }
 
     private static DateTimeOffset Noon(string date) =>

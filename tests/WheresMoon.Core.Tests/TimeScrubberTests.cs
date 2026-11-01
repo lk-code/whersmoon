@@ -12,10 +12,9 @@ public class TimeScrubberTests
     private static readonly TimeSpan Day = TimeSpan.FromHours(24);
     private static readonly DateTimeOffset Start = DateTimeOffset.Parse("2026-11-01T12:00:00Z", CultureInfo.InvariantCulture);
 
-    [Theory]
-    [InlineData(InfoPage.SunAndMoon, 24.0)]
-    [InlineData(InfoPage.LightHours, 24.0)]
-    [InlineData(InfoPage.Events, 720.0)]
+    [TestCase(InfoPage.SunAndMoon, 24.0)]
+    [TestCase(InfoPage.LightHours, 24.0)]
+    [TestCase(InfoPage.Events, 720.0)]
     public void A_screen_width_stands_for_a_day_or_a_month(InfoPage page, double hours)
     {
         var scrubber = new TimeScrubber();
@@ -23,10 +22,10 @@ public class TimeScrubberTests
 
         scrubber.Move(Width, FastSpeed, Width, TimeScrubber.ScaleOf(page), []);
 
-        Assert.Equal(Start.AddHours(hours), scrubber.Time);
+        scrubber.Time.Should().Be(Start.AddHours(hours));
     }
 
-    [Fact]
+    [Test]
     public void A_negative_distance_goes_back_in_time()
     {
         var scrubber = new TimeScrubber();
@@ -34,12 +33,11 @@ public class TimeScrubberTests
 
         scrubber.Move(-Width / 4.0, SlowSpeed, Width, Day, []);
 
-        Assert.Equal(Start.AddHours(-6), scrubber.Time);
+        scrubber.Time.Should().Be(Start.AddHours(-6));
     }
 
-    [Theory]
-    [InlineData(-100.0, 6.0)]
-    [InlineData(100.0, -6.0)]
+    [TestCase(-100.0, 6.0)]
+    [TestCase(100.0, -6.0)]
     public void Pulling_to_the_left_goes_to_the_future_and_to_the_right_to_the_past(double pointer, double hours)
     {
         var scrubber = new TimeScrubber();
@@ -47,20 +45,20 @@ public class TimeScrubberTests
 
         scrubber.Move(TimeScrubber.TowardsLater(pointer), SlowSpeed, Width, Day, []);
 
-        Assert.Equal(Start.AddHours(hours), scrubber.Time);
+        scrubber.Time.Should().Be(Start.AddHours(hours));
     }
 
-    [Fact]
+    [Test]
     public void A_throw_to_the_left_flies_into_the_future()
     {
         var glide = new TimeGlide();
 
         glide.Push(TimeScrubber.TowardsLater(-1000.0), Width);
 
-        Assert.True(glide.Speed > 0.0);
+        glide.Speed.Should().BeGreaterThan(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Slow_movement_catches_on_a_nearby_event()
     {
         var scrubber = new TimeScrubber();
@@ -69,12 +67,12 @@ public class TimeScrubberTests
 
         bool caught = scrubber.Move(Width * 2.0 / 24.0 - 2.0, SlowSpeed, Width, Day, [target]);
 
-        Assert.True(caught);
-        Assert.Equal(target, scrubber.Time);
-        Assert.Equal(target, scrubber.Caught);
+        caught.Should().BeTrue();
+        scrubber.Time.Should().Be(target);
+        scrubber.Caught.Should().Be(target);
     }
 
-    [Fact]
+    [Test]
     public void Fast_movement_passes_events_by()
     {
         var scrubber = new TimeScrubber();
@@ -83,12 +81,12 @@ public class TimeScrubberTests
 
         bool caught = scrubber.Move(Width * 2.0 / 24.0, FastSpeed, Width, Day, [target]);
 
-        Assert.False(caught);
-        Assert.Null(scrubber.Caught);
-        Assert.Equal(target, scrubber.Time);
+        caught.Should().BeFalse();
+        scrubber.Caught.Should().BeNull();
+        scrubber.Time.Should().Be(target);
     }
 
-    [Fact]
+    [Test]
     public void A_caught_time_holds_until_the_pointer_pulls_harder()
     {
         var scrubber = new TimeScrubber();
@@ -98,14 +96,14 @@ public class TimeScrubberTests
 
         double release = TimeScrubber.ReleaseShare * Width;
 
-        Assert.False(scrubber.Move(release * 0.5, SlowSpeed, Width, Day, [target]));
-        Assert.Equal(target, scrubber.Time);
+        scrubber.Move(release * 0.5, SlowSpeed, Width, Day, [target]).Should().BeFalse();
+        scrubber.Time.Should().Be(target);
 
         scrubber.Move(release * 0.6, SlowSpeed, Width, Day, [target]);
-        Assert.Null(scrubber.Caught);
+        scrubber.Caught.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void Getting_loose_does_not_jump()
     {
         var scrubber = new TimeScrubber();
@@ -119,10 +117,10 @@ public class TimeScrubberTests
             scrubber.Move(Step, SlowSpeed, Width, Day, [target]);
         }
 
-        Assert.Equal(target + Day * (Step / Width), scrubber.Time);
+        scrubber.Time.Should().Be(target + Day * (Step / Width));
     }
 
-    [Fact]
+    [Test]
     public void The_event_just_left_does_not_catch_again_at_once()
     {
         var scrubber = new TimeScrubber();
@@ -132,11 +130,11 @@ public class TimeScrubberTests
 
         scrubber.Move(TimeScrubber.ReleaseShare * Width + 1.0, SlowSpeed, Width, Day, [target]);
 
-        Assert.False(scrubber.Move(1.0, SlowSpeed, Width, Day, [target]));
-        Assert.Null(scrubber.Caught);
+        scrubber.Move(1.0, SlowSpeed, Width, Day, [target]).Should().BeFalse();
+        scrubber.Caught.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void An_event_catches_again_after_moving_away_and_coming_back()
     {
         var scrubber = new TimeScrubber();
@@ -147,13 +145,13 @@ public class TimeScrubberTests
         scrubber.Move(loose, SlowSpeed, Width, Day, [target]);
 
         scrubber.Move(Width / 8.0, SlowSpeed, Width, Day, [target]);
-        Assert.Null(scrubber.Caught);
+        scrubber.Caught.Should().BeNull();
 
-        Assert.True(scrubber.Move(-Width / 8.0 - loose - 1.0, SlowSpeed, Width, Day, [target]));
-        Assert.Equal(target, scrubber.Caught);
+        scrubber.Move(-Width / 8.0 - loose - 1.0, SlowSpeed, Width, Day, [target]).Should().BeTrue();
+        scrubber.Caught.Should().Be(target);
     }
 
-    [Fact]
+    [Test]
     public void A_fast_pull_gets_loose_at_once()
     {
         var scrubber = new TimeScrubber();
@@ -163,10 +161,10 @@ public class TimeScrubberTests
 
         scrubber.Move(1.0, FastSpeed, Width, Day, [target]);
 
-        Assert.Null(scrubber.Caught);
+        scrubber.Caught.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void The_nearest_of_several_events_wins()
     {
         var scrubber = new TimeScrubber();
@@ -174,10 +172,10 @@ public class TimeScrubberTests
 
         scrubber.Move(1.0, SlowSpeed, Width, Day, [Start.AddMinutes(25), Start.AddMinutes(10), Start.AddMinutes(-20)]);
 
-        Assert.Equal(Start.AddMinutes(10), scrubber.Caught);
+        scrubber.Caught.Should().Be(Start.AddMinutes(10));
     }
 
-    [Fact]
+    [Test]
     public void Key_steps_ignore_events()
     {
         var scrubber = new TimeScrubber();
@@ -186,13 +184,12 @@ public class TimeScrubberTests
         scrubber.Step(TimeSpan.FromMinutes(15));
         scrubber.Step(TimeSpan.FromMinutes(15));
 
-        Assert.Equal(Start.AddMinutes(30), scrubber.Time);
-        Assert.Null(scrubber.Caught);
+        scrubber.Time.Should().Be(Start.AddMinutes(30));
+        scrubber.Caught.Should().BeNull();
     }
 
-    [Theory]
-    [InlineData(InfoPage.SunAndMoon)]
-    [InlineData(InfoPage.LightHours)]
+    [TestCase(InfoPage.SunAndMoon)]
+    [TestCase(InfoPage.LightHours)]
     public void Day_pages_catch_on_their_own_events(InfoPage page)
     {
         var berlin = new GeoLocation(52.52, 13.405);
@@ -200,11 +197,11 @@ public class TimeScrubberTests
 
         IReadOnlyList<DateTimeOffset> around = points.Around(page, Start, TimeSpan.FromHours(14));
 
-        Assert.NotEmpty(around);
-        Assert.All(around, time => Assert.InRange(time, Start.AddHours(-14), Start.AddHours(14)));
+        around.Should().NotBeEmpty();
+        around.Should().AllSatisfy(time => time.Should().BeOnOrAfter(Start.AddHours(-14)).And.BeOnOrBefore(Start.AddHours(14)));
     }
 
-    [Fact]
+    [Test]
     public void Sun_and_moon_page_catches_on_sunrise()
     {
         var berlin = new GeoLocation(52.52, 13.405);
@@ -214,10 +211,10 @@ public class TimeScrubberTests
 
         IReadOnlyList<DateTimeOffset> around = points.Around(InfoPage.SunAndMoon, sunrise, TimeSpan.FromMinutes(10));
 
-        Assert.Contains(around, time => (time - sunrise).Duration() < TimeSpan.FromSeconds(1));
+        around.Should().Contain(time => (time - sunrise).Duration() < TimeSpan.FromSeconds(1));
     }
 
-    [Fact]
+    [Test]
     public void Light_page_catches_on_the_edges_of_the_golden_hour()
     {
         var berlin = new GeoLocation(52.52, 13.405);
@@ -226,10 +223,10 @@ public class TimeScrubberTests
 
         IReadOnlyList<DateTimeOffset> around = points.Around(InfoPage.LightHours, edge, TimeSpan.FromMinutes(5));
 
-        Assert.Contains(edge, around);
+        around.Should().Contain(edge);
     }
 
-    [Fact]
+    [Test]
     public void Events_page_catches_on_a_supermoon_once()
     {
         var berlin = new GeoLocation(52.52, 13.405);
@@ -239,6 +236,6 @@ public class TimeScrubberTests
 
         IReadOnlyList<DateTimeOffset> around = points.Around(InfoPage.Events, moon, TimeSpan.FromDays(1));
 
-        Assert.Single(around);
+        around.Should().ContainSingle();
     }
 }

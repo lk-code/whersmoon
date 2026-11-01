@@ -13,7 +13,7 @@ public class MoonOrientationTests
         string Name, string Utc, double Latitude, double Longitude,
         double Dec, double Azimuth, double Elevation, double IlluminationPercent, double PsAng);
 
-    public static readonly TheoryData<HorizonsCase> Cases =
+    public static readonly IReadOnlyList<HorizonsCase> Cases =
     [
         new("Berlin gibbous", "2026-10-30T00:00:00Z", 52.52, 13.40, 27.248416320, 117.730357774, 52.551235579, 80.43759, 266.506),
         new("Berlin crescent", "2026-11-12T15:30:00Z", 52.52, 13.40, -28.512672747, 206.797716314, 4.626756002, 10.29172, 98.121),
@@ -23,27 +23,25 @@ public class MoonOrientationTests
         new("Tromso full", "2026-09-23T20:00:00Z", 69.6492, 18.9553, -14.043632581, 173.311164277, 6.168129635, 90.99267, 68.537),
     ];
 
-    [Theory]
-    [MemberData(nameof(Cases))]
+    [TestCaseSource(nameof(Cases))]
     public void Position_and_illumination_match_horizons(HorizonsCase c)
     {
         MoonInfo moon = Compute(c).Moon;
 
-        Assert.InRange(moon.Body.Azimuth, c.Azimuth - 0.1, c.Azimuth + 0.1);
-        Assert.InRange(moon.IlluminatedFraction * 100.0, c.IlluminationPercent - 0.15, c.IlluminationPercent + 0.15);
+        moon.Body.Azimuth.Should().BeInRange(c.Azimuth - 0.1, c.Azimuth + 0.1);
+        (moon.IlluminatedFraction * 100.0).Should().BeInRange(c.IlluminationPercent - 0.15, c.IlluminationPercent + 0.15);
 
         // Horizons is airless here, the snapshot includes refraction. Astronomy Engine keeps
         // its value for -1 degree for anything lower, which is about 0.56 degrees.
         double refraction = c.Elevation > 0 ? 1.02 / Math.Tan(Radians(c.Elevation + 10.3 / (c.Elevation + 5.11))) / 60.0 : 0.56;
-        Assert.InRange(moon.Body.Altitude, c.Elevation + refraction - 0.1, c.Elevation + refraction + 0.1);
+        moon.Body.Altitude.Should().BeInRange(c.Elevation + refraction - 0.1, c.Elevation + refraction + 0.1);
     }
 
-    [Theory]
-    [InlineData(52.52, 13.40)]
-    [InlineData(-33.8688, 151.2093)]
-    [InlineData(-0.1807, -78.4678)]
-    [InlineData(69.6492, 18.9553)]
-    [InlineData(-54.8, -68.3)]
+    [TestCase(52.52, 13.40)]
+    [TestCase(-33.8688, 151.2093)]
+    [TestCase(-0.1807, -78.4678)]
+    [TestCase(69.6492, 18.9553)]
+    [TestCase(-54.8, -68.3)]
     public void Bright_limb_points_along_the_sky_towards_the_sun(double latitude, double longitude)
     {
         // Built from sky directions alone, without position or parallactic angles: seen from the
@@ -74,11 +72,10 @@ public class MoonOrientationTests
             checkedMoments++;
         }
 
-        Assert.True(checkedMoments > 100, $"only {checkedMoments} moments were usable");
+        checkedMoments.Should().BeGreaterThan(100, $"only {checkedMoments} moments were usable");
     }
 
-    [Theory]
-    [MemberData(nameof(Cases))]
+    [TestCaseSource(nameof(Cases))]
     public void Bright_limb_relative_to_zenith_matches_horizons(HorizonsCase c)
     {
         // Derived from azimuth and altitude only, so it does not share a path with the hour angle in the code.
@@ -93,7 +90,7 @@ public class MoonOrientationTests
         AssertAngle(expected, Compute(c).Moon.BrightLimbZenithAngle, 0.6);
     }
 
-    [Fact]
+    [Test]
     public void Position_angle_matches_meeus_example_48a()
     {
         double chi = MoonOrientation.BrightLimbPositionAngle(sunRa: 20.6579, sunDec: 8.6964, moonRa: 134.6885, moonDec: 13.7684);
@@ -101,40 +98,38 @@ public class MoonOrientationTests
         AssertAngle(285.0, chi, 0.1);
     }
 
-    [Fact]
+    [Test]
     public void Illuminated_fraction_matches_meeus_example_48a()
     {
-        Assert.Equal(0.6786, MoonOrientation.IlluminatedFraction(69.0756), 3);
+        MoonOrientation.IlluminatedFraction(69.0756).Should().BeApproximately(0.6786, 0.5e-3);
     }
 
-    [Theory]
-    [InlineData(0.0, 0.0, 45.0, 0.0)]
-    [InlineData(1.0, 0.0, 45.0, 90.0)]
-    [InlineData(-1.0, 0.0, 45.0, -90.0)]
+    [TestCase(0.0, 0.0, 45.0, 0.0)]
+    [TestCase(1.0, 0.0, 45.0, 90.0)]
+    [TestCase(-1.0, 0.0, 45.0, -90.0)]
     public void Parallactic_angle_has_the_expected_sign(double sinHour, double declination, double latitude, double expectedSign)
     {
         double q = MoonOrientation.ParallacticAngle(Math.Asin(sinHour) * 180.0 / Math.PI, declination, latitude);
 
-        Assert.Equal(Math.Sign(expectedSign), Math.Sign(q));
+        Math.Sign(q).Should().Be(Math.Sign(expectedSign));
     }
 
-    [Theory]
-    [InlineData(90.0)]
-    [InlineData(-90.0)]
+    [TestCase(90.0)]
+    [TestCase(-90.0)]
     public void Parallactic_angle_stays_defined_at_the_poles(double latitude)
     {
-        Assert.True(double.IsFinite(MoonOrientation.ParallacticAngle(30.0, 10.0, latitude)));
+        double.IsFinite(MoonOrientation.ParallacticAngle(30.0, 10.0, latitude)).Should().BeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Evening_crescent_in_berlin_is_lit_on_the_right()
     {
         (double x, _) = ScreenDirection(Compute("2026-11-12T15:30:00Z", 52.52, 13.40).Moon);
 
-        Assert.True(x > 0.5);
+        x.Should().BeGreaterThan(0.5);
     }
 
-    [Fact]
+    [Test]
     public void Autumn_evening_crescent_in_sydney_is_lit_on_the_left()
     {
         // April in Sydney, because the ecliptic lies as flat at sunset as in a northern autumn.
@@ -142,50 +137,48 @@ public class MoonOrientationTests
         SkySnapshot sky = Compute("2026-04-20T08:30:00Z", -33.8688, 151.2093);
         (double x, _) = ScreenDirection(sky.Moon);
 
-        Assert.Equal(MoonPhaseName.WaxingCrescent, sky.Moon.PhaseName);
-        Assert.True(x < -0.5);
+        sky.Moon.PhaseName.Should().Be(MoonPhaseName.WaxingCrescent);
+        x.Should().BeLessThan(-0.5);
     }
 
-    [Fact]
+    [Test]
     public void Evening_crescent_at_the_equator_is_lit_from_below()
     {
         (double x, double y) = ScreenDirection(Compute("2026-11-12T23:30:00Z", -0.1807, -78.4678).Moon);
 
-        Assert.True(y > 0.5 && Math.Abs(x) < y);
+        (y > 0.5 && Math.Abs(x) < y).Should().BeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Limb_points_towards_the_sun_even_when_it_is_below_the_horizon()
     {
         // Dusk over Berlin: the sun has set in the south-west, the moon stands to its upper left.
         SkySnapshot sky = Compute("2026-11-12T16:30:00Z", 52.52, 13.40);
         (double x, double y) = ScreenDirection(sky.Moon);
 
-        Assert.True(sky.Sun.GeometricAltitude < 0);
-        Assert.True(x > 0 && y > 0);
+        sky.Sun.GeometricAltitude.Should().BeLessThan(0);
+        (x > 0 && y > 0).Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData(0.0, MoonPhaseName.NewMoon)]
-    [InlineData(359.0, MoonPhaseName.NewMoon)]
-    [InlineData(45.0, MoonPhaseName.WaxingCrescent)]
-    [InlineData(90.0, MoonPhaseName.FirstQuarter)]
-    [InlineData(135.0, MoonPhaseName.WaxingGibbous)]
-    [InlineData(180.0, MoonPhaseName.FullMoon)]
-    [InlineData(225.0, MoonPhaseName.WaningGibbous)]
-    [InlineData(270.0, MoonPhaseName.LastQuarter)]
-    [InlineData(315.0, MoonPhaseName.WaningCrescent)]
+    [TestCase(0.0, MoonPhaseName.NewMoon)]
+    [TestCase(359.0, MoonPhaseName.NewMoon)]
+    [TestCase(45.0, MoonPhaseName.WaxingCrescent)]
+    [TestCase(90.0, MoonPhaseName.FirstQuarter)]
+    [TestCase(135.0, MoonPhaseName.WaxingGibbous)]
+    [TestCase(180.0, MoonPhaseName.FullMoon)]
+    [TestCase(225.0, MoonPhaseName.WaningGibbous)]
+    [TestCase(270.0, MoonPhaseName.LastQuarter)]
+    [TestCase(315.0, MoonPhaseName.WaningCrescent)]
     public void Phase_names_follow_the_elongation(double elongation, MoonPhaseName expected)
     {
-        Assert.Equal(expected, MoonOrientation.PhaseName(elongation));
+        MoonOrientation.PhaseName(elongation).Should().Be(expected);
     }
 
-    [Theory]
-    [InlineData("2026-10-26T04:12:00Z", MoonPhaseName.FullMoon)]
-    [InlineData("2026-11-09T07:02:00Z", MoonPhaseName.NewMoon)]
+    [TestCase("2026-10-26T04:12:00Z", MoonPhaseName.FullMoon)]
+    [TestCase("2026-11-09T07:02:00Z", MoonPhaseName.NewMoon)]
     public void Known_phases_are_named_correctly(string utc, MoonPhaseName expected)
     {
-        Assert.Equal(expected, Compute(utc, 52.52, 13.40).Moon.PhaseName);
+        Compute(utc, 52.52, 13.40).Moon.PhaseName.Should().Be(expected);
     }
 
     private static SkySnapshot Compute(HorizonsCase c) => Compute(c.Utc, c.Latitude, c.Longitude);
@@ -205,7 +198,7 @@ public class MoonOrientationTests
         double difference = Math.Abs((actual - expected) % 360.0);
         difference = Math.Min(difference, 360.0 - difference);
 
-        Assert.True(difference <= tolerance, $"expected {expected:F2}, got {actual:F2}");
+        difference.Should().BeLessThanOrEqualTo(tolerance, $"expected {expected:F2}, got {actual:F2}");
     }
 
     private static double Radians(double degrees) => degrees * Math.PI / 180.0;

@@ -15,58 +15,53 @@ public class SkyEventTests
     private static readonly TimeSpan PhaseTolerance = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan EclipseTolerance = TimeSpan.FromMinutes(5);
 
-    [Theory]
-    [InlineData("2026-10-31T00:00:00Z", "2026-11-24T14:53:00Z")]
-    [InlineData("2026-11-25T00:00:00Z", "2026-12-24T01:28:00Z")]
-    [InlineData("2026-01-01T00:00:00Z", "2026-01-03T10:03:00Z")]
+    [TestCase("2026-10-31T00:00:00Z", "2026-11-24T14:53:00Z")]
+    [TestCase("2026-11-25T00:00:00Z", "2026-12-24T01:28:00Z")]
+    [TestCase("2026-01-01T00:00:00Z", "2026-01-03T10:03:00Z")]
     public void Full_moon_matches_the_tables(string after, string expected)
     {
         AssertClose(expected, Next(SkyEventKind.FullMoon, after).Time, PhaseTolerance);
     }
 
-    [Theory]
-    [InlineData("2026-10-31T00:00:00Z", "2026-11-09T07:02:00Z")]
-    [InlineData("2026-11-10T00:00:00Z", "2026-12-09T00:52:00Z")]
+    [TestCase("2026-10-31T00:00:00Z", "2026-11-09T07:02:00Z")]
+    [TestCase("2026-11-10T00:00:00Z", "2026-12-09T00:52:00Z")]
     public void New_moon_matches_the_tables(string after, string expected)
     {
         AssertClose(expected, Next(SkyEventKind.NewMoon, after).Time, PhaseTolerance);
     }
 
-    [Theory]
-    [InlineData("2026-10-31T00:00:00Z", "2026-11-24T14:53:00Z")]
-    [InlineData("2026-11-25T00:00:00Z", "2026-12-24T01:28:00Z")]
+    [TestCase("2026-10-31T00:00:00Z", "2026-11-24T14:53:00Z")]
+    [TestCase("2026-11-25T00:00:00Z", "2026-12-24T01:28:00Z")]
     public void Supermoon_is_a_full_moon_near_perigee(string after, string expected)
     {
         AssertClose(expected, Next(SkyEventKind.Supermoon, after).Time, PhaseTolerance);
     }
 
-    [Fact]
+    [Test]
     public void Full_moons_far_from_perigee_are_skipped()
     {
         // The full moons of spring and summer 2026 are all too far away.
         SkyEvent next = Next(SkyEventKind.Supermoon, "2026-02-01T00:00:00Z");
 
-        Assert.Equal(2026, next.Time.Year);
-        Assert.Equal(11, next.Time.Month);
+        next.Time.Year.Should().Be(2026);
+        next.Time.Month.Should().Be(11);
     }
 
-    [Theory]
-    [InlineData("2026-02-01T00:00:00Z", "2026-03-03T11:33:00Z", EclipseType.Total)]
-    [InlineData("2026-03-10T00:00:00Z", "2026-08-28T04:13:00Z", EclipseType.Partial)]
-    [InlineData("2026-09-01T00:00:00Z", "2027-02-20T23:13:00Z", EclipseType.Penumbral)]
+    [TestCase("2026-02-01T00:00:00Z", "2026-03-03T11:33:00Z", EclipseType.Total)]
+    [TestCase("2026-03-10T00:00:00Z", "2026-08-28T04:13:00Z", EclipseType.Partial)]
+    [TestCase("2026-09-01T00:00:00Z", "2027-02-20T23:13:00Z", EclipseType.Penumbral)]
     public void Lunar_eclipse_matches_the_catalogue(string after, string expected, EclipseType type)
     {
         SkyEvent eclipse = Next(SkyEventKind.LunarEclipse, after);
 
         AssertClose(expected, eclipse.Time, EclipseTolerance);
-        Assert.Equal(type, eclipse.Eclipse);
+        eclipse.Eclipse.Should().Be(type);
     }
 
     // No catalogue behind the local peaks: these fix the type and the rough time, hence the wider tolerance.
-    [Theory]
-    [InlineData(32.78, -96.80, "2024-04-01T00:00:00Z", "2024-04-08T18:42:00Z", EclipseType.Total)] // Dallas
-    [InlineData(35.08, -106.65, "2023-10-01T00:00:00Z", "2023-10-14T16:36:00Z", EclipseType.Annular)] // Albuquerque
-    [InlineData(52.52, 13.405, "2025-03-01T00:00:00Z", "2025-03-29T11:17:00Z", EclipseType.Partial)] // Berlin
+    [TestCase(32.78, -96.80, "2024-04-01T00:00:00Z", "2024-04-08T18:42:00Z", EclipseType.Total)] // Dallas
+    [TestCase(35.08, -106.65, "2023-10-01T00:00:00Z", "2023-10-14T16:36:00Z", EclipseType.Annular)] // Albuquerque
+    [TestCase(52.52, 13.405, "2025-03-01T00:00:00Z", "2025-03-29T11:17:00Z", EclipseType.Partial)] // Berlin
     public void Solar_eclipse_matches_the_local_circumstances(double latitude, double longitude, string after, string expected, EclipseType type)
     {
         var calendar = new SkyEventCalendar(new GeoLocation(latitude, longitude));
@@ -74,10 +69,10 @@ public class SkyEventTests
         SkyEvent eclipse = calendar.Upcoming(Parse(after)).Single(e => e.Kind == SkyEventKind.SolarEclipse);
 
         AssertClose(expected, eclipse.Time, EclipseTolerance);
-        Assert.Equal(type, eclipse.Eclipse);
+        eclipse.Eclipse.Should().Be(type);
     }
 
-    [Fact]
+    [Test]
     public void Solar_eclipses_out_of_sight_are_skipped()
     {
         // The eclipse of 2026-08-12 is over Europe and the Arctic, far from Dallas.
@@ -85,18 +80,18 @@ public class SkyEventTests
 
         SkyEvent eclipse = calendar.Upcoming(Parse("2026-08-01T00:00:00Z")).Single(e => e.Kind == SkyEventKind.SolarEclipse);
 
-        Assert.True(eclipse.Time > Parse("2026-09-01T00:00:00Z"));
+        eclipse.Time.Should().BeAfter(Parse("2026-09-01T00:00:00Z"));
     }
 
-    [Fact]
+    [Test]
     public void Every_kind_appears_once_in_a_fixed_order()
     {
         IReadOnlyList<SkyEvent> events = new SkyEventCalendar(Berlin).Upcoming(Parse("2026-10-31T00:00:00Z"));
 
-        Assert.Equal(Enum.GetValues<SkyEventKind>(), events.Select(e => e.Kind));
+        events.Select(e => e.Kind).Should().Equal(Enum.GetValues<SkyEventKind>());
     }
 
-    [Fact]
+    [Test]
     public void An_event_counts_as_past_at_its_exact_moment()
     {
         var calendar = new SkyEventCalendar(Berlin);
@@ -104,21 +99,21 @@ public class SkyEventTests
 
         SkyEvent next = calendar.Upcoming(first.Time)[0];
 
-        Assert.True(next.Time > first.Time.AddDays(20));
+        next.Time.Should().BeAfter(first.Time.AddDays(20));
     }
 
-    [Fact]
+    [Test]
     public void Between_finds_all_events_in_order()
     {
         IReadOnlyList<SkyEvent> events = new SkyEventCalendar(Berlin)
             .Between(Parse("2026-11-01T00:00:00Z"), Parse("2026-12-31T00:00:00Z"));
 
         // Two new moons, two full moons and both of those again as supermoons.
-        Assert.Equal(6, events.Count);
-        Assert.Equal(events.OrderBy(e => e.Time), events);
+        events.Count.Should().Be(6);
+        events.Should().Equal(events.OrderBy(e => e.Time));
     }
 
-    [Fact]
+    [Test]
     public void Scrubbing_backwards_finds_earlier_events_too()
     {
         var calendar = new SkyEventCalendar(Berlin);
@@ -126,17 +121,16 @@ public class SkyEventTests
         calendar.Upcoming(Parse("2026-10-31T00:00:00Z"));
         SkyEvent earlier = calendar.Upcoming(Parse("2026-02-01T00:00:00Z"))[0];
 
-        Assert.Equal(2026, earlier.Time.Year);
-        Assert.Equal(2, earlier.Time.Month);
+        earlier.Time.Year.Should().Be(2026);
+        earlier.Time.Month.Should().Be(2);
     }
 
-    [Theory]
-    [InlineData(-2880)]
-    [InlineData(-30)]
-    [InlineData(-5)]
-    [InlineData(-2)]
-    [InlineData(1)]
-    [InlineData(5)]
+    [TestCase(-2880)]
+    [TestCase(-30)]
+    [TestCase(-5)]
+    [TestCase(-2)]
+    [TestCase(1)]
+    [TestCase(5)]
     public void Time_around_an_eclipse_peak_finds_the_right_one(int minutes)
     {
         var calendar = new SkyEventCalendar(Berlin);
@@ -145,11 +139,11 @@ public class SkyEventTests
 
         SkyEvent next = calendar.Upcoming(time).Single(e => e.Kind == SkyEventKind.LunarEclipse);
 
-        Assert.True(next.Time > time);
-        Assert.Equal(minutes < 0 ? eclipse.Time : Parse("2027-02-20T23:13:00Z").Date, minutes < 0 ? next.Time : next.Time.Date);
+        next.Time.Should().BeAfter(time);
+        (minutes < 0 ? next.Time : next.Time.Date).Should().Be(minutes < 0 ? eclipse.Time : Parse("2027-02-20T23:13:00Z").Date);
     }
 
-    [Fact]
+    [Test]
     public void Passing_eclipses_never_gets_stuck()
     {
         IReadOnlyList<SkyEvent> events = new SkyEventCalendar(Berlin)
@@ -159,15 +153,14 @@ public class SkyEventTests
         List<SkyEvent> solar = events.Where(e => e.Kind == SkyEventKind.SolarEclipse).ToList();
 
         // NASA's catalogue lists these ten from 2025 to 2028.
-        Assert.Equal(
-            ["2025-03-14", "2025-09-07", "2026-03-03", "2026-08-28", "2027-02-20", "2027-07-18", "2027-08-17", "2028-01-12", "2028-07-06", "2028-12-31"],
-            lunar.Select(e => e.Time.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+        lunar.Select(e => e.Time.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Should().Equal(
+            ["2025-03-14", "2025-09-07", "2026-03-03", "2026-08-28", "2027-02-20", "2027-07-18", "2027-08-17", "2028-01-12", "2028-07-06", "2028-12-31"]);
 
-        Assert.NotEmpty(solar);
-        Assert.Equal(solar.Count, solar.Select(e => e.Time.Date).Distinct().Count());
+        solar.Should().NotBeEmpty();
+        solar.Select(e => e.Time.Date).Distinct().Count().Should().Be(solar.Count);
     }
 
-    [Fact]
+    [Test]
     public void Scrubbing_backwards_step_by_step_stays_correct_and_does_not_search_again()
     {
         var calendar = new SkyEventCalendar(Berlin);
@@ -180,12 +173,12 @@ public class SkyEventTests
             DateTimeOffset time = start.AddHours(-hour);
             SkyEvent fullMoon = calendar.Upcoming(time)[0];
 
-            Assert.True(fullMoon.Time > time);
-            Assert.True(fullMoon.Time < time.AddDays(30));
+            fullMoon.Time.Should().BeAfter(time);
+            fullMoon.Time.Should().BeBefore(time.AddDays(30));
         }
 
         // A month of hourly frames. Searching anew each time would take a large multiple of this.
-        Assert.True(stopwatch.ElapsedMilliseconds < 500, $"took {stopwatch.ElapsedMilliseconds} ms");
+        stopwatch.ElapsedMilliseconds.Should().BeLessThan(500, $"took {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private static SkyEvent Next(SkyEventKind kind, string after) =>
@@ -194,7 +187,7 @@ public class SkyEventTests
     private static void AssertClose(string expected, DateTimeOffset actual, TimeSpan tolerance)
     {
         DateTimeOffset time = Parse(expected);
-        Assert.InRange(actual, time - tolerance, time + tolerance);
+        actual.Should().BeCloseTo(time, tolerance);
     }
 
     private static DateTimeOffset Parse(string text) => DateTimeOffset.Parse(text, CultureInfo.InvariantCulture);

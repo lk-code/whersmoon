@@ -44,27 +44,27 @@ public class RingInertiaTests
         return largest;
     }
 
-    [Fact]
+    [Test]
     public void A_resting_device_leaves_the_rings_alone()
     {
         RingInertia inertia = Resting();
 
-        Assert.Equal(0.0, inertia.OffsetX);
-        Assert.Equal(0.0, inertia.OffsetY);
+        inertia.OffsetX.Should().Be(0.0);
+        inertia.OffsetY.Should().Be(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Gravity_alone_moves_nothing_at_any_angle()
     {
         var inertia = new RingInertia { AccelerationX = 0.3, AccelerationY = -0.9 };
 
         Run(inertia, 120);
 
-        Assert.Equal(0.0, inertia.OffsetX);
-        Assert.Equal(0.0, inertia.OffsetY);
+        inertia.OffsetX.Should().Be(0.0);
+        inertia.OffsetY.Should().Be(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Moving_left_shifts_the_rings_right()
     {
         RingInertia inertia = Resting();
@@ -72,10 +72,10 @@ public class RingInertiaTests
         inertia.AccelerationX = -0.5;
         Run(inertia, 12);
 
-        Assert.True(inertia.OffsetX > 0.0);
+        inertia.OffsetX.Should().BeGreaterThan(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Moving_up_shifts_the_rings_down()
     {
         RingInertia inertia = Resting();
@@ -83,10 +83,10 @@ public class RingInertiaTests
         inertia.AccelerationY = 0.5;
         Run(inertia, 12);
 
-        Assert.True(inertia.OffsetY > 0.0);
+        inertia.OffsetY.Should().BeGreaterThan(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Turning_left_shifts_the_rings_right()
     {
         RingInertia inertia = Resting();
@@ -94,21 +94,21 @@ public class RingInertiaTests
         inertia.TurnY = 2.0;
         Run(inertia, 20);
 
-        Assert.True(inertia.OffsetX > 0.0);
+        inertia.OffsetX.Should().BeGreaterThan(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Faster_movement_gives_a_larger_shift()
     {
         double slow = LargestOffsetOfPush(0.1);
         double medium = LargestOffsetOfPush(0.5);
         double fast = LargestOffsetOfPush(2.0);
 
-        Assert.True(slow < 0.25, $"slow movement shifted by {slow:F2}");
-        Assert.True(medium > slow && fast > medium, $"{slow:F2}, {medium:F2}, {fast:F2}");
+        slow.Should().BeLessThan(0.25, $"slow movement shifted by {slow:F2}");
+        (medium > slow && fast > medium).Should().BeTrue($"{slow:F2}, {medium:F2}, {fast:F2}");
     }
 
-    [Fact]
+    [Test]
     public void The_shift_is_limited_however_hard_the_device_moves()
     {
         RingInertia inertia = Resting();
@@ -118,11 +118,11 @@ public class RingInertiaTests
         for (int i = 0; i < 300; i++)
         {
             inertia.Advance(Frame);
-            Assert.InRange(inertia.OffsetX, -1.0, 1.0);
+            inertia.OffsetX.Should().BeInRange(-1.0, 1.0);
         }
     }
 
-    [Fact]
+    [Test]
     public void The_rings_return_without_overshoot()
     {
         RingInertia inertia = Resting();
@@ -136,15 +136,15 @@ public class RingInertiaTests
             double previous = inertia.OffsetX;
             inertia.Advance(Frame);
 
-            Assert.True(inertia.OffsetX >= 0.0, "crossed zero");
-            Assert.True(inertia.OffsetX <= before + 0.001, "swung further out");
-            Assert.True(inertia.OffsetX <= previous + 0.08, "jumped");
+            inertia.OffsetX.Should().BeGreaterThanOrEqualTo(0.0, "crossed zero");
+            inertia.OffsetX.Should().BeLessThanOrEqualTo(before + 0.001, "swung further out");
+            inertia.OffsetX.Should().BeLessThanOrEqualTo(previous + 0.08, "jumped");
         }
 
-        Assert.Equal(0.0, inertia.OffsetX);
+        inertia.OffsetX.Should().Be(0.0);
     }
 
-    [Fact]
+    [Test]
     public void Coming_to_rest_ends_the_need_to_redraw()
     {
         RingInertia inertia = Resting();
@@ -153,16 +153,15 @@ public class RingInertiaTests
         inertia.TurnY = 0.0;
         Run(inertia, 300);
 
-        Assert.False(inertia.Advance(Frame));
+        inertia.Advance(Frame).Should().BeFalse();
     }
 
-    [Theory]
-    [InlineData(0, 1.0, 2.0, 1.0, 2.0)]
-    [InlineData(90, 1.0, 2.0, -2.0, 1.0)]
-    [InlineData(180, 1.0, 2.0, -1.0, -2.0)]
-    [InlineData(270, 1.0, 2.0, 2.0, -1.0)]
+    [TestCase(0, 1.0, 2.0, 1.0, 2.0)]
+    [TestCase(90, 1.0, 2.0, -2.0, 1.0)]
+    [TestCase(180, 1.0, 2.0, -1.0, -2.0)]
+    [TestCase(270, 1.0, 2.0, 2.0, -1.0)]
     public void Device_axes_follow_the_screen_rotation(int rotation, double x, double y, double expectedX, double expectedY)
     {
-        Assert.Equal((expectedX, expectedY), RingInertia.ToScreen(x, y, rotation));
+        RingInertia.ToScreen(x, y, rotation).Should().Be((expectedX, expectedY));
     }
 }

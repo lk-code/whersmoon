@@ -25,52 +25,50 @@ public class TimeGlideTests
         return distance;
     }
 
-    [Theory]
-    [InlineData(0.0)]
-    [InlineData(40.0)]
-    [InlineData(-40.0)]
-    [InlineData(TimeScrubber.SlowSpeed * Width)]
+    [TestCase(0.0)]
+    [TestCase(40.0)]
+    [TestCase(-40.0)]
+    [TestCase(TimeScrubber.SlowSpeed * Width)]
     public void A_slow_swipe_stops_with_the_finger(double speed)
     {
         var glide = new TimeGlide();
 
         glide.Push(speed, Width);
 
-        Assert.False(glide.IsRunning);
+        glide.IsRunning.Should().BeFalse();
     }
 
-    [Theory]
-    [InlineData(800.0)]
-    [InlineData(-800.0)]
+    [TestCase(800.0)]
+    [TestCase(-800.0)]
     public void A_fast_swipe_carries_on_in_its_own_direction(double speed)
     {
-        Assert.Equal(Math.Sign(speed), Math.Sign(Flight(speed)));
+        Math.Sign(Flight(speed)).Should().Be(Math.Sign(speed));
     }
 
-    [Fact]
+    [Test]
     public void The_faster_the_push_the_further_it_flies()
     {
         double gentle = Flight(300.0);
         double firm = Flight(1000.0);
         double hard = Flight(3000.0);
 
-        Assert.True(gentle < firm && firm < hard);
-        Assert.True(hard / gentle > 3000.0 / 300.0, "a hard push should fly more than its speed alone says");
+        (gentle < firm && firm < hard).Should().BeTrue();
+        (hard / gentle).Should().BeGreaterThan(3000.0 / 300.0, "a hard push should fly more than its speed alone says");
     }
 
-    [Fact]
+    [Test]
     public void Flying_does_not_start_with_a_jump_just_above_a_slow_swipe()
     {
-        Assert.InRange(Flight(TimeScrubber.SlowSpeed * Width + 20.0), 0.0, 0.05 * Width);
+        Flight(TimeScrubber.SlowSpeed * Width + 20.0).Should().BeInRange(0.0, 0.05 * Width);
     }
 
-    [Fact]
+    [Test]
     public void A_flight_is_the_same_at_any_frame_rate()
     {
-        Assert.InRange(Math.Abs(Flight(1500.0, 1.0 / 120.0) - Flight(1500.0, 1.0 / 30.0)), 0.0, 3.0);
+        Math.Abs(Flight(1500.0, 1.0 / 120.0) - Flight(1500.0, 1.0 / 30.0)).Should().BeInRange(0.0, 3.0);
     }
 
-    [Fact]
+    [Test]
     public void A_flight_ends_by_itself_within_seconds()
     {
         var glide = new TimeGlide();
@@ -83,11 +81,11 @@ public class TimeGlideTests
             seconds += Frame;
         }
 
-        Assert.False(glide.IsRunning);
-        Assert.InRange(seconds, 1.0, 6.0);
+        glide.IsRunning.Should().BeFalse();
+        seconds.Should().BeInRange(1.0, 6.0);
     }
 
-    [Fact]
+    [Test]
     public void The_speed_only_ever_falls()
     {
         var glide = new TimeGlide();
@@ -97,12 +95,12 @@ public class TimeGlideTests
         while (glide.IsRunning)
         {
             glide.Advance(Frame);
-            Assert.True(glide.Speed < previous);
+            glide.Speed.Should().BeLessThan(previous);
             previous = glide.Speed;
         }
     }
 
-    [Fact]
+    [Test]
     public void Grabbing_stops_a_flight_at_once()
     {
         var glide = new TimeGlide();
@@ -110,11 +108,11 @@ public class TimeGlideTests
 
         glide.Stop();
 
-        Assert.False(glide.IsRunning);
-        Assert.Equal(0.0, glide.Advance(Frame));
+        glide.IsRunning.Should().BeFalse();
+        glide.Advance(Frame).Should().Be(0.0);
     }
 
-    [Fact]
+    [Test]
     public void A_glide_flies_past_events_and_lands_on_one_as_it_slows_down()
     {
         const double Push = 2000.0;
@@ -135,11 +133,11 @@ public class TimeGlideTests
             scrubber.Move(distance, glide.Speed, Width, Day, events);
         }
 
-        Assert.Equal(landing, scrubber.Caught);
-        Assert.Equal(landing, scrubber.Time);
+        scrubber.Caught.Should().Be(landing);
+        scrubber.Time.Should().Be(landing);
     }
 
-    [Fact]
+    [Test]
     public void A_glide_covers_as_much_time_as_its_flight_says()
     {
         var glide = new TimeGlide();
@@ -155,7 +153,7 @@ public class TimeGlideTests
             scrubber.Move(distance, glide.Speed, Width, Day, []);
         }
 
-        Assert.True(scrubber.Time < Start);
-        Assert.InRange((scrubber.Time - (Start + Day * (flown / Width))).Duration(), TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        scrubber.Time.Should().BeBefore(Start);
+        (scrubber.Time - (Start + Day * (flown / Width))).Duration().Should().BeGreaterThanOrEqualTo(TimeSpan.Zero).And.BeLessThanOrEqualTo(TimeSpan.FromSeconds(1));
     }
 }

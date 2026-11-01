@@ -20,312 +20,299 @@ public class PlaceSearchTests
         return PlaceIndex.Load(file, language);
     }
 
-    [Theory]
-    [InlineData("Tromsø", "tromso")]
-    [InlineData("TROMSØ", "tromso")]
-    [InlineData("München", "munchen")]
-    [InlineData("Saint-Étienne", "saint etienne")]
-    [InlineData("Malmö", "malmo")]
-    [InlineData("Çanakkale", "canakkale")]
-    [InlineData("Łódź", "lodz")]
-    [InlineData("Straße", "strasse")]
-    [InlineData("Ærøskøbing", "aeroskobing")]
-    [InlineData("Sana'a", "sanaa")]
-    [InlineData("  St. Gallen  ", "st gallen")]
-    [InlineData("", "")]
+    [TestCase("Tromsø", "tromso")]
+    [TestCase("TROMSØ", "tromso")]
+    [TestCase("München", "munchen")]
+    [TestCase("Saint-Étienne", "saint etienne")]
+    [TestCase("Malmö", "malmo")]
+    [TestCase("Çanakkale", "canakkale")]
+    [TestCase("Łódź", "lodz")]
+    [TestCase("Straße", "strasse")]
+    [TestCase("Ærøskøbing", "aeroskobing")]
+    [TestCase("Sana'a", "sanaa")]
+    [TestCase("  St. Gallen  ", "st gallen")]
+    [TestCase("", "")]
     public void Folding_removes_what_a_keyboard_may_not_have(string text, string expected)
     {
-        Assert.Equal(expected, SearchText.Fold(text));
+        SearchText.Fold(text).Should().Be(expected);
     }
 
-    [Theory]
-    [InlineData("München", "muenchen")]
-    [InlineData("Köln", "koeln")]
-    [InlineData("Zürich", "zuerich")]
-    [InlineData("Tromsø", "tromsoe")]
+    [TestCase("München", "muenchen")]
+    [TestCase("Köln", "koeln")]
+    [TestCase("Zürich", "zuerich")]
+    [TestCase("Tromsø", "tromsoe")]
     public void Umlauts_also_have_their_long_spelling(string text, string expected)
     {
-        Assert.Equal(expected, SearchText.ExpandedSpelling(text));
+        SearchText.ExpandedSpelling(text).Should().Be(expected);
     }
 
-    [Fact]
+    [Test]
     public void Names_without_umlauts_have_no_second_spelling()
     {
-        Assert.Null(SearchText.ExpandedSpelling("Berlin"));
+        SearchText.ExpandedSpelling("Berlin").Should().BeNull();
     }
 
-    [Theory]
-    [InlineData("Tromso", "Tromsø", "NO")]
-    [InlineData("tromsø", "Tromsø", "NO")]
-    [InlineData("Tromsoe", "Tromsø", "NO")]
-    [InlineData("Muenchen", "Munich", "DE")]
-    [InlineData("München", "Munich", "DE")]
-    [InlineData("Köln", "Köln", "DE")]
-    [InlineData("Koeln", "Köln", "DE")]
-    [InlineData("Cologne", "Köln", "DE")]
-    [InlineData("Zurich", "Zürich", "CH")]
-    [InlineData("Mailand", "Milan", "IT")]
-    [InlineData("Peking", "Beijing", "CN")]
-    [InlineData("Sao Paulo", "São Paulo", "BR")]
-    [InlineData("reykjavik", "Reykjavík", "IS")]
+    [TestCase("Tromso", "Tromsø", "NO")]
+    [TestCase("tromsø", "Tromsø", "NO")]
+    [TestCase("Tromsoe", "Tromsø", "NO")]
+    [TestCase("Muenchen", "Munich", "DE")]
+    [TestCase("München", "Munich", "DE")]
+    [TestCase("Köln", "Köln", "DE")]
+    [TestCase("Koeln", "Köln", "DE")]
+    [TestCase("Cologne", "Köln", "DE")]
+    [TestCase("Zurich", "Zürich", "CH")]
+    [TestCase("Mailand", "Milan", "IT")]
+    [TestCase("Peking", "Beijing", "CN")]
+    [TestCase("Sao Paulo", "São Paulo", "BR")]
+    [TestCase("reykjavik", "Reykjavík", "IS")]
     public void Search_is_tolerant_of_accents_and_finds_german_names(string query, string name, string country)
     {
         Place first = Index.Value.Search(query, 8)[0];
 
-        Assert.Equal(name, first.Name);
-        Assert.Equal(country, first.Country);
+        first.Name.Should().Be(name);
+        first.Country.Should().Be(country);
     }
 
-    [Theory]
-    [InlineData("Spandau", "DE")]
-    [InlineData("Kreuzberg", "DE")]
-    [InlineData("Altona", "DE")]
-    [InlineData("Wattenscheid", "DE")]
-    [InlineData("Favoriten", "AT")]
-    [InlineData("Stadt Winterthur (Kreis 1)", "CH")]
-    [InlineData("Paris 15 Vaugirard", "FR")]
-    [InlineData("Marseille 08", "FR")]
-    [InlineData("Islington", "GB")]
-    [InlineData("Croydon", "GB")]
-    [InlineData("Brooklyn", "US")]
-    [InlineData("The Bronx", "US")]
-    [InlineData("Ciudad Lineal", "ES")]
-    [InlineData("Žižkov", "CZ")]
-    [InlineData("Ursynów", "PL")]
-    [InlineData("Setagaya", "JP")]
-    [InlineData("Kowloon", "HK")]
-    [InlineData("Bedok New Town", "SG")]
+    [TestCase("Spandau", "DE")]
+    [TestCase("Kreuzberg", "DE")]
+    [TestCase("Altona", "DE")]
+    [TestCase("Wattenscheid", "DE")]
+    [TestCase("Favoriten", "AT")]
+    [TestCase("Stadt Winterthur (Kreis 1)", "CH")]
+    [TestCase("Paris 15 Vaugirard", "FR")]
+    [TestCase("Marseille 08", "FR")]
+    [TestCase("Islington", "GB")]
+    [TestCase("Croydon", "GB")]
+    [TestCase("Brooklyn", "US")]
+    [TestCase("The Bronx", "US")]
+    [TestCase("Ciudad Lineal", "ES")]
+    [TestCase("Žižkov", "CZ")]
+    [TestCase("Ursynów", "PL")]
+    [TestCase("Setagaya", "JP")]
+    [TestCase("Kowloon", "HK")]
+    [TestCase("Bedok New Town", "SG")]
     public void Districts_are_no_places(string name, string country)
     {
-        Assert.DoesNotContain(Index.Value.Search(name, 8), place => place.Name == name && place.Country == country);
+        Index.Value.Search(name, 8).Should().NotContain(place => place.Name == name && place.Country == country);
     }
 
-    [Theory]
-    [InlineData("Potsdam", "DE")]
-    [InlineData("Fürth", "DE")]
-    [InlineData("Brühl", "DE")]
-    [InlineData("Hürth", "DE")]
-    [InlineData("Klosterneuburg", "AT")]
-    [InlineData("Winterthur", "CH")]
-    [InlineData("Boulogne-Billancourt", "FR")]
-    [InlineData("Getafe", "ES")]
-    [InlineData("Sesto San Giovanni", "IT")]
-    [InlineData("Glendale", "US")]
-    [InlineData("Newark", "US")]
-    [InlineData("Niterói", "BR")]
-    [InlineData("Howrah", "IN")]
-    [InlineData("New Delhi", "IN")]
-    [InlineData("Hong Kong", "HK")]
-    [InlineData("Singapore", "SG")]
-    [InlineData("London", "GB")]
-    [InlineData("New York City", "US")]
+    [TestCase("Potsdam", "DE")]
+    [TestCase("Fürth", "DE")]
+    [TestCase("Brühl", "DE")]
+    [TestCase("Hürth", "DE")]
+    [TestCase("Klosterneuburg", "AT")]
+    [TestCase("Winterthur", "CH")]
+    [TestCase("Boulogne-Billancourt", "FR")]
+    [TestCase("Getafe", "ES")]
+    [TestCase("Sesto San Giovanni", "IT")]
+    [TestCase("Glendale", "US")]
+    [TestCase("Newark", "US")]
+    [TestCase("Niterói", "BR")]
+    [TestCase("Howrah", "IN")]
+    [TestCase("New Delhi", "IN")]
+    [TestCase("Hong Kong", "HK")]
+    [TestCase("Singapore", "SG")]
+    [TestCase("London", "GB")]
+    [TestCase("New York City", "US")]
     public void Towns_next_to_a_big_city_stay_places(string name, string country)
     {
-        Assert.Contains(Index.Value.Search(name, 8), place => place.Name == name && place.Country == country);
+        Index.Value.Search(name, 8).Should().Contain(place => place.Name == name && place.Country == country);
     }
 
-    [Fact]
+    [Test]
     public void A_town_of_the_same_name_as_a_district_stays()
     {
-        Assert.Equal("Kansas", Index.Value.Search("Manhattan", 8).Single(place => place.Name == "Manhattan").Region);
+        Index.Value.Search("Manhattan", 8).Single(place => place.Name == "Manhattan").Region.Should().Be("Kansas");
     }
 
-    [Theory]
-    [InlineData("München", "München", "Bayern")]
-    [InlineData("Munich", "München", "Bayern")]
-    [InlineData("Nürnberg", "Nürnberg", "Bayern")]
-    [InlineData("Köln", "Köln", "Nordrhein-Westfalen")]
-    [InlineData("Wien", "Wien", "Wien")]
-    [InlineData("Genf", "Genf", "Genf")]
-    [InlineData("Luzern", "Luzern", "Luzern")]
-    [InlineData("Mailand", "Mailand", "Lombardei")]
-    [InlineData("Milan", "Mailand", "Lombardei")]
-    [InlineData("Venedig", "Venedig", "Venetien")]
-    [InlineData("Den Haag", "Den Haag", "Südholland")]
-    [InlineData("Peking", "Peking", "Peking")]
-    [InlineData("Los Angeles", "Los Angeles", "Kalifornien")]
+    [TestCase("München", "München", "Bayern")]
+    [TestCase("Munich", "München", "Bayern")]
+    [TestCase("Nürnberg", "Nürnberg", "Bayern")]
+    [TestCase("Köln", "Köln", "Nordrhein-Westfalen")]
+    [TestCase("Wien", "Wien", "Wien")]
+    [TestCase("Genf", "Genf", "Genf")]
+    [TestCase("Luzern", "Luzern", "Luzern")]
+    [TestCase("Mailand", "Mailand", "Lombardei")]
+    [TestCase("Milan", "Mailand", "Lombardei")]
+    [TestCase("Venedig", "Venedig", "Venetien")]
+    [TestCase("Den Haag", "Den Haag", "Südholland")]
+    [TestCase("Peking", "Peking", "Peking")]
+    [TestCase("Los Angeles", "Los Angeles", "Kalifornien")]
     public void German_names_appear_in_german(string query, string name, string region)
     {
         Place first = GermanIndex.Value.Search(query, 8)[0];
 
-        Assert.Equal(name, first.Name);
-        Assert.Equal(region, first.Region);
+        first.Name.Should().Be(name);
+        first.Region.Should().Be(region);
     }
 
-    [Theory]
-    [InlineData("Munich", "Munich", "Bavaria")]
-    [InlineData("München", "Munich", "Bavaria")]
-    [InlineData("Mailand", "Milan", "Lombardy")]
+    [TestCase("Munich", "Munich", "Bavaria")]
+    [TestCase("München", "Munich", "Bavaria")]
+    [TestCase("Mailand", "Milan", "Lombardy")]
     public void English_names_stay_english(string query, string name, string region)
     {
         Place first = Index.Value.Search(query, 8)[0];
 
-        Assert.Equal(name, first.Name);
-        Assert.Equal(region, first.Region);
+        first.Name.Should().Be(name);
+        first.Region.Should().Be(region);
     }
 
-    [Theory]
-    [InlineData("Danzig", "Gdańsk")]
-    [InlineData("Breslau", "Wrocław")]
-    [InlineData("Stettin", "Szczecin")]
-    [InlineData("Königsberg", "Kaliningrad")]
+    [TestCase("Danzig", "Gdańsk")]
+    [TestCase("Breslau", "Wrocław")]
+    [TestCase("Stettin", "Szczecin")]
+    [TestCase("Königsberg", "Kaliningrad")]
     public void Old_german_names_find_a_town_but_are_not_shown(string query, string name)
     {
-        Assert.Equal(name, GermanIndex.Value.Search(query, 8)[0].Name);
+        GermanIndex.Value.Search(query, 8)[0].Name.Should().Be(name);
     }
 
-    [Theory]
-    [InlineData("Leesburg")]
-    [InlineData("Monroe")]
-    [InlineData("Naucalpan")]
-    [InlineData("Schwedt")]
+    [TestCase("Leesburg")]
+    [TestCase("Monroe")]
+    [TestCase("Naucalpan")]
+    [TestCase("Schwedt")]
     public void Names_carry_no_additions(string query)
     {
-        Assert.All(GermanIndex.Value.Search(query, 8), place => Assert.DoesNotContain("/", place.Name.Replace(" / ", string.Empty)));
-        Assert.All(GermanIndex.Value.Search(query, 8), place => Assert.DoesNotContain("Municipio", place.Name));
+        GermanIndex.Value.Search(query, 8).Should().AllSatisfy(place => place.Name.Replace(" / ", string.Empty).Should().NotContain("/"));
+        GermanIndex.Value.Search(query, 8).Should().AllSatisfy(place => place.Name.Should().NotContain("Municipio"));
     }
 
-    [Theory]
-    [InlineData("Frankfurt am Main", "Hessen", "Deutschland", "Frankfurt am Main - Hessen - Deutschland")]
-    [InlineData("Luzern", "Luzern", "Schweiz", "Luzern - Schweiz")]
-    [InlineData("Berlin", "Berlin", "Deutschland", "Berlin - Deutschland")]
-    [InlineData("Monaco", "", "Monaco", "Monaco")]
-    [InlineData("Tromsø", "Troms", "Norwegen", "Tromsø - Troms - Norwegen")]
+    [TestCase("Frankfurt am Main", "Hessen", "Deutschland", "Frankfurt am Main - Hessen - Deutschland")]
+    [TestCase("Luzern", "Luzern", "Schweiz", "Luzern - Schweiz")]
+    [TestCase("Berlin", "Berlin", "Deutschland", "Berlin - Deutschland")]
+    [TestCase("Monaco", "", "Monaco", "Monaco")]
+    [TestCase("Tromsø", "Troms", "Norwegen", "Tromsø - Troms - Norwegen")]
     public void A_full_name_reads_city_region_country(string name, string region, string country, string expected)
     {
         var place = new Place(name, region, "XX", 0.0, 0.0, 0.0, "Etc/UTC");
 
-        Assert.Equal(expected, place.FullName(name, country));
+        place.FullName(name, country).Should().Be(expected);
     }
 
-    [Fact]
+    [Test]
     public void Typing_narrows_down_as_it_goes()
     {
-        Assert.Equal("Berlin", Index.Value.Search("ber", 8).Single(place => place.Country == "DE" && place.Name == "Berlin").Name);
-        Assert.Equal("Frankfurt am Main", Index.Value.Search("frankf", 8)[0].Name);
-        Assert.Equal("San Francisco", Index.Value.Search("san fr", 8)[0].Name);
+        Index.Value.Search("ber", 8).Single(place => place.Country == "DE" && place.Name == "Berlin").Name.Should().Be("Berlin");
+        Index.Value.Search("frankf", 8)[0].Name.Should().Be("Frankfurt am Main");
+        Index.Value.Search("san fr", 8)[0].Name.Should().Be("San Francisco");
     }
 
-    [Fact]
+    [Test]
     public void A_later_word_of_a_name_matches_too()
     {
-        Assert.Contains(Index.Value.Search("francisco", 8), place => place.Name == "San Francisco");
+        Index.Value.Search("francisco", 8).Should().Contain(place => place.Name == "San Francisco");
     }
 
-    [Fact]
+    [Test]
     public void Larger_places_come_first_among_equal_matches()
     {
         IReadOnlyList<Place> results = Index.Value.Search("Frankfurt", 2);
 
-        Assert.Equal("Frankfurt am Main", results[0].Name);
-        Assert.Equal("Frankfurt (Oder)", results[1].Name);
+        results[0].Name.Should().Be("Frankfurt am Main");
+        results[1].Name.Should().Be("Frankfurt (Oder)");
     }
 
-    [Fact]
+    [Test]
     public void Places_with_the_same_name_can_be_told_apart_by_region()
     {
         IReadOnlyList<Place> results = Index.Value.Search("Springfield", 8).Where(place => place.Country == "US").ToList();
 
-        Assert.True(results.Count >= 3);
-        Assert.Equal(results.Count, results.Select(place => place.Region).Distinct().Count());
+        results.Count.Should().BeGreaterThanOrEqualTo(3);
+        results.Select(place => place.Region).Distinct().Count().Should().Be(results.Count);
     }
 
-    [Fact]
+    [Test]
     public void Middle_of_a_word_does_not_match()
     {
-        Assert.DoesNotContain(Index.Value.Search("erlin", 8), place => place.Name == "Berlin");
+        Index.Value.Search("erlin", 8).Should().NotContain(place => place.Name == "Berlin");
     }
 
-    [Fact]
+    [Test]
     public void Blank_queries_find_nothing()
     {
-        Assert.Empty(Index.Value.Search("   ", 8));
-        Assert.Empty(Index.Value.Search("-", 8));
+        Index.Value.Search("   ", 8).Should().BeEmpty();
+        Index.Value.Search("-", 8).Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Unknown_names_find_nothing()
     {
-        Assert.Empty(Index.Value.Search("qqxzqq", 8));
+        Index.Value.Search("qqxzqq", 8).Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void The_limit_holds()
     {
-        Assert.Equal(3, Index.Value.Search("san", 3).Count);
+        Index.Value.Search("san", 3).Count.Should().Be(3);
     }
 
-    [Fact]
+    [Test]
     public void Places_carry_what_the_sky_needs()
     {
         Place tromso = Index.Value.Search("Tromsø", 1)[0];
 
-        Assert.Equal("Europe/Oslo", tromso.Zone);
-        Assert.Equal(69.65, tromso.Latitude, 1);
-        Assert.Equal(18.96, tromso.Longitude, 1);
-        Assert.Equal("Troms", tromso.Region[..5]);
+        tromso.Zone.Should().Be("Europe/Oslo");
+        tromso.Latitude.Should().BeApproximately(69.65, 0.05);
+        tromso.Longitude.Should().BeApproximately(18.96, 0.05);
+        tromso.Region[..5].Should().Be("Troms");
     }
 
-    [Fact]
+    [Test]
     public void Every_place_has_a_zone_this_system_knows()
     {
         Place[] samples = new[] { "Tokyo", "Auckland", "Honolulu", "Kathmandu", "Kolkata" }.Select(name => Index.Value.Search(name, 1)[0]).ToArray();
 
-        Assert.All(samples, place => Assert.Equal(place.Zone, TimeZoneInfo.FindSystemTimeZoneById(place.Zone).Id));
+        samples.Should().AllSatisfy(place => TimeZoneInfo.FindSystemTimeZoneById(place.Zone).Id.Should().Be(place.Zone));
     }
 
-    [Theory]
-    [InlineData(52.5, 13.4, "Europe/Berlin")]
-    [InlineData(-33.9, 151.2, "Australia/Sydney")]
-    [InlineData(69.65, 18.96, "Europe/Oslo")]
-    [InlineData(40.7, -74.0, "America/New_York")]
+    [TestCase(52.5, 13.4, "Europe/Berlin")]
+    [TestCase(-33.9, 151.2, "Australia/Sydney")]
+    [TestCase(69.65, 18.96, "Europe/Oslo")]
+    [TestCase(40.7, -74.0, "America/New_York")]
     public void Coordinates_get_the_zone_of_the_nearest_place(double latitude, double longitude, string zone)
     {
-        Assert.Equal(zone, Index.Value.Nearest(latitude, longitude)!.Zone);
+        Index.Value.Nearest(latitude, longitude)!.Zone.Should().Be(zone);
     }
 
-    [Fact]
+    [Test]
     public void Nearest_place_works_across_the_date_line()
     {
         Place place = Index.Value.Nearest(-17.0, -179.9)!;
 
-        Assert.True(Math.Abs(place.Longitude) > 170.0);
+        Math.Abs(place.Longitude).Should().BeGreaterThan(170.0);
     }
 
-    [Fact]
+    [Test]
     public void Stored_places_come_back_unchanged()
     {
         var place = new Place("Tromsø", "Troms og Finnmark", "NO", 69.649, 18.955, 12, "Europe/Oslo");
 
-        Assert.Equal(place, Place.FromStoredText(place.ToStoredText()));
+        Place.FromStoredText(place.ToStoredText()).Should().Be(place);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("not a place")]
-    [InlineData("a\tb\tc\tx\ty\tz\tzone")]
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("not a place")]
+    [TestCase("a\tb\tc\tx\ty\tz\tzone")]
     public void Unreadable_stored_text_gives_no_place(string? text)
     {
-        Assert.Null(Place.FromStoredText(text));
+        Place.FromStoredText(text).Should().BeNull();
     }
 
-    [Theory]
-    [InlineData("Europe/Oslo", "2026-06-21T12:00:00Z", 14)]
-    [InlineData("Europe/Oslo", "2026-12-21T12:00:00Z", 13)]
-    [InlineData("Pacific/Auckland", "2026-06-21T12:00:00Z", 0)]
-    [InlineData("Asia/Kolkata", "2026-06-21T12:30:00Z", 18)]
-    [InlineData("America/New_York", "2026-03-08T12:00:00Z", 8)]
+    [TestCase("Europe/Oslo", "2026-06-21T12:00:00Z", 14)]
+    [TestCase("Europe/Oslo", "2026-12-21T12:00:00Z", 13)]
+    [TestCase("Pacific/Auckland", "2026-06-21T12:00:00Z", 0)]
+    [TestCase("Asia/Kolkata", "2026-06-21T12:30:00Z", 18)]
+    [TestCase("America/New_York", "2026-03-08T12:00:00Z", 8)]
     public void Manual_place_shows_its_local_time(string zoneId, string utc, int expectedHour)
     {
         TimeZoneInfo zone = PlaceZone.Resolve(zoneId, 0.0);
 
         SkySnapshot sky = SkyCalculator.Compute(DateTimeOffset.Parse(utc, CultureInfo.InvariantCulture), new GeoLocation(48.0, 11.0), zone);
 
-        Assert.Equal(expectedHour, sky.Time.Hour);
+        sky.Time.Hour.Should().Be(expectedHour);
     }
 
-    [Fact]
+    [Test]
     public void Rise_and_set_of_a_far_place_appear_in_its_own_time()
     {
         TimeZoneInfo tokyo = PlaceZone.Resolve("Asia/Tokyo", 139.7);
@@ -333,12 +320,12 @@ public class PlaceSearchTests
 
         SkySnapshot sky = SkyCalculator.Compute(time, new GeoLocation(35.68, 139.69), tokyo);
 
-        Assert.Equal(TimeSpan.FromHours(9), sky.Sun.Body.Rise!.Value.Time.Offset);
-        Assert.InRange(sky.Sun.Body.Rise.Value.Time.Hour, 4, 5);
-        Assert.InRange(sky.Sun.Body.Set!.Value.Time.Hour, 18, 19);
+        sky.Sun.Body.Rise!.Value.Time.Offset.Should().Be(TimeSpan.FromHours(9));
+        sky.Sun.Body.Rise.Value.Time.Hour.Should().BeInRange(4, 5);
+        sky.Sun.Body.Set!.Value.Time.Hour.Should().BeInRange(18, 19);
     }
 
-    [Fact]
+    [Test]
     public void A_day_boundary_follows_the_place_and_not_utc()
     {
         TimeZoneInfo auckland = PlaceZone.Resolve("Pacific/Auckland", 174.8);
@@ -346,15 +333,15 @@ public class PlaceSearchTests
 
         SkySnapshot sky = SkyCalculator.Compute(time, new GeoLocation(-36.85, 174.76), auckland);
 
-        Assert.Equal(22, sky.Time.Day);
-        Assert.Equal(22, sky.Sun.Body.Rise!.Value.Time.Day);
+        sky.Time.Day.Should().Be(22);
+        sky.Sun.Body.Rise!.Value.Time.Day.Should().Be(22);
     }
 
-    [Fact]
+    [Test]
     public void An_unknown_zone_falls_back_to_the_longitude()
     {
         TimeZoneInfo zone = PlaceZone.Resolve("Not/AZone", 139.7);
 
-        Assert.Equal(TimeSpan.FromHours(9), zone.BaseUtcOffset);
+        zone.BaseUtcOffset.Should().Be(TimeSpan.FromHours(9));
     }
 }

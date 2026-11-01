@@ -8,19 +8,9 @@ public class RiseSetTests
     private static readonly TimeSpan SunTolerance = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan MoonTolerance = TimeSpan.FromMinutes(3);
 
-    public static TheoryData<UsnoFixtures.Day> Days()
-    {
-        var data = new TheoryData<UsnoFixtures.Day>();
-        foreach (UsnoFixtures.Day day in UsnoFixtures.Days)
-        {
-            data.Add(day);
-        }
+    public static IEnumerable<UsnoFixtures.Day> Days() => UsnoFixtures.Days;
 
-        return data;
-    }
-
-    [Theory]
-    [MemberData(nameof(Days))]
+    [TestCaseSource(nameof(Days))]
     public void Sun_matches_usno(UsnoFixtures.Day day)
     {
         SkySnapshot sky = SkyCalculator.Compute(Noon(day), Location(day), TimeZoneInfo.Utc);
@@ -29,8 +19,7 @@ public class RiseSetTests
         AssertEvent(day, day.SunSet, Today(sky.Sun.Body.Set), SunTolerance);
     }
 
-    [Theory]
-    [MemberData(nameof(Days))]
+    [TestCaseSource(nameof(Days))]
     public void Moon_matches_usno(UsnoFixtures.Day day)
     {
         var observer = new Observer(day.Latitude, day.Longitude, 0);
@@ -46,44 +35,42 @@ public class RiseSetTests
         }
     }
 
-    [Theory]
-    [MemberData(nameof(Days))]
+    [TestCaseSource(nameof(Days))]
     public void Illumination_matches_usno(UsnoFixtures.Day day)
     {
         SkySnapshot sky = SkyCalculator.Compute(Noon(day), Location(day), TimeZoneInfo.Utc);
 
-        Assert.InRange(sky.Moon.IlluminatedFraction * 100.0, day.IlluminationPercent - 3.0, day.IlluminationPercent + 3.0);
+        (sky.Moon.IlluminatedFraction * 100.0).Should().BeInRange(day.IlluminationPercent - 3.0, day.IlluminationPercent + 3.0);
     }
 
-    [Theory]
-    [InlineData("2026-03-29T10:00:00Z", "06:48", "19:35")]
-    [InlineData("2026-10-25T10:00:00Z", "06:50", "16:50")]
+    [TestCase("2026-03-29T10:00:00Z", "06:48", "19:35")]
+    [TestCase("2026-10-25T10:00:00Z", "06:50", "16:50")]
     public void Clock_change_days_use_local_midnights_and_the_new_offset(string utc, string rise, string set)
     {
         TimeZoneInfo berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
 
         SkySnapshot sky = SkyCalculator.Compute(DateTimeOffset.Parse(utc, CultureInfo.InvariantCulture), new GeoLocation(52.52, 13.405), berlin);
 
-        Assert.Equal(0, sky.Sun.Body.Rise!.Value.DayOffset);
-        Assert.Equal(0, sky.Sun.Body.Set!.Value.DayOffset);
+        sky.Sun.Body.Rise!.Value.DayOffset.Should().Be(0);
+        sky.Sun.Body.Set!.Value.DayOffset.Should().Be(0);
         AssertClock(rise, sky.Sun.Body.Rise.Value.Time);
         AssertClock(set, sky.Sun.Body.Set.Value.Time);
     }
 
-    [Fact]
+    [Test]
     public void Evening_after_sunset_still_shows_todays_sun()
     {
         var evening = new DateTimeOffset(2026, 10, 25, 20, 0, 0, TimeSpan.Zero);
 
         SkySnapshot sky = SkyCalculator.Compute(evening, new GeoLocation(52.52, 13.405), TimeZoneInfo.Utc);
 
-        Assert.False(sky.Sun.Body.IsUp);
-        Assert.Null(sky.Sun.Body.ArcProgress);
-        Assert.Equal(0, sky.Sun.Body.Set!.Value.DayOffset);
-        Assert.True(sky.Sun.Body.Set.Value.Time < evening);
+        sky.Sun.Body.IsUp.Should().BeFalse();
+        sky.Sun.Body.ArcProgress.Should().BeNull();
+        sky.Sun.Body.Set!.Value.DayOffset.Should().Be(0);
+        sky.Sun.Body.Set.Value.Time.Should().BeBefore(evening);
     }
 
-    [Fact]
+    [Test]
     public void Midnight_sun_has_no_events_but_keeps_moving_above_the_hills()
     {
         var location = new GeoLocation(69.6492, 18.9553);
@@ -94,17 +81,17 @@ public class RiseSetTests
         {
             SkySnapshot sky = SkyCalculator.Compute(start.AddHours(hour), location, TimeZoneInfo.Utc);
 
-            Assert.True(sky.Sun.Body.IsUp);
-            Assert.Null(sky.Sun.Body.Rise);
-            Assert.Null(sky.Sun.Body.Set);
+            sky.Sun.Body.IsUp.Should().BeTrue();
+            sky.Sun.Body.Rise.Should().BeNull();
+            sky.Sun.Body.Set.Should().BeNull();
             progress.Add(sky.Sun.Body.ArcProgress!.Value);
         }
 
-        Assert.All(progress, t => Assert.InRange(t, 0.1, 0.9));
-        Assert.True(progress.Max() - progress.Min() > 0.7);
+        progress.Should().AllSatisfy(t => t.Should().BeInRange(0.1, 0.9));
+        (progress.Max() - progress.Min()).Should().BeGreaterThan(0.7);
     }
 
-    [Fact]
+    [Test]
     public void Polar_night_hides_the_sun()
     {
         SkySnapshot sky = SkyCalculator.Compute(
@@ -112,13 +99,13 @@ public class RiseSetTests
             new GeoLocation(69.6492, 18.9553),
             TimeZoneInfo.Utc);
 
-        Assert.False(sky.Sun.Body.IsUp);
-        Assert.Null(sky.Sun.Body.ArcProgress);
-        Assert.Null(sky.Sun.Body.Rise);
-        Assert.Null(sky.Sun.Body.Set);
+        sky.Sun.Body.IsUp.Should().BeFalse();
+        sky.Sun.Body.ArcProgress.Should().BeNull();
+        sky.Sun.Body.Rise.Should().BeNull();
+        sky.Sun.Body.Set.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void Sunset_after_local_midnight_is_shown_as_next_day()
     {
         TimeZoneInfo oslo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Oslo");
@@ -128,13 +115,12 @@ public class RiseSetTests
         IEnumerable<TimeEvent?> sets = Enumerable.Range(0, 25)
             .Select(day => SkyCalculator.Compute(start.AddDays(day), location, oslo).Sun.Body.Set);
 
-        Assert.Contains(sets, set => set?.DayOffset == 1);
+        sets.Should().Contain(set => set.HasValue && set.Value.DayOffset == 1);
     }
 
-    [Theory]
-    [InlineData(52.52, 13.405, "Europe/Berlin")]
-    [InlineData(-33.8688, 151.2093, "Australia/Sydney")]
-    [InlineData(-0.1807, -78.4678, "America/Guayaquil")]
+    [TestCase(52.52, 13.405, "Europe/Berlin")]
+    [TestCase(-33.8688, 151.2093, "Australia/Sydney")]
+    [TestCase(-0.1807, -78.4678, "America/Guayaquil")]
     public void Moon_uses_the_current_pair_while_up_and_the_next_pair_while_down(double latitude, double longitude, string zoneId)
     {
         TimeZoneInfo zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId);
@@ -153,24 +139,24 @@ public class RiseSetTests
 
             if (moon.IsUp)
             {
-                Assert.True(rise <= now && now <= set, $"{now}: up, but window is {rise} to {set}");
-                Assert.InRange(moon.ArcProgress!.Value, 0.0, 1.0);
+                (rise <= now && now <= set).Should().BeTrue($"{now}: up, but window is {rise} to {set}");
+                moon.ArcProgress!.Value.Should().BeInRange(0.0, 1.0);
             }
             else
             {
-                Assert.True(now < rise && rise < set, $"{now}: down, but window is {rise} to {set}");
-                Assert.Null(moon.ArcProgress);
+                (now < rise && rise < set).Should().BeTrue($"{now}: down, but window is {rise} to {set}");
+                moon.ArcProgress.Should().BeNull();
             }
 
             DateTime today = TimeZoneInfo.ConvertTime(now, zone).Date;
-            Assert.Equal((rise.Date - today).Days, moon.Rise.Value.DayOffset);
-            Assert.Equal((set.Date - today).Days, moon.Set.Value.DayOffset);
+            moon.Rise.Value.DayOffset.Should().Be((rise.Date - today).Days);
+            moon.Set.Value.DayOffset.Should().Be((set.Date - today).Days);
         }
 
-        Assert.Equal(2, seenStates.Count);
+        seenStates.Count.Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void Moon_near_the_pole_never_breaks_the_state_rules()
     {
         var location = new GeoLocation(78.2232, 15.6267);
@@ -180,37 +166,36 @@ public class RiseSetTests
         {
             BodyInfo moon = SkyCalculator.Compute(start.AddHours(6 * step), location, TimeZoneInfo.Utc).Moon.Body;
 
-            Assert.Equal(moon.IsUp, moon.ArcProgress is not null);
+            (moon.ArcProgress is not null).Should().Be(moon.IsUp);
             if (moon.Rise is not null)
             {
-                Assert.InRange(moon.Rise.Value.DayOffset, -2, 2);
+                moon.Rise.Value.DayOffset.Should().BeInRange(-2, 2);
             }
 
             if (moon.Set is not null)
             {
-                Assert.InRange(moon.Set.Value.DayOffset, -2, 2);
+                moon.Set.Value.DayOffset.Should().BeInRange(-2, 2);
             }
         }
     }
 
-    [Theory]
-    [InlineData(-30.0, TwilightPhase.Night)]
-    [InlineData(-15.0, TwilightPhase.AstronomicalTwilight)]
-    [InlineData(-9.0, TwilightPhase.NauticalTwilight)]
-    [InlineData(-3.0, TwilightPhase.CivilTwilight)]
-    [InlineData(3.0, TwilightPhase.GoldenHour)]
-    [InlineData(30.0, TwilightPhase.Day)]
+    [TestCase(-30.0, TwilightPhase.Night)]
+    [TestCase(-15.0, TwilightPhase.AstronomicalTwilight)]
+    [TestCase(-9.0, TwilightPhase.NauticalTwilight)]
+    [TestCase(-3.0, TwilightPhase.CivilTwilight)]
+    [TestCase(3.0, TwilightPhase.GoldenHour)]
+    [TestCase(30.0, TwilightPhase.Day)]
     public void Twilight_follows_the_sun_altitude(double altitude, TwilightPhase expected)
     {
-        Assert.Equal(expected, SkyCalculator.ClassifyTwilight(altitude));
+        SkyCalculator.ClassifyTwilight(altitude).Should().Be(expected);
     }
 
-    [Fact]
+    [Test]
     public void Absurd_gps_elevation_is_tolerated()
     {
         SkySnapshot sky = SkyCalculator.Compute(DateTimeOffset.UnixEpoch.AddYears(56), new GeoLocation(52.52, 13.405, 1e7), TimeZoneInfo.Utc);
 
-        Assert.NotNull(sky);
+        sky.Should().NotBeNull();
     }
 
     private static DateTimeOffset? Today(TimeEvent? timeEvent) =>
@@ -220,22 +205,22 @@ public class RiseSetTests
     {
         if (expected is null)
         {
-            Assert.True(actual is null, $"{day.Place} {day.Date}: expected no event, got {actual}");
+            actual.Should().BeNull($"{day.Place} {day.Date}: expected no event, got {actual}");
             return;
         }
 
-        Assert.True(actual is not null, $"{day.Place} {day.Date}: expected {expected}, got none");
+        actual.Should().NotBeNull($"{day.Place} {day.Date}: expected {expected}, got none");
 
         DateTimeOffset reference = Midnight(day) + TimeSpan.ParseExact(expected, @"hh\:mm", CultureInfo.InvariantCulture);
-        TimeSpan difference = (actual.Value - reference).Duration();
+        TimeSpan difference = (actual!.Value - reference).Duration();
 
-        Assert.True(difference <= tolerance, $"{day.Place} {day.Date}: expected {reference:HH:mm}, got {actual:HH:mm:ss}");
+        difference.Should().BeLessThanOrEqualTo(tolerance, $"{day.Place} {day.Date}: expected {reference:HH:mm}, got {actual:HH:mm:ss}");
     }
 
     private static void AssertClock(string expected, DateTimeOffset actual)
     {
         TimeSpan reference = TimeSpan.ParseExact(expected, @"hh\:mm", CultureInfo.InvariantCulture);
-        Assert.True((actual.TimeOfDay - reference).Duration() <= SunTolerance, $"expected {expected}, got {actual:HH:mm:ss zzz}");
+        (actual.TimeOfDay - reference).Duration().Should().BeLessThanOrEqualTo(SunTolerance, $"expected {expected}, got {actual:HH:mm:ss zzz}");
     }
 
     private static GeoLocation Location(UsnoFixtures.Day day) => new(day.Latitude, day.Longitude);
