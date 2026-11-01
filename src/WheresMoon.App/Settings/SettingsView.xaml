@@ -48,11 +48,6 @@
                         BorderWidth="0" Clicked="OnAstronomyLicenseClicked" />
                 <Label x:Name="AstronomyLicenseText" FontSize="12" IsVisible="False" />
 
-                <Label x:Name="ManropeLicenseName" Margin="0,8,0,0" />
-                <Button x:Name="ManropeLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
-                        BorderWidth="0" Clicked="OnManropeLicenseClicked" />
-                <Label x:Name="ManropeLicenseText" FontSize="12" IsVisible="False" />
-
                 <Label x:Name="GeoNamesLicenseName" Margin="0,8,0,0" />
                 <Button x:Name="GeoNamesLicenseButton" HorizontalOptions="Start" Padding="0" BackgroundColor="Transparent"
                         BorderWidth="0" Clicked="OnGeoNamesLicenseClicked" />

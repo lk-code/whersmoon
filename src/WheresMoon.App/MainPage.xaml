@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:WheresMoon.App.Controls"
              x:Class="WheresMoon.App.MainPage"
              SafeAreaEdges="None"
              BackgroundColor="#070D24">
@@ -11,10 +12,10 @@
 
         <!-- Positions come from SceneLayout, which already accounts for the safe area. -->
         <Grid x:Name="TextLayer" SafeAreaEdges="None" InputTransparent="True">
-            <Label x:Name="ClockLabel" FontFamily="ManropeLight" TextColor="White"
-                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
-                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
-            <Label x:Name="ContextLabel" FontFamily="ManropeRegular" TextColor="White" Opacity="0.8"
+            <controls:ClockLabel x:Name="ClockLabel" TextColor="White"
+                                 HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                                 LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+            <Label x:Name="ContextLabel" TextColor="White" Opacity="0.8"
                    HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
                    LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
         </Grid>
@@ -26,7 +27,7 @@
         <Grid x:Name="SafeArea" SafeAreaEdges="Container" InputTransparent="True" CascadeInputTransparent="False">
             <BoxView x:Name="SafeAreaProbe" Color="Transparent" InputTransparent="True" />
             <Button x:Name="NowButton" IsVisible="False"
-                    FontFamily="ManropeMedium" FontSize="13" TextColor="White" BackgroundColor="#33FFFFFF"
+                    FontSize="13" TextColor="White" BackgroundColor="#33FFFFFF"
                     BorderWidth="0" CornerRadius="18" HeightRequest="36" Padding="16,0"
                     HorizontalOptions="Start" VerticalOptions="End" Margin="10,0,0,10"
                     Clicked="OnNowClicked" />

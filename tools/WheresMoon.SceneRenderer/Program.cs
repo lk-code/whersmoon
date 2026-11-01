@@ -13,10 +13,9 @@ const double Heading = 20.0;
 string output = args.Length > 0 ? args[0] : "scene-output";
 Directory.CreateDirectory(output);
 
-string fonts = Path.Combine(FindRepositoryRoot(), "src", "WheresMoon.App", "Resources", "Fonts");
-using SKTypeface light = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Light.ttf"));
-using SKTypeface regular = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Regular.ttf"));
-using SKTypeface medium = SKTypeface.FromFile(Path.Combine(fonts, "Manrope-Medium.ttf"));
+// Falls back to the default font away from a Mac. That one is shared, so it must not be disposed here.
+SKTypeface light = SystemFont(SKFontStyleWeight.Light);
+SKTypeface regular = SystemFont(SKFontStyleWeight.Normal);
 
 const string DayLength = "Tageslänge 9 h 31 min · 3 min kürzer als gestern";
 var dayTexts = new Texts("10:23", "Tromsø · Mo., 3. Nov.", ["Sonnenaufgang: 07:31 – Sonnenuntergang: 17:02", "Mondaufgang: 03:10 – Monduntergang: 12:50"], "Abnehmende Sichel · 18 %", DayLength);
@@ -135,7 +134,7 @@ void DrawTexts(SKCanvas target, SceneLayout layout, Texts texts)
     bool isList = texts.Phase.Length == 0;
     for (int row = 0; row < texts.Rows.Count; row++)
     {
-        Line(texts.Rows[row], medium, isList ? layout.PhaseFontSize : layout.RiseSetFontSize, layout.RowCenterY(row), 1f, 0f);
+        Line(texts.Rows[row], regular, isList ? layout.PhaseFontSize : layout.RiseSetFontSize, layout.RowCenterY(row), 1f, 0f);
     }
 
     Line(texts.Phase, regular, layout.PhaseFontSize, layout.RowCenterY(texts.Rows.Count), (float)DesignTokens.Opacity.PhaseText, 0f);
@@ -229,15 +228,7 @@ void Save(SKBitmap bitmap, string name)
     File.WriteAllBytes(Path.Combine(output, name), data.ToArray());
 }
 
-static string FindRepositoryRoot()
-{
-    var directory = new DirectoryInfo(AppContext.BaseDirectory);
-    while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "WheresMoon.slnx")))
-    {
-        directory = directory.Parent;
-    }
-
-    return directory?.FullName ?? throw new InvalidOperationException("Run this tool from inside the repository.");
-}
+static SKTypeface SystemFont(SKFontStyleWeight weight) =>
+    SKTypeface.FromFamilyName(".AppleSystemUIFont", weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
 
 internal sealed record Texts(string Clock, string Context, IReadOnlyList<string> Rows, string Phase, string Caption);

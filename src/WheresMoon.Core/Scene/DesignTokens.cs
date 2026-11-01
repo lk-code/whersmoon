@@ -185,6 +185,9 @@ public static class DesignTokens
         public const double LetterRing = 0.38;
         public const double LetterHeight = 0.15;
         public const double NorthLetterHeight = 0.18;
+
+        /// <summary>Capital height of the system fonts relative to their size, which turns these heights into font sizes.</summary>
+        public const double CapHeightShare = 0.71;
         public const double SunMarker = 0.1;
         public const double MoonMarker = 0.09;
 

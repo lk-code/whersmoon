@@ -40,7 +40,6 @@
   <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="LicensesHeader" xml:space="preserve"><value>Lizenzen</value></data>
   <data name="LicenseAstronomy" xml:space="preserve"><value>Astronomy Engine, MIT-Lizenz</value></data>
-  <data name="LicenseManrope" xml:space="preserve"><value>Manrope, SIL Open Font License 1.1</value></data>
   <data name="ShowLicense" xml:space="preserve"><value>Lizenztext anzeigen</value></data>
   <data name="HideLicense" xml:space="preserve"><value>Lizenztext ausblenden</value></data>
   <data name="AltitudeLow" xml:space="preserve"><value>tief</value></data>

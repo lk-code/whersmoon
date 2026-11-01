@@ -11,6 +11,17 @@ public sealed class SceneDrawable : IDrawable
 
 	private const int PageCount = 3;
 
+	/// <summary>Distance from the top of a line to its baseline in the system font, relative to the font size.</summary>
+#if IOS || MACCATALYST
+	private const double LetterAscent = 0.952;
+#elif ANDROID
+	private const double LetterAscent = 0.928;
+#elif WINDOWS
+	private const double LetterAscent = 1.079;
+#else
+	private const double LetterAscent = 0.770;
+#endif
+
 	public SceneState State { get; set; } = new();
 
 	public SceneLayout? Layout { get; set; }
@@ -323,19 +334,23 @@ public sealed class SceneDrawable : IDrawable
 		canvas.RestoreState();
 	}
 
+	/// <summary>Drawn from the top of its line, as centring a line would leave the capital off its centre.</summary>
 	private static void DrawLetter(ICanvas canvas, char letter, PointD center, double height, double opacity)
 	{
-		var path = new PathF();
+		double size = height / DesignTokens.Compass.CapHeightShare;
+		double top = center.Y + height / 2.0 - LetterAscent * size;
 
-		foreach (CubicPath contour in CompassGlyphs.Place(letter, center, height))
-		{
-			path.MoveTo((float)contour.Start.X, (float)contour.Start.Y);
-			AddSegments(path, contour);
-			path.Close();
-		}
-
-		canvas.FillColor = Colors.White.WithAlpha((float)opacity);
-		canvas.FillPath(path, WindingMode.EvenOdd);
+		canvas.Font = Microsoft.Maui.Graphics.Font.Default;
+		canvas.FontSize = (float)size;
+		canvas.FontColor = Colors.White.WithAlpha((float)opacity);
+		canvas.DrawString(
+			letter.ToString(),
+			(float)(center.X - size),
+			(float)top,
+			(float)(2.0 * size),
+			(float)(2.0 * size),
+			HorizontalAlignment.Center,
+			VerticalAlignment.Top);
 	}
 
 	private void DrawPageDots(ICanvas canvas, SceneLayout layout)

@@ -10,13 +10,6 @@ Where's Moon? includes the following third-party software. The full license text
 - Location in this repository: `src/WheresMoon.Core/External/astronomy.cs`
 - Local changes: `#nullable disable` added, `RegexOptions.Compiled` removed. Both are noted at the top of the file.
 
-## Manrope
-
-- Source: https://github.com/aaronbell/manrope
-- Files: `fonts/ttf/manrope-light.ttf`, `manrope-regular.ttf`, `manrope-medium.ttf`
-- License: SIL Open Font License 1.1, Copyright 2018 The Manrope Project Authors
-- Location in this repository: `src/WheresMoon.App/Resources/Fonts`
-
 ## GeoNames
 
 - Source: https://download.geonames.org/export/dump/, files `cities15000.zip` and `admin1CodesASCII.txt`, retrieved 2026-10-31, and `alternateNamesV2.zip`, retrieved 2026-11-01

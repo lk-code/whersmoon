@@ -17,6 +17,7 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet test tests/WheresMoon.Core.Tests/WheresMoon.Core.Tests.csproj
+      - run: dotnet build tools/WheresMoon.SceneRenderer/WheresMoon.SceneRenderer.csproj
 
   windows:
     runs-on: windows-latest

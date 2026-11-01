@@ -226,7 +226,6 @@ internal sealed class InfoSlider : Grid
 			InfoRowStyle.Caption => _layout?.CaptionFontSize ?? 0.0,
 			_ => _layout?.PhaseFontSize ?? 0.0,
 		};
-		label.FontFamily = style is InfoRowStyle.Primary or InfoRowStyle.List ? "ManropeMedium" : "ManropeRegular";
 		label.Opacity = style switch
 		{
 			InfoRowStyle.Secondary => DesignTokens.Opacity.PhaseText,

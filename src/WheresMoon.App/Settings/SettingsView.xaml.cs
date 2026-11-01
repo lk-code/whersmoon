@@ -10,7 +10,6 @@ namespace WheresMoon.App.Settings;
 public partial class SettingsView : ContentView
 {
 	private const string AstronomyLicenseFile = "licenses/astronomy-engine-mit.txt";
-	private const string ManropeLicenseFile = "licenses/manrope-ofl.txt";
 	private const string GeoNamesLicenseFile = "licenses/geonames-cc-by-4.0.txt";
 	private const string UnicodeLicenseFile = "licenses/unicode-cldr.txt";
 
@@ -77,11 +76,9 @@ public partial class SettingsView : ContentView
 		VersionLabel.Text = Strings.Format("Version", AppInfo.Current.VersionString);
 		LicensesHeader.Text = Strings.Get("LicensesHeader");
 		AstronomyLicenseName.Text = Strings.Get("LicenseAstronomy");
-		ManropeLicenseName.Text = Strings.Get("LicenseManrope");
 		GeoNamesLicenseName.Text = Strings.Get("LicenseGeoNames");
 		UnicodeLicenseName.Text = Strings.Get("LicenseUnicode");
 		AstronomyLicenseButton.Text = Strings.Get("ShowLicense");
-		ManropeLicenseButton.Text = Strings.Get("ShowLicense");
 		GeoNamesLicenseButton.Text = Strings.Get("ShowLicense");
 		UnicodeLicenseButton.Text = Strings.Get("ShowLicense");
 
@@ -96,12 +93,12 @@ public partial class SettingsView : ContentView
 	{
 		TitleLabel.FontSize = style.TitleSize;
 
-		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, AstronomyLicenseName, ManropeLicenseName, GeoNamesLicenseName, UnicodeLicenseName })
+		foreach (Label label in new[] { TitleLabel, LocationHeader, AboutHeader, AboutLabel, LicensesHeader, AstronomyLicenseName, GeoNamesLicenseName, UnicodeLicenseName })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.Text.Light, style.Text.Dark);
 		}
 
-		foreach (Label label in new[] { StatusLabel, RecentHeader, VersionLabel, AstronomyLicenseText, ManropeLicenseText, GeoNamesLicenseText, UnicodeLicenseText })
+		foreach (Label label in new[] { StatusLabel, RecentHeader, VersionLabel, AstronomyLicenseText, GeoNamesLicenseText, UnicodeLicenseText })
 		{
 			label.SetAppThemeColor(Label.TextColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
@@ -119,7 +116,7 @@ public partial class SettingsView : ContentView
 			entry.SetAppThemeColor(Entry.PlaceholderColorProperty, style.SecondaryText.Light, style.SecondaryText.Dark);
 		}
 
-		foreach (Button button in new[] { CloseButton, CoordinatesButton, AstronomyLicenseButton, ManropeLicenseButton, GeoNamesLicenseButton, UnicodeLicenseButton })
+		foreach (Button button in new[] { CloseButton, CoordinatesButton, AstronomyLicenseButton, GeoNamesLicenseButton, UnicodeLicenseButton })
 		{
 			button.SetAppThemeColor(Button.TextColorProperty, style.Accent.Light, style.Accent.Dark);
 		}
@@ -280,9 +277,6 @@ public partial class SettingsView : ContentView
 
 	private async void OnAstronomyLicenseClicked(object? sender, EventArgs e) =>
 		await ToggleLicenseAsync(AstronomyLicenseText, AstronomyLicenseButton, AstronomyLicenseFile);
-
-	private async void OnManropeLicenseClicked(object? sender, EventArgs e) =>
-		await ToggleLicenseAsync(ManropeLicenseText, ManropeLicenseButton, ManropeLicenseFile);
 
 	private async void OnGeoNamesLicenseClicked(object? sender, EventArgs e) =>
 		await ToggleLicenseAsync(GeoNamesLicenseText, GeoNamesLicenseButton, GeoNamesLicenseFile);

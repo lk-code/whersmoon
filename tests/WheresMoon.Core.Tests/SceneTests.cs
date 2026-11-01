@@ -648,21 +648,6 @@ public class SceneTests
         flashesPerSecond.Should().BeLessThan(3.0, $"{flashesPerSecond:F1} flashes per second");
     }
 
-    [TestCase('N')]
-    [TestCase('E')]
-    [TestCase('O')]
-    [TestCase('S')]
-    [TestCase('W')]
-    public void Compass_letters_fit_their_height_around_the_centre(char letter)
-    {
-        IReadOnlyList<CubicPath> contours = CompassGlyphs.Place(letter, new PointD(100, 50), 10.0);
-
-        List<PointD> points = contours.SelectMany(Flatten).ToList();
-        points.Min(p => p.Y).Should().BeInRange(44.0, 46.0);
-        points.Max(p => p.Y).Should().BeInRange(54.0, 56.0);
-        ((points.Min(p => p.X) + points.Max(p => p.X)) / 2.0).Should().BeApproximately(100.0, 0.5);
-    }
-
     [Test]
     public void Hills_span_the_full_width()
     {
