@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:WheresMoon.App.Controls"
+             x:Class="WheresMoon.App.MainPage"
+             SafeAreaEdges="None"
+             BackgroundColor="#070D24">
+
+    <Grid x:Name="Root" SafeAreaEdges="None">
+
+        <GraphicsView x:Name="Scene" />
+
+        <!-- Positions come from SceneLayout, which already accounts for the safe area. -->
+        <Grid x:Name="TextLayer" SafeAreaEdges="None" InputTransparent="True">
+            <controls:ClockLabel x:Name="ClockLabel" TextColor="White"
+                                 HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                                 LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+            <Label x:Name="ContextLabel" TextColor="White" Opacity="0.8"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" VerticalOptions="Start"
+                   LineBreakMode="NoWrap" FontAutoScalingEnabled="False" />
+        </Grid>
+
+        <Button x:Name="PagerButton" BackgroundColor="Transparent" BorderWidth="0" Padding="0"
+                HorizontalOptions="Center" VerticalOptions="Start" Clicked="OnPagerClicked" />
+
+        <!-- The probe is the only way to learn the insets: this grid keeps its full size and only shrinks its content. -->
+        <Grid x:Name="SafeArea" SafeAreaEdges="Container" InputTransparent="True" CascadeInputTransparent="False">
+            <BoxView x:Name="SafeAreaProbe" Color="Transparent" InputTransparent="True" />
+            <Button x:Name="NowButton" IsVisible="False"
+                    FontSize="13" TextColor="White" BackgroundColor="#33FFFFFF"
+                    BorderWidth="0" CornerRadius="18" HeightRequest="36" Padding="16,0"
+                    HorizontalOptions="Start" VerticalOptions="End" Margin="10,0,0,10"
+                    Clicked="OnNowClicked" />
+            <ImageButton x:Name="SettingsButton"
+                         Source="settings_icon.png"
+                         WidthRequest="44" HeightRequest="44" Padding="11"
+                         HorizontalOptions="End" VerticalOptions="End" Margin="0,0,6,6"
+                         BackgroundColor="Transparent" BorderWidth="0" BorderColor="Transparent" CornerRadius="22" Opacity="0.7"
+                         Clicked="OnSettingsClicked" />
+        </Grid>
+
+        <!-- Settings dialog everywhere except iOS, where it is a system sheet. -->
+        <Grid x:Name="SettingsOverlay" SafeAreaEdges="None" IsVisible="False">
+            <BoxView x:Name="Scrim" Color="#99000000">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnScrimTapped" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+            <Grid x:Name="SettingsHost" SafeAreaEdges="All" CascadeInputTransparent="False" InputTransparent="True">
+                <Border x:Name="SettingsCard" StrokeThickness="0" InputTransparent="False" />
+            </Grid>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

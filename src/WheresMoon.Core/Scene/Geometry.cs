@@ -1,0 +1,198 @@
+namespace WheresMoon.Core.Scene;
+
+public readonly record struct PointD(double X, double Y);
+
+/// <summary>Cubic Bézier piece of a path, continuing from the previous end point.</summary>
+public readonly record struct CubicSegment(PointD Control1, PointD Control2, PointD End);
+
+/// <summary>A path of cubic Bézier curves.</summary>
+public sealed record CubicPath(PointD Start, IReadOnlyList<CubicSegment> Segments);
+
+/// <summary>Paths of sun and moon: semicircles above the horizon line, flatter half ellipses below it.</summary>
+public static class ArcGeometry
+{
+    /// <summary>Point at progress <paramref name="t"/>: 0 is the left end, 0.5 the apex, 1 the right end.</summary>
+    public static PointD PointAt(double t, double centerX, double horizonY, double radiusX, double radiusY)
+    {
+        double theta = Math.PI * (1.0 - t);
+        return new PointD(centerX + radiusX * Math.Cos(theta), horizonY - radiusY * Math.Sin(theta));
+    }
+
+    /// <summary>Point on the path below the horizon: 0 is the right end, where the body set, 1 the left end, where it rises.</summary>
+    public static PointD LowerPointAt(double t, double centerX, double horizonY, double radiusX, double radiusY)
+    {
+        double theta = Math.PI * t;
+        return new PointD(centerX + radiusX * Math.Cos(theta), horizonY + radiusY * Math.Sin(theta));
+    }
+
+    /// <summary>The whole arc from its left to its right end.</summary>
+    public static CubicPath Outline(double centerX, double horizonY, double radiusX, double radiusY)
+    {
+        double kx = radiusX * MoonShape.Kappa;
+        double ky = radiusY * MoonShape.Kappa;
+        double top = horizonY - radiusY;
+
+        return new CubicPath(new PointD(centerX - radiusX, horizonY),
+        [
+            new(new(centerX - radiusX, horizonY - ky), new(centerX - kx, top), new(centerX, top)),
+            new(new(centerX + kx, top), new(centerX + radiusX, horizonY - ky), new(centerX + radiusX, horizonY)),
+        ]);
+    }
+}
+
+/// <summary>Positions on the compass, whose top is the direction the user faces.</summary>
+public static class CompassGeometry
+{
+    /// <summary>Point on a ring in the direction of an azimuth, for a user facing <paramref name="heading"/>.</summary>
+    public static PointD PointAt(PointD center, double radius, double azimuth, double heading)
+    {
+        double bearing = (azimuth - heading) * Math.PI / 180.0;
+        return new PointD(center.X + radius * Math.Sin(bearing), center.Y - radius * Math.Cos(bearing));
+    }
+
+    /// <summary>Head of an arrow that points away from the centre, with its base at <paramref name="radius"/>.</summary>
+    public static ArrowHead HeadAt(PointD center, double radius, double length, double halfWidth, double azimuth, double heading)
+    {
+        double bearing = (azimuth - heading) * Math.PI / 180.0;
+        PointD middle = PointAt(center, radius, azimuth, heading);
+        var side = new PointD(halfWidth * Math.Cos(bearing), halfWidth * Math.Sin(bearing));
+
+        return new ArrowHead(
+            PointAt(center, radius + length, azimuth, heading),
+            new PointD(middle.X - side.X, middle.Y - side.Y),
+            new PointD(middle.X + side.X, middle.Y + side.Y));
+    }
+}
+
+/// <summary>A filled arrow head.</summary>
+public readonly record struct ArrowHead(PointD Tip, PointD Left, PointD Right);
+
+/// <summary>The two hill outlines from the design reference.</summary>
+public static class HillShapes
+{
+    /// <summary>
+    /// Top edge of a hill in units of the reference: x relative to the width, y relative to the
+    /// scene unit and to the horizon line. The second segment of each curve was an SVG "S" command,
+    /// so its first control point is the mirror image of the previous one.
+    /// </summary>
+    private static readonly CubicPath BackOutline = new(
+        new PointD(0, 0.021),
+        [
+            new(new(0.179, -0.031), new(0.359, -0.015), new(0.526, 0.010)),
+            new(new(0.693, 0.035), new(0.846, -0.031), new(1.0, 0)),
+        ]);
+
+    private static readonly CubicPath FrontOutline = new(
+        new PointD(0, 0.108),
+        [
+            new(new(0.231, 0.056), new(0.436, 0.082), new(0.641, 0.108)),
+            new(new(0.846, 0.134), new(0.897, 0.072), new(1.0, 0.092)),
+        ]);
+
+    public static CubicPath Back(double width, double unit, double horizonY) => Place(BackOutline, width, unit, horizonY);
+
+    public static CubicPath Front(double width, double unit, double horizonY) => Place(FrontOutline, width, unit, horizonY);
+
+    private static CubicPath Place(CubicPath outline, double width, double unit, double horizonY)
+    {
+        PointD Map(PointD p) => new(p.X * width, horizonY + p.Y * unit);
+
+        return new CubicPath(
+            Map(outline.Start),
+            outline.Segments.Select(s => new CubicSegment(Map(s.Control1), Map(s.Control2), Map(s.End))).ToList());
+    }
+}
+
+/// <summary>Outline of the lit part of the moon.</summary>
+public static class MoonShape
+{
+    /// <summary>Control point distance that makes a cubic Bézier follow a quarter circle.</summary>
+    internal const double Kappa = 0.5522847498;
+
+    /// <summary>
+    /// Builds the lit area: half of the limb plus the terminator, which is a half ellipse.
+    /// </summary>
+    /// <param name="center">Moon centre on screen, y pointing down.</param>
+    /// <param name="radius">Disc radius.</param>
+    /// <param name="illuminatedFraction">Lit fraction of the disc, 0 to 1.</param>
+    /// <param name="zenithAngle">Bright limb direction, degrees counter-clockwise from the top of the screen.</param>
+    public static CubicPath Lit(PointD center, double radius, double illuminatedFraction, double zenithAngle)
+    {
+        double angle = zenithAngle * Math.PI / 180.0;
+        double brightX = -Math.Sin(angle);
+        double brightY = -Math.Cos(angle);
+
+        // Local frame: +x points to the bright limb, +y is perpendicular to it.
+        PointD Place(double x, double y) => new(
+            center.X + x * brightX - y * brightY,
+            center.Y + x * brightY + y * brightX);
+
+        double r = radius;
+        double k = r * Kappa;
+
+        // Where the terminator crosses the local x axis: the right edge at new moon, the left at full moon.
+        double t = r * (1.0 - 2.0 * Math.Clamp(illuminatedFraction, 0.0, 1.0));
+        double tk = t * Kappa;
+
+        return new CubicPath(Place(0, -r),
+        [
+            new(Place(k, -r), Place(r, -k), Place(r, 0)),
+            new(Place(r, k), Place(k, r), Place(0, r)),
+            new(Place(tk, r), Place(t, k), Place(t, 0)),
+            new(Place(t, -k), Place(tk, -r), Place(0, -r)),
+        ]);
+    }
+}
+
+/// <summary>Few faint stars with fixed, pseudo-random positions on a band around the viewer.</summary>
+public static class StarField
+{
+    /// <summary>Azimuth in degrees and height relative to the distance from top to horizon.</summary>
+    public readonly record struct Star(double Azimuth, double Y, double Radius, double Opacity);
+
+    /// <summary>Own generator, because the result must never change between runtimes or platforms.</summary>
+    public static IReadOnlyList<Star> Stars { get; } = Create(DesignTokens.Stars.Count, DesignTokens.Stars.Seed);
+
+    /// <summary>Overall star visibility for a sun altitude, 0 to 1.</summary>
+    public static double Visibility(double sunAltitude) =>
+        SkyPalette.Ramp(sunAltitude, DesignTokens.Stars.StartAltitude, DesignTokens.Stars.FullAltitude);
+
+    /// <summary>
+    /// Screen position of a star for a viewer facing <paramref name="heading"/>. The star moves against
+    /// a turn by the same angle, and the width stands for the field of view.
+    /// </summary>
+    public static double ScreenX(double azimuth, double heading, double width)
+    {
+        double offset = ((azimuth - heading + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
+        return width / 2.0 + offset / DesignTokens.Stars.FieldOfView * width;
+    }
+
+    private static List<Star> Create(int count, uint seed)
+    {
+        uint state = seed;
+        var stars = new List<Star>(count);
+        double sector = 360.0 / count;
+
+        for (int i = 0; i < count; i++)
+        {
+            double y = Next(ref state);
+
+            // One star per sector keeps the density even around the band, which pure chance would not.
+            stars.Add(new Star(
+                (i + Next(ref state)) * sector,
+                DesignTokens.Stars.TopLimit + (DesignTokens.Stars.BottomLimit - DesignTokens.Stars.TopLimit) * y,
+                DesignTokens.Stars.MinRadius + (DesignTokens.Stars.MaxRadius - DesignTokens.Stars.MinRadius) * Next(ref state),
+                DesignTokens.Stars.MinOpacity + (DesignTokens.Stars.MaxOpacity - DesignTokens.Stars.MinOpacity) * Next(ref state)));
+        }
+
+        return stars;
+    }
+
+    private static double Next(ref uint state)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return state / (double)uint.MaxValue;
+    }
+}

@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Authors>Lars Krämer</Authors>
+    <Copyright>Copyright (c) 2026 Lars Krämer</Copyright>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,98 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet test tests/WheresMoon.Core.Tests/WheresMoon.Core.Tests.csproj
+      - run: dotnet build tools/WheresMoon.SceneRenderer/WheresMoon.SceneRenderer.csproj
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.Core/obj/project.assets.json tests/WheresMoon.Core.Tests/obj/project.assets.json tools/WheresMoon.SceneRenderer/obj/project.assets.json
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet workload install maui-windows
+      - run: dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-windows10.0.19041.0 -c Release
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: '21'
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet workload install maui-android
+      - run: dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-android -c Release
+      - run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
+
+  # Builds only prove that the code compiles and links: signing needs certificates that do not
+  # belong in this repository, and a runner cannot show how the app looks on a device.
+  apple:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      # The newest workload needs an Xcode that runners may not have yet, so this stays on known versions.
+      - run: dotnet workload install maui --from-rollback-file .github/workload-versions.json
+      - name: Report tool versions
+        run: |
+          echo "::notice::Active: $(xcodebuild -version | paste -sd ' ' -) Installed: $(ls /Applications | grep '^Xcode' | paste -sd ' ' -)"
+          dotnet workload list
+      - name: iOS simulator
+        run: |
+          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Debug -r iossimulator-arm64 -p:ValidateXcodeVersion=false 2>&1 | tee ios.log
+      - name: Mac Catalyst
+        run: |
+          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Debug -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false 2>&1 | tee mac.log
+      # NativeAOT only takes effect when publishing, so the debug builds above say nothing about it.
+      # Publishing for iOS only accepts signed device builds. This flag is what publish sets internally.
+      - name: iOS release with NativeAOT
+        run: |
+          dotnet build src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-ios -c Release -r iossimulator-arm64 -p:_IsPublishing=true -p:ValidateXcodeVersion=false 2>&1 | tee ios-release.log
+      - name: Mac Catalyst release with NativeAOT
+        run: |
+          dotnet publish src/WheresMoon.App/WheresMoon.App.csproj -f net10.0-maccatalyst -c Release -r maccatalyst-arm64 -p:ValidateXcodeVersion=false -p:EnableCodeSigning=false -p:CreatePackage=false 2>&1 | tee mac-release.log
+      # AOT warnings do not stop the compiler, because HybridWebView always causes some. Any other one
+      # could mean a crash at runtime that no build shows, so that fails here.
+      - name: Check AOT warnings
+        run: |
+          found=$(cat ios-release.log mac-release.log | grep -E ' IL[0-9]{4}: ' | sort -u || true)
+          others=$(echo "$found" | grep -v 'HybridWebView' | grep -E 'IL[0-9]{4}' || true)
+          echo "::notice::AOT warnings: $(echo "$found" | grep -c 'IL' || true) in total, $(echo "$others" | grep -c 'IL' || true) outside HybridWebView"
+          if [ -n "$others" ]; then
+            echo "$others" | cut -c1-300 | head -9 | sed 's/^/::error::/'
+            exit 1
+          fi
+      - name: Check licenses
+        run: dotnet run tools/CheckLicenses.cs -- src/WheresMoon.App/obj/project.assets.json
+      # Job logs need a login to read, annotations do not.
+      - name: Report build errors
+        if: failure()
+        run: |
+          cat *.log 2>/dev/null | grep -E ': error |error [A-Z]+[0-9]+|IL[0-9]{4}' | sort -u | cut -c1-400 | head -30 | sed 's/^/::error::/' || true
